@@ -1,0 +1,52 @@
+# Plume native stack manifest (Laradock-style central config).
+# Copy to ~/.config/plume/services.yml (or set PLUME_SERVICES_MANIFEST_FILE).
+# Merge order: built-in defaults → this file → ~/.config/plume/.env (env wins).
+
+version: 1
+
+services:
+  web:
+    engine: nginx
+    manage_main_config: false
+    http_port: 80
+    auto_provision: true
+    enabled: true
+
+  php:
+    enabled: true
+    default_version: "8.3"
+    versions:
+      - "8.1"
+      - "8.2"
+      - "8.3"
+    extensions_profile: matrix
+
+  database:
+    engine: mariadb   # mariadb | mysql
+    version: "11.0"
+    auto_start: true
+
+  redis:
+    enabled: false
+
+  composer: { enabled: true }
+  phpmyadmin: { enabled: false }   # native: not auto-provisioned; use docker-lite or laradock-bridge
+  postgres: { enabled: false, version: "16" }
+  memcached: { enabled: false }
+  rabbitmq: { enabled: false }
+  mongodb: { enabled: false }
+  mongo_webui: { enabled: false }
+  mailpit: { enabled: true }
+  meilisearch: { enabled: false }
+  minio: { enabled: false }
+  supervisor: { enabled: false }
+  horizon: { enabled: false }
+  php_worker: { enabled: false }
+
+  # Laradock-bridge compose aliases (informational; ignored in native-only mode):
+  # workspace: { mode: laradock-bridge, enabled: false }   # maps to composer/workspace
+  # php-fpm: { mode: laradock-bridge, enabled: false }     # maps to php service in compose
+
+  provision:
+    on_first_run: true
+    interactive: true

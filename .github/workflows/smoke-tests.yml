@@ -1,0 +1,27 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Phase 10 E2E matrix
+        run: bash ./tests/phase10_e2e_matrix_smoke.sh
+
+      - name: Phase 14 golden JSON
+        run: bash ./tests/phase14_golden_json_smoke.sh
+
+      - name: Phase 12 native host provision (mock)
+        run: bash ./tests/phase12_native_host_provision_smoke.sh
+
+      - name: Phase 12 site publish auto-provision web
+        run: bash ./tests/phase12_site_publish_auto_provision_web_smoke.sh
+
+      - name: Phase 13 deploy apply
+        run: bash ./tests/phase13_deploy_apply_smoke.sh

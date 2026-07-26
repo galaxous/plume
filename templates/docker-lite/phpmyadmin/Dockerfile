@@ -1,0 +1,2 @@
+ARG PHPMYADMIN_VERSION=latest
+FROM phpmyadmin/phpmyadmin:${PHPMYADMIN_VERSION}

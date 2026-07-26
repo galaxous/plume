@@ -1,0 +1,65 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      initial_tag:
+        type: string
+        description: The initial tag name
+        default: v0.0.0
+      prerelease:
+        type: choice
+        description: Prerelease mode
+        options:
+          - 'false'
+          - 'alpha'
+          - 'beta'
+          - 'rc'
+      force_release:
+        type: boolean
+        description: Force release
+        default: false
+      tag:
+        type: string
+        description: The tag name
+        default: ''
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Smoke matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run release smoke chain
+        run: |
+          bash ./tests/phase10_e2e_matrix_smoke.sh
+          bash ./tests/phase14_golden_json_smoke.sh
+          bash ./tests/phase12_native_host_provision_smoke.sh
+          bash ./tests/phase13_deploy_apply_smoke.sh
+
+  release:
+    needs: test
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: oobook/autonomous-tag@v1
+        id: tag-generation
+        with:
+          gh_token: ${{ github.token }}
+          initial_tag: ${{ github.event.inputs.initial_tag }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          force_release: ${{ github.event.inputs.force_release }}
+          tag: ${{ github.event.inputs.tag }}
+
+      - name: Create Release
+        uses: oobook/autonomous-release@v1
+        id: release-generation
+        with:
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: "${{ steps.tag-generation.outputs.tag }}"
+          prerelease: true

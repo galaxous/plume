@@ -1,0 +1,17 @@
+---
+description: Plume AGENTS.md, docs, and smoke-test hermetic rules
+alwaysApply: true
+---
+
+# Plume smoke tests and agent obligations
+
+- Follow [AGENTS.md](../../AGENTS.md): every code change updates related docs in the same change; new commands need `docs/commands/`; phase-gate = tests + docs + decision log; check `docs/contracts/`.
+- Pre-PR default: `./tests/run_smoke_suite.sh --release` (same as `--ci`). Broader: `--phase11-full`, `--all`, `--all --linux`.
+- Hermetic smokes: temp `HOME`, `PLUME_STATE_DIR`, registry dirs; never assert against real `~/.config/plume/.env`.
+- Mock brew PATH: `MOCK_BIN:/usr/bin:/bin` (optionally `/usr/sbin:/sbin`) — **not** `MOCK_BIN:$PATH` (Homebrew wins; phase12 lesson).
+- Mock nginx/php shims; set `PLUME_NGINX_INCLUDE_DIR` to a temp dir for strict/include tests.
+- Isolated reload-validate: `PLUME_SITE_NGINX_STRICT=false` and `PLUME_SITE_NGINX_STRICT_ON_RELOAD=false`.
+- Phase6-style service tests: `PLUME_PHP_EXTENSIONS_AUTO_SYNC=false`.
+- Under `pipefail`, never `./plume.sh ... | grep -q`; capture with `OUT="$()"` then grep the variable.
+- macOS native: TCC on Desktop/Documents/Downloads; FDA for nginx/php-fpm binaries only (not plume.sh); see `docs/operations/macos-permissions.md`.
+- Full reference: `docs/operations/ai-assisted-development.md`.

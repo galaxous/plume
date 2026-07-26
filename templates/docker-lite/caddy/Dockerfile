@@ -1,0 +1,2 @@
+ARG CADDY_VERSION=2-alpine
+FROM caddy:${CADDY_VERSION}

@@ -1,0 +1,2 @@
+ARG POSTGRES_TAG=16-alpine
+FROM postgres:${POSTGRES_TAG}

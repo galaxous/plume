@@ -1,0 +1,2 @@
+ARG REDIS_TAG=7-alpine
+FROM redis:${REDIS_TAG}
