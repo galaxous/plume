@@ -68,6 +68,14 @@ plume_macos_permissions_maybe_prompt_site_path "test" "${desktop_path}" "native"
 }
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
+  warn_out="$(plume_macos_permissions_warn_site_path "${desktop_path}" "native" 2>&1 || true)"
+  echo "${warn_out}" | grep -q 'Sites/tunnelion' || {
+    echo "[FAIL] warn should suggest ~/Sites path: ${warn_out}" >&2
+    exit 1
+  }
+fi
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
   site_id="site-test-tcc"
   cat > "${SITES_DIR}/${site_id}.yml" <<EOF
 id: ${site_id}

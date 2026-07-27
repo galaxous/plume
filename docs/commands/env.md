@@ -24,7 +24,7 @@ Plume'in sistem seviyesindeki global env dosyasini yonetmek.
     - plume built-in: `templates/native-core.env.example`
     - calisma dizinindeki `.env.example`
   - preset kaynaklari:
-    - local: `templates/native-local.env.example` (`PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix`)
+    - local: `templates/native-local.env.example` (`PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=target`)
     - prod: `templates/native-prod.env.example` (`PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=target`)
   - `--from=...` ile ozel kaynak verilebilir.
   - `--force` ile mevcut global env overwrite edilir.

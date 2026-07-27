@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
-grep -q '^PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix$' templates/native-local.env.example || {
-  echo "[FAIL] local preset must set matrix auto-sync profile" >&2
+grep -q '^PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=target$' templates/native-local.env.example || {
+  echo "[FAIL] local preset must set target auto-sync profile (daily dev)" >&2
   exit 1
 }
 

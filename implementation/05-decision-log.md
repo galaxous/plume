@@ -2,6 +2,20 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-27 - D-110 - macOS Local Dev Ergonomics (Extension Sync + TCC Path Warnings)
+
+- Durum: accepted
+- Karar:
+  - Gunluk macOS gelistirme icin varsayilan oneri: `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=target` (`templates/native-local.env.example`, `.env.example` yorumlari, `docs/operations/local-dev-macos.md`).
+  - `matrix` profili coklu PHP surumu senkronu icin kalir; prod preset `target` ile hizali.
+  - `site add` / basarili `site update`: TCC-duyarli path icin her zaman `plume_warn` + `~/Sites/<basename>` ve `init permissions --interactive` ipucu (JSON: `warnings`).
+  - `site check --json`: `data.tcc_risk` boolean; TCC metni `warnings` ve text ciktida `tcc_risk` / `tcc_hint`.
+- Gerekce:
+  - Tam extension matrix sync gunluk `services up php` icin yavas/pecl hatali; Herd-benzeri akista tek hedef surum yeterli.
+  - Desktop/Documents/Downloads altindaki tunnelion gibi sitelerde TCC riski komut ciktisinda kaybolmamali.
+- Etki:
+  - `lib/common/macos_permissions.sh`, `lib/commands/site.sh`, `docs/operations/local-dev-macos.md`, `docs/contracts/cli-output-contract.md`, `tests/phase11_native_env_presets_smoke.sh`.
+
 ## 2026-07-27 - D-109 - Native Mailpit Host Provision (Homebrew) + Doctor Port-80 UX
 
 - Durum: accepted

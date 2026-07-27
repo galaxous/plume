@@ -183,6 +183,29 @@ plume_macos_permissions_interactive_menu() {
   esac
 }
 
+plume_macos_permissions_site_tcc_hint() {
+  local path="$1"
+  local label="" suggested=""
+  label="$(plume_macos_permissions_path_label "${path}")"
+  suggested="$(plume_macos_permissions_suggest_sites_path "${path}")"
+  printf 'macOS TCC (%s): nginx/php-fpm may not read project files — prefer %s; run: init permissions --interactive (docs/operations/local-dev-macos.md)' \
+    "${label}" "${suggested}"
+}
+
+plume_macos_permissions_warn_site_path() {
+  local path="$1"
+  local mode="${2:-native}"
+
+  [[ "$(plume_detect_os)" == "macos" ]] || return 0
+  if [[ -n "${mode}" && "${mode}" != "native" ]]; then
+    return 0
+  fi
+  if ! plume_sites_path_is_macos_tcc_sensitive "${path}"; then
+    return 0
+  fi
+  plume_warn "$(plume_macos_permissions_site_tcc_hint "${path}")"
+}
+
 plume_macos_permissions_maybe_prompt_site_path() {
   local context="$1"
   local path="$2"

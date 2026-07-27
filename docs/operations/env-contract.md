@@ -52,7 +52,7 @@ Not:
   - `PLUME_PHP_EXT_DISABLE_<VER>_<EXT>=true|false`
   - `PLUME_PHP_EXTENSIONS_STRICT=true|false`
   - `PLUME_PHP_EXTENSIONS_AUTO_SYNC=true|false`
-  - `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix|target|default`
+  - `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix|target|default` — gunluk macOS dev icin `target` onerilir (`docs/operations/local-dev-macos.md`)
   - `PLUME_PHP_EXT_INSTALL_DRIVER=brew|apt|mock|...`
 - Native per-version php-fpm upstream override:
   - `PLUME_NATIVE_PHP_FPM_UPSTREAM` (default php)

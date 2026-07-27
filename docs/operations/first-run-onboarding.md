@@ -47,7 +47,7 @@ Laravel kokunu `~/Desktop`, `~/Documents` veya `~/Downloads` altina koyarsaniz n
 ./plume.sh init permissions --interactive   # TTY menu
 ```
 
-Detay: [macos-permissions.md](./macos-permissions.md)
+Detay: [macos-permissions.md](./macos-permissions.md) — gunluk `.env` ve TCC yollari: [local-dev-macos.md](./local-dev-macos.md)
 
 Ciktida listelenen Homebrew **nginx** ve **php-fpm** binary'lerini Full Disk Access'e `+` ile ekleyin. Gerekirse `./plume.sh init permissions --open --reveal`.
 

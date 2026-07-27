@@ -572,6 +572,11 @@ cmd_site_add() {
   fi
 
   if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    local add_warnings="" add_tcc_hint=""
+    if plume_sites_path_is_macos_tcc_sensitive "${path}" && declare -F plume_macos_permissions_site_tcc_hint >/dev/null 2>&1; then
+      add_tcc_hint="$(plume_macos_permissions_site_tcc_hint "${path}")"
+      add_warnings="\"$(printf '%s' "${add_tcc_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
+    fi
     printf '{"ok":true,"command":"site add","data":{"id":"%s","path":"%s","server":"%s","php_version":"%s","https_port":"%s","cert_id":"%s","domains":[' \
       "${site_id}" "${path}" "${server}" "${php_version}" "${https_port}" "${cert_id}"
     local first="true"
@@ -583,9 +588,14 @@ cmd_site_add() {
       fi
       printf '"%s"' "${domain_item}"
     done
-    printf ']},"warnings":[],"errors":[]}\n'
+    if [[ -n "${add_warnings}" ]]; then
+      printf ']},"warnings":[%s],"errors":[]}\n' "${add_warnings}"
+    else
+      printf ']},"warnings":[],"errors":[]}\n'
+    fi
   else
     printf '%s\n' "${site_id}"
+    plume_macos_permissions_warn_site_path "${path}" "${resolved_mode}" || true
   fi
 }
 
@@ -807,6 +817,11 @@ cmd_site_update() {
   rm -f "${rollback_record}"
 
   if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    local update_warnings="" update_tcc_hint=""
+    if plume_sites_path_is_macos_tcc_sensitive "${path}" && declare -F plume_macos_permissions_site_tcc_hint >/dev/null 2>&1; then
+      update_tcc_hint="$(plume_macos_permissions_site_tcc_hint "${path}")"
+      update_warnings="\"$(printf '%s' "${update_tcc_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
+    fi
     printf '{"ok":true,"command":"site update","data":{"id":"%s","path":"%s","server":"%s","php_version":"%s","https_port":"%s","cert_id":"%s","domains":[' \
       "${site_id}" "${path}" "${server}" "${php_version}" "${https_port}" "${cert_id}"
     local first="true"
@@ -818,9 +833,14 @@ cmd_site_update() {
       fi
       printf '"%s"' "${domain_item}"
     done
-    printf ']},"warnings":[],"errors":[]}\n'
+    if [[ -n "${update_warnings}" ]]; then
+      printf ']},"warnings":[%s],"errors":[]}\n' "${update_warnings}"
+    else
+      printf ']},"warnings":[],"errors":[]}\n'
+    fi
   else
     printf '%s\n' "${site_id}"
+    plume_macos_permissions_warn_site_path "${path}" "${resolved_mode}" || true
   fi
 }
 
@@ -1043,8 +1063,15 @@ cmd_site_check() {
   if [[ -n "${access_hint}" ]]; then
     json_warnings="\"$(printf '%s' "${access_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
   fi
+  local tcc_risk="false"
   if plume_sites_path_is_macos_tcc_sensitive "${path}"; then
-    local tcc_hint="macOS TCC: Desktop/Documents path may block nginx/php-fpm (No input file specified). See site.md."
+    tcc_risk="true"
+    local tcc_hint=""
+    if declare -F plume_macos_permissions_site_tcc_hint >/dev/null 2>&1; then
+      tcc_hint="$(plume_macos_permissions_site_tcc_hint "${path}")"
+    else
+      tcc_hint="macOS TCC: Desktop/Documents/Downloads path may block nginx/php-fpm (No input file specified). See site.md."
+    fi
     if [[ -n "${json_warnings}" ]]; then
       json_warnings="${json_warnings},\"$(printf '%s' "${tcc_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')\""
     else
@@ -1080,8 +1107,8 @@ cmd_site_check() {
   fi
 
   if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
-    printf '{"ok":true,"command":"site check","data":{"id":"%s","mode":"%s","path":"%s","server":"%s","php_version":"%s","php_upstream":"%s","php_upstream_resolved":"%s","strict_enabled":%s,"strict_include_dir":"%s","strict_include_target":"%s","port":%s,"effective_http_port":%s,"https_port":%s,"url_http":"%s","url_https":"%s","access_hint":"%s","cert_id":"%s","status":"%s","document_root":"%s","server_config":"%s","domains":[' \
-      "${site_id}" "${mode}" "${path}" "${server}" "${php_version}" "${php_upstream}" "${resolved_upstream}" "${strict_enabled}" "${strict_include_dir}" "${strict_include_target}" "${port}" "${effective_http_port}" "${https_port}" "${url_http}" "${url_https}" "$(printf '%s' "${access_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')" "${cert_id}" "${status}" "${document_root}" "${server_config}"
+    printf '{"ok":true,"command":"site check","data":{"id":"%s","mode":"%s","path":"%s","server":"%s","php_version":"%s","php_upstream":"%s","php_upstream_resolved":"%s","strict_enabled":%s,"strict_include_dir":"%s","strict_include_target":"%s","port":%s,"effective_http_port":%s,"https_port":%s,"url_http":"%s","url_https":"%s","access_hint":"%s","tcc_risk":%s,"cert_id":"%s","status":"%s","document_root":"%s","server_config":"%s","domains":[' \
+      "${site_id}" "${mode}" "${path}" "${server}" "${php_version}" "${php_upstream}" "${resolved_upstream}" "${strict_enabled}" "${strict_include_dir}" "${strict_include_target}" "${port}" "${effective_http_port}" "${https_port}" "${url_http}" "${url_https}" "$(printf '%s' "${access_hint}" | sed 's/\\/\\\\/g; s/"/\\"/g')" "${tcc_risk}" "${cert_id}" "${status}" "${document_root}" "${server_config}"
     local first="true"
     local domain
     while IFS= read -r domain; do
@@ -1120,8 +1147,13 @@ cmd_site_check() {
   if [[ -n "${access_hint}" ]]; then
     printf '%s\n' "access_hint: ${access_hint}"
   fi
-  if plume_sites_path_is_macos_tcc_sensitive "${path}"; then
-    printf '%s\n' "tcc_hint: macOS Desktop/Documents — grant Full Disk Access to nginx/php-fpm or move project (site.md)"
+  if [[ "${tcc_risk}" == "true" ]]; then
+    printf '%s\n' "tcc_risk: true"
+    if declare -F plume_macos_permissions_site_tcc_hint >/dev/null 2>&1; then
+      printf '%s\n' "tcc_hint: $(plume_macos_permissions_site_tcc_hint "${path}")"
+    else
+      printf '%s\n' "tcc_hint: macOS Desktop/Documents/Downloads — grant Full Disk Access to nginx/php-fpm or move project (site.md)"
+    fi
   fi
   printf '%s\n' "cert_id: ${cert_id}"
   printf '%s\n' "status: ${status}"

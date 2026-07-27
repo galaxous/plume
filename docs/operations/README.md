@@ -17,6 +17,7 @@
 - `release-versioning-and-tags.md`: semver, release tag ve contract guardrail kurallari
 - `plume-adapter-onboarding.md`: plume-adapter icin komut, exit-code ve guard entegrasyon baslangici
 - `first-run-onboarding.md`: host profili, TCC, nginx port ve ilk kurulum sirasi
+- `local-dev-macos.md`: gunluk macOS gelistirme (.env onerileri, TCC yollari, site tasima)
 - `macos-permissions.md`: macOS TCC/FDA otomasyon sinirlari ve etkilesimli akis
 
 Gelecek dokumanlar:

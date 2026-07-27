@@ -25,8 +25,9 @@ JSON desteklenen komutlar (minimum):
 
 `site check --json` `data` alanlari (ek alanlar, geriye uyumlu):
 
-- `effective_http_port`, `url_http`, `url_https` (cert varsa), `access_hint`
+- `effective_http_port`, `url_http`, `url_https` (cert varsa), `access_hint`, `tcc_risk` (boolean; macOS Desktop/Documents/Downloads path)
 - `access_hint` doluysa ayni metin `warnings` dizisinde de yer alir
+- `tcc_risk` true ise TCC metni `warnings` dizisinde de yer alir
 
 - `status`
 - `health`

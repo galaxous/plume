@@ -147,7 +147,9 @@ Belirti:
 2. **Full Disk Access** — `./plume.sh init permissions --interactive` veya `--open --reveal`; System Settings → Privacy & Security → Full Disk Access: Homebrew **nginx** ve **php-fpm** binary’lerini ekleyin; servisleri yeniden başlatın
 3. **Teşhis** — `plumectl doctor web --mode=native` satırı `macos-site-tcc`; `plumectl doctor php` satırı `MACOS_TCC` (çıktı `init permissions --interactive` önerir)
 
-`site check --json` `warnings` içinde Desktop/Documents yolu için TCC ipucu eklenir (registry path TCC-duyarlıysa).
+`site add` ve başarılı `site update` sonrası aynı klasörler için **WARN** basılır (`~/Sites/<proje-adı>` önerisi). Ayrıntı: [local-dev-macos.md](../operations/local-dev-macos.md).
+
+`site check --json` `data.tcc_risk: true` ve `warnings` içinde TCC metni döner (registry path TCC-duyarlıysa).
 
 `site check --json` `data` içinde aynı alanları döner; `access_hint` doluysa `warnings` dizisine de eklenir.
 
