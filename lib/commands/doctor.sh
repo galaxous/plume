@@ -147,6 +147,11 @@ plume_doctor_web_port_detail() {
   fi
 }
 
+plume_doctor_web_homebrew_port80_hint() {
+  local effective_port="$1"
+  printf 'PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true plumectl services web sync-config --reload (or browse :%s); plumectl site check <site-id> for url_http' "${effective_port}"
+}
+
 plume_doctor_web_strict_include_checks() {
   local mode="$1"
   local driver="$2"
@@ -324,7 +329,7 @@ cmd_doctor_web() {
     plume_doctor_web_print_line "listener-80" "PASS" "false" "${detail}"
   else
     if [[ "${registry_port}" == "80" && "${effective_port}" != "80" ]]; then
-      plume_doctor_web_print_line "listener-80" "WARN" "false" "${detail} (expected on Homebrew nginx; use :${effective_port} in browser)"
+      plume_doctor_web_print_line "listener-80" "WARN" "false" "${detail}; $(plume_doctor_web_homebrew_port80_hint "${effective_port}")"
     else
       plume_doctor_web_print_line "listener-80" "WARN" "false" "${detail}"
     fi
@@ -360,7 +365,7 @@ cmd_doctor_web() {
   done < <(plume_sites_index_ids)
 
   if [[ "${sites_port80}" -gt 0 ]] && ! plume_service_port_in_use "80"; then
-    plume_doctor_web_print_line "sites-port80" "WARN" "false" "${sites_port80}/${sites_total} site(s) registry port 80 but nothing listens on 80 (open http://domain:${effective_port})"
+    plume_doctor_web_print_line "sites-port80" "WARN" "false" "${sites_port80}/${sites_total} site(s) registry port 80 but nothing listens on 80 — $(plume_doctor_web_homebrew_port80_hint "${effective_port}")"
   elif [[ "${sites_port80}" -gt 0 ]]; then
     plume_doctor_web_print_line "sites-port80" "PASS" "false" "${sites_port80}/${sites_total} site(s) on registry port 80; port 80 is listening"
   else

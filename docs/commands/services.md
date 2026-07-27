@@ -187,6 +187,7 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 - Phase 2 notu (guncel):
   - Varsayilan (`PLUME_NATIVE_HOST_PROVISION=false`): non-PHP servisler state/port orchestration kullanir.
   - `PLUME_NATIVE_HOST_PROVISION=true`: `nginx`, `apache2`, `mariadb`, `mysql`, `redis` icin gercek host kurulum/start/stop (brew/apt/dnf).
+  - Native **mailpit** (D-109): macOS Homebrew `brew install mailpit` + `brew services start mailpit`; `services up mailpit` global provision bayragi olmadan da brew yolunu dener. Linux native: WARN + exit 2; docker-lite veya manuel kurulum.
   - Native `php` icin `services install php --mode=native --version=<x.y>` gercek host binary kurulumunu dener:
     - macOS (brew): `php@x.y`
     - Linux (apt): `phpx.y-cli` + `phpx.y-fpm`
@@ -264,6 +265,24 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 - `services health/logs --mode=docker-lite` komutlari docker compose `ps/logs` uzerinden container durumuna baglanir.
 - `services exec --mode=docker-lite|laradock-bridge` mode/path bilgisiyle compose dosyasini bulup herhangi bir dizinden container shell'e girebilir.
 - `services install/up/workspace up` sonrasinda global mode/path context lock aktif olur; mode/path degisikligi icin `--force` gerekir.
+
+## Mailpit (native, D-109)
+
+macOS Homebrew ile gelistirme mail yakalama:
+
+```bash
+# Manifest
+# services.yml → mailpit: { enabled: true }
+./plume.sh services provision --from-manifest
+
+# veya dogrudan
+PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
+./plume.sh services up mailpit --mode=native
+```
+
+- UI varsayilan: `http://127.0.0.1:8025` (`PLUME_MAILPIT_PORT`).
+- Laravel `.env`: `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, `MAIL_PORT=1025` (Mailpit SMTP).
+- Linux native: otomatik kurulum yok; `./plume.sh services up mailpit` WARN + exit 2 — `--mode=docker-lite` veya [Mailpit](https://github.com/axllent/mailpit) manuel.
 
 ## Manifest alt komutlari (native)
 

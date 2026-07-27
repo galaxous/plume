@@ -36,7 +36,7 @@ services:
   rabbitmq: { enabled: false }
   mongodb: { enabled: false }
   mongo_webui: { enabled: false }
-  mailpit: { enabled: true }
+  mailpit: { enabled: true }   # native: macOS brew install/start; Linux → docker-lite or manual
   meilisearch: { enabled: false }
   minio: { enabled: false }
   supervisor: { enabled: false }

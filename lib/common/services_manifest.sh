@@ -526,6 +526,7 @@ plume_services_manifest_provision_services() {
   plume_services_manifest_provision_enabled_native mariadb "${auto_start}" || return 2
   plume_services_manifest_provision_enabled_native mysql "${auto_start}" || return 2
   plume_services_manifest_provision_enabled_native redis "true" || return 2
+  plume_services_manifest_provision_enabled_native mailpit "true" || return 2
 
   plume_services_manifest_provision_php_matrix || return 2
 

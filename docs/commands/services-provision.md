@@ -4,9 +4,9 @@
 
 Native modda `~/.config/plume/services.yml` manifest’ine göre host paketlerini kurmak ve (tanımlıysa) başlatmak.
 
-**Native otomatik kurulum:** web (nginx/apache2 driver), MariaDB/MySQL, Redis; manifest `php.versions` listesi için best-effort host PHP (brew/apt).
+**Native otomatik kurulum:** web (nginx/apache2 driver), MariaDB/MySQL, Redis, **mailpit (macOS Homebrew)**; manifest `php.versions` listesi için best-effort host PHP (brew/apt).
 
-**Yalnızca YAML/env toggle (native paket yok):** postgres, mailpit, memcached, rabbitmq, mongodb, phpmyadmin, horizon, vb. — `enabled: true` env’i yükler; kurulum için docker-lite, laradock-bridge veya manuel adımlar.
+**Yalnızca YAML/env toggle (native paket yok):** postgres, memcached, rabbitmq, mongodb, phpmyadmin, horizon, vb. — `enabled: true` env’i yükler; kurulum için docker-lite, laradock-bridge veya manuel adımlar. **mailpit** Linux native’de paket yok (docker-lite veya manuel).
 
 ## Kullanım
 
@@ -48,7 +48,7 @@ plumectl services provision --from-manifest
 
 - Manifest yok → `init host` ile bootstrap edin.
 - `database.engine: mysql` iken MariaDB formülü kurulmaz; `PLUME_MYSQL_ENABLED=true` olur.
-- `mailpit.enabled: true` native’de paket kurmaz; docker moduna geçin veya Mailpit’i elle kurun.
+- `mailpit.enabled: true` Linux native’de brew hook yok → uyarı; macOS’ta `brew install mailpit`. Alternatif: docker-lite veya manuel kurulum.
 - Kullanıcı interaktif prompt’ta iptal → exit 2.
 - Windows native tam stack desteklenmez (host profili limited note).
 

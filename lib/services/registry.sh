@@ -1480,6 +1480,10 @@ plume_service_install_native() {
     if ! plume_service_validate_version "${service}" "${normalized}"; then
       return 2
     fi
+    if [[ "${service}" == "mailpit" ]] && ! plume_native_host_provision_supported mailpit; then
+      plume_warn "native mailpit: Homebrew (macOS) only; use --mode=docker-lite or install Mailpit manually"
+      return 2
+    fi
   fi
   if [[ "${service}" == "php" ]]; then
     plume_native_php_install_host_version "${normalized}" || return 2
@@ -1512,6 +1516,10 @@ plume_service_start_native() {
     plume_native_php_extensions_autosync_on_up "${normalized}" || return 2
   else
     if ! plume_service_validate_version "${service}" "${normalized}"; then
+      return 2
+    fi
+    if [[ "${service}" == "mailpit" ]] && ! plume_native_host_provision_supported mailpit; then
+      plume_warn "native mailpit: Homebrew (macOS) only; use --mode=docker-lite or install Mailpit manually"
       return 2
     fi
   fi

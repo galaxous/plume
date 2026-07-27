@@ -5,10 +5,25 @@ plume_native_host_provision_enabled() {
   [[ "$(plume_bool "${PLUME_NATIVE_HOST_PROVISION:-false}")" == "true" ]]
 }
 
+# Mailpit host install/start also runs on `services up mailpit` without global provision flag (D-109).
+plume_native_host_provision_service_wants() {
+  local service="$1"
+  if plume_native_host_provision_enabled; then
+    return 0
+  fi
+  if [[ "${service}" == "mailpit" ]] && plume_native_host_provision_supported mailpit; then
+    return 0
+  fi
+  return 1
+}
+
 plume_native_host_provision_supported() {
   local service="$1"
   case "${service}" in
     web|nginx|apache2|mariadb|mysql|redis) return 0 ;;
+    mailpit)
+      [[ "$(plume_detect_package_manager)" == "brew" ]]
+      ;;
     *) return 1 ;;
   esac
 }
@@ -37,6 +52,7 @@ plume_native_host_brew_formula() {
     mariadb) echo "mariadb" ;;
     mysql) echo "mysql" ;;
     redis) echo "redis" ;;
+    mailpit) echo "mailpit" ;;
     *) return 1 ;;
   esac
 }
@@ -73,6 +89,7 @@ plume_native_host_brew_service_name() {
     mariadb) echo "mariadb" ;;
     mysql) echo "mysql" ;;
     redis) echo "redis" ;;
+    mailpit) echo "mailpit" ;;
     *) return 1 ;;
   esac
 }
@@ -185,7 +202,7 @@ plume_native_host_stop_service() {
 
 plume_native_host_provision_install() {
   local service="$1"
-  if ! plume_native_host_provision_enabled; then
+  if ! plume_native_host_provision_service_wants "${service}"; then
     return 0
   fi
   if ! plume_native_host_provision_supported "${service}"; then
@@ -201,7 +218,7 @@ plume_native_host_provision_install() {
 
 plume_native_host_provision_start() {
   local service="$1"
-  if ! plume_native_host_provision_enabled; then
+  if ! plume_native_host_provision_service_wants "${service}"; then
     return 0
   fi
   if ! plume_native_host_provision_supported "${service}"; then
@@ -216,7 +233,7 @@ plume_native_host_provision_start() {
 
 plume_native_host_provision_stop() {
   local service="$1"
-  if ! plume_native_host_provision_enabled; then
+  if ! plume_native_host_provision_service_wants "${service}"; then
     return 0
   fi
   if ! plume_native_host_provision_supported "${service}"; then

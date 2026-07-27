@@ -2,6 +2,20 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-27 - D-109 - Native Mailpit Host Provision (Homebrew) + Doctor Port-80 UX
+
+- Durum: accepted
+- Karar:
+  - `mailpit` native host provision: macOS Homebrew `brew install mailpit` + `brew services start mailpit` (`plume_native_host_provision_*`).
+  - `services up mailpit` / `install mailpit` mailpit icin global `PLUME_NATIVE_HOST_PROVISION` olmadan da brew yolunu calistirir (`plume_native_host_provision_service_wants`).
+  - Linux/apt: desteklenmez; `services up mailpit` ve manifest provision acik WARN + exit 2; docker-lite veya manuel kurulum.
+  - `services provision --from-manifest`: `mailpit.enabled: true` icin brew kurulum/start (macOS).
+  - `doctor web`: Homebrew 8080 + registry port 80 iken `listener-80` / `sites-port80` WARN satirlarina `services web sync-config --reload` + `site check` ipucu.
+- Gerekce:
+  - Herd parity: gelistirme mail yakalama native stack'te tek komutla acilabilmeli; portsuz URL / 8080 karisikliginda tek satirlik duzeltme yolu.
+- Etki:
+  - `lib/services/native_host_provision.sh`, `lib/common/services_manifest.sh`, `lib/services/registry.sh`, `lib/commands/doctor.sh`, `docs/commands/services.md`, `docs/commands/services-provision.md`, `docs/operations/services-manifest.md`, `docs/commands/services-web.md`, `tests/phase12_native_host_provision_mailpit_smoke.sh`, `implementation/phases/phase-15-scheduler-queue.md` (backlog stub).
+
 ## 2026-07-27 - D-108 - Manifest `provision.on_first_run` (One-Shot Host Bootstrap)
 
 - Durum: accepted

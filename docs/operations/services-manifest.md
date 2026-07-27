@@ -76,8 +76,9 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 |--------|-------------------|--------------------------------------|
 | web (nginx/apache2) | Evet | Kurulum + start |
 | mariadb, mysql, redis | Evet | Kurulum + start (`database.auto_start` DB için) |
+| mailpit | Evet (env) | macOS Homebrew: kurulum + start; Linux: uyarı (docker-lite / manuel) |
 | php (`versions[]`) | Evet | Best-effort brew/apt PHP kurulumu + matrix kaydı |
-| postgres, mailpit, memcached, … | Evet (env) | **Yok** — uyarı; docker-lite / laradock-bridge veya manuel |
+| postgres, memcached, … | Evet (env) | **Yok** — uyarı; docker-lite / laradock-bridge veya manuel |
 | phpmyadmin, composer, horizon, … | Evet (env) | **Yok** — genelde container / workspace |
 
 Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yorum olarak dokümante edilir; native loader bu satırları okumaz.

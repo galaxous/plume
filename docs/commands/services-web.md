@@ -78,5 +78,5 @@ PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080
 
 ## Ilgili komutlar
 
-- `doctor web`: `listener-80` vs `listener-effective` teshisi
+- `doctor web`: `listener-80` vs `listener-effective` teshisi; registry port 80 + Homebrew 8080 iken WARN satirinda `services web sync-config --reload` ve `site check` ipuclari (D-109)
 - `site check`: `effective_http_port`, `url_http`, `access_hint`

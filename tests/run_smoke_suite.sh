@@ -115,6 +115,7 @@ run_ci_release_suite() {
   run_step "phase10-e2e-matrix" "phase10_e2e_matrix_smoke.sh"
   run_step "phase14-golden-json" "phase14_golden_json_smoke.sh"
   run_step "phase12-native-host-provision" "phase12_native_host_provision_smoke.sh"
+  run_step "phase12-native-host-provision-mailpit" "phase12_native_host_provision_mailpit_smoke.sh"
   run_step "phase12-site-publish-auto-provision-web" "phase12_site_publish_auto_provision_web_smoke.sh"
   run_step "phase13-deploy-apply" "phase13_deploy_apply_smoke.sh"
 }

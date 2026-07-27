@@ -20,6 +20,9 @@ jobs:
       - name: Phase 12 native host provision (mock)
         run: bash ./tests/phase12_native_host_provision_smoke.sh
 
+      - name: Phase 12 native host provision mailpit (mock)
+        run: bash ./tests/phase12_native_host_provision_mailpit_smoke.sh
+
       - name: Phase 12 site publish auto-provision web
         run: bash ./tests/phase12_site_publish_auto_provision_web_smoke.sh
 
