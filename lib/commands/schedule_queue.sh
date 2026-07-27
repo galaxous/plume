@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+plume_laravel_schedule_cron_marker() {
+  printf '%s' '# plume-laravel-schedule-cron'
+}
+
+plume_laravel_parse_path_from_args() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --path=*) printf '%s' "${arg#*=}"; return 0 ;;
+    esac
+  done
+  printf '%s' ""
+}
+
+plume_laravel_to_abs_path() {
+  local value="$1"
+  if [[ -z "${value}" ]]; then
+    return 1
+  fi
+  if [[ "${value:0:1}" == "~" ]]; then
+    value="${HOME}${value#\~}"
+  fi
+  if [[ "${value}" != /* ]]; then
+    value="$(cd "${value}" 2>/dev/null && pwd || true)"
+  fi
+  [[ -n "${value}" && -d "${value}" ]] || return 1
+  printf '%s' "${value}"
+}
+
+plume_laravel_resolve_project_context() {
+  local explicit_raw="${1:-}"
+  local explicit="" cwd id file path mode active_path
+
+  PLUME_LARAVEL_PROJECT_PATH=""
+  PLUME_LARAVEL_PROJECT_SOURCE=""
+  PLUME_LARAVEL_SITE_ID=""
+
+  if [[ -n "${explicit_raw}" ]]; then
+    if ! explicit="$(plume_laravel_to_abs_path "${explicit_raw}")"; then
+      plume_err "invalid --path: ${explicit_raw}"
+      return 2
+    fi
+    PLUME_LARAVEL_PROJECT_PATH="${explicit}"
+    PLUME_LARAVEL_PROJECT_SOURCE="flag:--path"
+    return 0
+  fi
+
+  cwd="$(pwd -P 2>/dev/null || pwd)"
+
+  while IFS= read -r id; do
+    [[ -z "${id}" ]] && continue
+    file="$(plume_sites_file "${id}")"
+    [[ -f "${file}" ]] || continue
+    path="$(plume_sites_record_value "${file}" path)"
+    [[ -n "${path}" ]] || continue
+    if [[ "${cwd}" == "${path}" || "${cwd}" == "${path}/"* ]]; then
+      PLUME_LARAVEL_PROJECT_PATH="${path}"
+      PLUME_LARAVEL_SITE_ID="${id}"
+      PLUME_LARAVEL_PROJECT_SOURCE="site:${id}"
+      return 0
+    fi
+  done < <(plume_sites_index_ids)
+
+  if [[ -f "${cwd}/artisan" ]]; then
+    PLUME_LARAVEL_PROJECT_PATH="${cwd}"
+    PLUME_LARAVEL_PROJECT_SOURCE="cwd"
+    return 0
+  fi
+
+  mode="$(plume_mode_current)"
+  active_path="$(plume_mode_path_get "${mode}" || true)"
+  if [[ -n "${active_path}" && -f "${active_path}/artisan" ]]; then
+    if active_path="$(plume_laravel_to_abs_path "${active_path}" 2>/dev/null || true)"; then
+      PLUME_LARAVEL_PROJECT_PATH="${active_path}"
+      PLUME_LARAVEL_PROJECT_SOURCE="mode_path:${mode}"
+      return 0
+    fi
+  fi
+
+  plume_err "could not resolve Laravel project path (use --path=, register site, or run from project root)"
+  return 2
+}
+
+plume_laravel_artisan_state() {
+  local project_path="$1"
+  if [[ -f "${project_path}/artisan" ]]; then
+    printf '%s' "present"
+  else
+    printf '%s' "missing"
+  fi
+}
+
+plume_laravel_read_env_kv() {
+  local env_file="$1"
+  local key="$2"
+  local line
+  [[ -f "${env_file}" ]] || return 1
+  line="$(grep -E "^${key}=" "${env_file}" 2>/dev/null | tail -n 1 || true)"
+  [[ -n "${line}" ]] || return 1
+  printf '%s' "${line#*=}" | sed -e 's/^["'\'' ]*//' -e 's/["'\'' ]*$//'
+}
+
+plume_laravel_schedule_cron_state() {
+  local project_path="$1"
+  local marker hit path_hit generic
+  marker="$(plume_laravel_schedule_cron_marker)"
+
+  if ! command -v crontab >/dev/null 2>&1; then
+    printf '%s' "unknown"
+    return 0
+  fi
+
+  hit="$(crontab -l 2>/dev/null | grep -F "${marker}" || true)"
+  if [[ -n "${hit}" ]]; then
+    printf '%s' "configured"
+    return 0
+  fi
+
+  path_hit="$(crontab -l 2>/dev/null | grep -F "schedule:run" | grep -F "${project_path}" || true)"
+  if [[ -n "${path_hit}" ]]; then
+    printf '%s' "configured"
+    return 0
+  fi
+
+  generic="$(crontab -l 2>/dev/null | grep -F 'schedule:run' || true)"
+  if [[ -n "${generic}" ]]; then
+    printf '%s' "maybe"
+    return 0
+  fi
+
+  printf '%s' "not-configured"
+}
+
+plume_laravel_schedule_cron_hint() {
+  local project_path="$1"
+  printf '* * * * * cd %s && php artisan schedule:run >> /dev/null 2>&1 %s' "${project_path}" "$(plume_laravel_schedule_cron_marker)"
+}
+
+plume_laravel_queue_service_summary() {
+  local service="$1"
+  local mode="$2"
+  if ! plume_service_exists "${service}" "${mode}"; then
+    printf '%s\t%s\t%s\t%s\n' "${service}" "n/a" "n/a" "unsupported"
+    return 0
+  fi
+  local status_line _svc enabled running health _port _version
+  status_line="$(plume_services_display_status_line "${service}" "${mode}")"
+  IFS=$'\t' read -r _svc enabled running health _port _version <<< "${status_line}"
+  printf '%s\t%s\t%s\t%s\n' "${service}" "${enabled}" "${running}" "${health}"
+}
+
+plume_laravel_queue_hints() {
+  local mode="$1"
+  local horizon_enabled="$2"
+  local supervisor_enabled="$3"
+  local horizon_running="$4"
+  local supervisor_running="$5"
+
+  if [[ "${mode}" == "native" ]]; then
+    if [[ "${horizon_enabled}" == "true" && "${horizon_running}" != "true" ]]; then
+      plume_info "start Horizon: ./plume.sh services up horizon --mode=native"
+    elif [[ "${horizon_enabled}" != "true" && "${supervisor_enabled}" == "true" && "${supervisor_running}" != "true" ]]; then
+      plume_info "native supervisor is enabled but not running; full install is backlog — try: ./plume.sh services up supervisor --mode=native"
+    elif [[ "${horizon_enabled}" != "true" && "${supervisor_enabled}" != "true" ]]; then
+      plume_info "enable queue workers: set PLUME_HORIZON_ENABLED=true (and PLUME_SUPERVISOR_ENABLED=true) then ./plume.sh services up horizon --mode=native"
+    fi
+    return 0
+  fi
+
+  if [[ "${mode}" == "docker-lite" ]]; then
+    plume_info "docker-lite: use ./plume.sh services status laravel-horizon --mode=docker-lite and services up laravel-horizon when enabled"
+    return 0
+  fi
+
+  if [[ "${mode}" == "laradock-bridge" ]]; then
+    plume_info "laradock-bridge: use ./plume.sh services status laravel-horizon --mode=laradock-bridge"
+  fi
+}
+
+cmd_schedule_status() {
+  local mode explicit_raw project_path artisan cron_state cron_hint
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if ! plume_laravel_resolve_project_context "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  artisan="$(plume_laravel_artisan_state "${project_path}")"
+  cron_state="$(plume_laravel_schedule_cron_state "${project_path}")"
+  cron_hint="$(plume_laravel_schedule_cron_hint "${project_path}")"
+
+  if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    printf '{"ok":true,"command":"schedule status","data":{"mode":"%s","project_path":"%s","project_source":"%s","site_id":"%s","artisan":"%s","scheduler_cron":"%s","cron_hint":"%s","docs":"docs/commands/schedule.md"}}\n' \
+      "${mode}" \
+      "${project_path}" \
+      "${PLUME_LARAVEL_PROJECT_SOURCE}" \
+      "${PLUME_LARAVEL_SITE_ID:-}" \
+      "${artisan}" \
+      "${cron_state}" \
+      "${cron_hint}"
+    return 0
+  fi
+
+  printf '%-18s %s\n' "MODE" "${mode}"
+  printf '%-18s %s\n' "PROJECT_PATH" "${project_path}"
+  printf '%-18s %s\n' "PROJECT_SOURCE" "${PLUME_LARAVEL_PROJECT_SOURCE}"
+  [[ -n "${PLUME_LARAVEL_SITE_ID:-}" ]] && printf '%-18s %s\n' "SITE_ID" "${PLUME_LARAVEL_SITE_ID}"
+  printf '%-18s %s\n' "ARTISAN" "${artisan}"
+  printf '%-18s %s\n' "SCHEDULER_CRON" "${cron_state}"
+  printf '%-18s %s\n' "CRON_HINT" "${cron_hint}"
+  if [[ "${cron_state}" == "not-configured" ]]; then
+    plume_info "install a user crontab line from CRON_HINT (every minute); plume does not install scheduler cron in MVP"
+  fi
+  if [[ "${artisan}" == "missing" ]]; then
+    plume_warn "no artisan file under PROJECT_PATH; schedule:run requires a Laravel app root"
+  fi
+}
+
+cmd_queue_status() {
+  local mode explicit_raw project_path queue_conn env_file
+  local horizon_enabled supervisor_enabled php_worker_enabled
+  local h_en h_run h_health s_en s_run s_health w_en w_run w_health
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if ! plume_laravel_resolve_project_context "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  env_file="${project_path}/.env"
+  queue_conn="$(plume_laravel_read_env_kv "${env_file}" "QUEUE_CONNECTION" 2>/dev/null || true)"
+  [[ -n "${queue_conn}" ]] || queue_conn="$(plume_laravel_read_env_kv "${env_file}" "QUEUE_DRIVER" 2>/dev/null || true)"
+  [[ -n "${queue_conn}" ]] || queue_conn="-"
+
+  horizon_enabled="$(plume_service_enabled_for_mode horizon "${mode}")"
+  supervisor_enabled="$(plume_service_enabled_for_mode supervisor "${mode}")"
+  php_worker_enabled="$(plume_service_enabled_for_mode php_worker "${mode}")"
+
+  IFS=$'\t' read -r _ h_en h_run h_health <<< "$(plume_laravel_queue_service_summary horizon "${mode}")"
+  IFS=$'\t' read -r _ s_en s_run s_health <<< "$(plume_laravel_queue_service_summary supervisor "${mode}")"
+  IFS=$'\t' read -r _ w_en w_run w_health <<< "$(plume_laravel_queue_service_summary php_worker "${mode}")"
+
+  if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    printf '{"ok":true,"command":"queue status","data":{"mode":"%s","project_path":"%s","project_source":"%s","site_id":"%s","queue_connection":"%s","horizon":{"env_enabled":%s,"enabled":"%s","running":"%s","health":"%s"},"supervisor":{"env_enabled":%s,"enabled":"%s","running":"%s","health":"%s"},"php_worker":{"env_enabled":%s,"enabled":"%s","running":"%s","health":"%s"},"docs":"docs/commands/queue.md"}}\n' \
+      "${mode}" \
+      "${project_path}" \
+      "${PLUME_LARAVEL_PROJECT_SOURCE}" \
+      "${PLUME_LARAVEL_SITE_ID:-}" \
+      "${queue_conn}" \
+      "${horizon_enabled}" "${h_en}" "${h_run}" "${h_health}" \
+      "${supervisor_enabled}" "${s_en}" "${s_run}" "${s_health}" \
+      "${php_worker_enabled}" "${w_en}" "${w_run}" "${w_health}"
+    return 0
+  fi
+
+  printf '%-18s %s\n' "MODE" "${mode}"
+  printf '%-18s %s\n' "PROJECT_PATH" "${project_path}"
+  printf '%-18s %s\n' "PROJECT_SOURCE" "${PLUME_LARAVEL_PROJECT_SOURCE}"
+  [[ -n "${PLUME_LARAVEL_SITE_ID:-}" ]] && printf '%-18s %s\n' "SITE_ID" "${PLUME_LARAVEL_SITE_ID}"
+  printf '%-18s %s\n' "QUEUE_CONNECTION" "${queue_conn}"
+  printf '%-18s env=%s enabled=%s running=%s health=%s\n' "HORIZON" "${horizon_enabled}" "${h_en}" "${h_run}" "${h_health}"
+  printf '%-18s env=%s enabled=%s running=%s health=%s\n' "SUPERVISOR" "${supervisor_enabled}" "${s_en}" "${s_run}" "${s_health}"
+  printf '%-18s env=%s enabled=%s running=%s health=%s\n' "PHP_WORKER" "${php_worker_enabled}" "${w_en}" "${w_run}" "${w_health}"
+  plume_laravel_queue_hints "${mode}" "${horizon_enabled}" "${supervisor_enabled}" "${h_run}" "${s_run}"
+}
+
+cmd_schedule() {
+  local sub="${1:-status}"
+  shift || true
+  case "${sub}" in
+    status) cmd_schedule_status "$@" ;;
+    *)
+      plume_err "unknown schedule subcommand: ${sub} (use status)"
+      return 2
+      ;;
+  esac
+}
+
+cmd_queue() {
+  local sub="${1:-status}"
+  shift || true
+  case "${sub}" in
+    status) cmd_queue_status "$@" ;;
+    *)
+      plume_err "unknown queue subcommand: ${sub} (use status)"
+      return 2
+      ;;
+  esac
+}

@@ -118,6 +118,7 @@ run_ci_release_suite() {
   run_step "phase12-native-host-provision-mailpit" "phase12_native_host_provision_mailpit_smoke.sh"
   run_step "phase12-site-publish-auto-provision-web" "phase12_site_publish_auto_provision_web_smoke.sh"
   run_step "phase13-deploy-apply" "phase13_deploy_apply_smoke.sh"
+  run_step "phase15-scheduler-queue" "phase15_scheduler_queue_smoke.sh"
 }
 
 run_phase11_full_suite() {

@@ -65,6 +65,8 @@ source "${ROOT_DIR}/lib/commands/backup.sh"
 source "${ROOT_DIR}/lib/commands/doctor.sh"
 # shellcheck source=commands/security.sh
 source "${ROOT_DIR}/lib/commands/security.sh"
+# shellcheck source=commands/schedule_queue.sh
+source "${ROOT_DIR}/lib/commands/schedule_queue.sh"
 
 main() {
   plume_parse_global_flags "$@"
@@ -128,6 +130,8 @@ main() {
     backup) cmd_backup "$@" ;;
     doctor) cmd_doctor "$@" ;;
     security) cmd_security "$@" ;;
+    schedule) cmd_schedule "$@" ;;
+    queue) cmd_queue "$@" ;;
     *)
       plume_err "Unknown command: ${cmd}"
       cmd_help

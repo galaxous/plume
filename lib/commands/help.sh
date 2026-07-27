@@ -46,6 +46,10 @@ COMMANDS:
   services workspace <op>    Docker-lite workspace (op: init|reinit|apply|up|refresh|rebuild|down|status, use --path=)
   sync state                 Reconcile live runtime state into files + SQLite
   sync cron <op>             Install/remove/status hourly sync cron (op: install|remove|status|run)
+  schedule status [--mode=...] [--path=...]
+                             Laravel scheduler hint + user crontab detection (MVP)
+  queue status [--mode=...] [--path=...]
+                             Queue/Horizon/supervisor status from env + services runtime
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
                              Install/start web + DB + redis per ~/.config/plume/services.yml

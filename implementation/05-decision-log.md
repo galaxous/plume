@@ -2,6 +2,20 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-27 - D-111 - Phase 15 Scheduler/Queue Status MVP
+
+- Durum: accepted
+- Karar:
+  - Ayri ust duzey komutlar: `plume schedule status`, `plume queue status` (`lib/commands/schedule_queue.sh`); `ops` namespace yok (mevcut `sync`/`status` router deseni).
+  - Proje yolu cozumleme sirasi: `--path=` → kayitli site (CWD prefix) → CWD'de `artisan` → aktif mod workspace + `artisan`.
+  - Scheduler MVP: kullanici crontab taramasi (`schedule:run`, istege bagli `# plume-laravel-schedule-cron` marker); otomatik cron install yok; `CRON_HINT` her zaman `* * * * * cd ... && php artisan schedule:run`.
+  - Queue MVP: `.env` `QUEUE_CONNECTION`/`QUEUE_DRIVER`; `PLUME_HORIZON_ENABLED` / supervisor / php_worker env + `plume_services_display_status_line`; native'de tam supervisor kurulumu yok — durum + `./plume.sh services up horizon` ipucu.
+  - Release smoke: `tests/phase15_scheduler_queue_smoke.sh` (`run_smoke_suite.sh --release`).
+- Gerekce:
+  - Phase 15 ilk dilim: operasyonel gorunurluk ve Herd-benzeri yonlendirme; worker install/compose genisletmesi sonraki checklist maddelerinde.
+- Etki:
+  - `lib/bootstrap.sh`, `lib/commands/help.sh`, `docs/commands/schedule.md`, `docs/commands/queue.md`, `docs/commands/README.md`, `implementation/phases/phase-15-scheduler-queue.md`, `tests/phase15_scheduler_queue_smoke.sh`, `tests/run_smoke_suite.sh`.
+
 ## 2026-07-27 - D-110 - macOS Local Dev Ergonomics (Extension Sync + TCC Path Warnings)
 
 - Durum: accepted

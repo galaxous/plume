@@ -21,6 +21,8 @@ Komutlar tek tek dosyalanir. Her dosya su basliklari icermelidir:
 - `php.md`
 - `prereq.md`
 - `project.md`
+- `queue.md`
+- `schedule.md`
 - `security.md`
 - `site.md`
 - `services.md`
