@@ -2,6 +2,20 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-28 - D-112 - Phase 15 Schedule List / Run-Once / Queue Failed List
+
+- Durum: accepted
+- Karar:
+  - `plume schedule list` ve `plume schedule run-once`: proje cozumleme D-111 ile ayni; `php artisan schedule:list` / `schedule:run --no-interaction`; site PHP surumu veya `PLUME_PHP_BIN`; plume crontab install yok.
+  - `run-once --dry-run`: yalnizca planlanan shell satirini yazar; basarili `run-once` sonrasi crontab `not-configured` ise `CRON_HINT` INFO.
+  - `plume queue list`: `php artisan queue:failed`; Horizon env aciksa `horizon:status` / `services status horizon` dokuman + INFO (ayri Artisan cagrisi yok).
+  - Exit: plume hatalari `2`; Artisan basarisizligi `1` (passthrough).
+  - Smoke: mock `php` + genisletilmis `phase15_scheduler_queue_smoke.sh`.
+- Gerekce:
+  - Phase 15 ikinci dilim: Artisan sarmalayicilari ve operasyonel test; tam cron install sonraki checklist maddesinde.
+- Etki:
+  - `lib/commands/schedule_queue.sh`, `lib/commands/help.sh`, `docs/commands/schedule.md`, `docs/commands/queue.md`, `implementation/phases/phase-15-scheduler-queue.md`, `implementation/05-decision-log.md`, `tests/phase15_scheduler_queue_smoke.sh`.
+
 ## 2026-07-27 - D-111 - Phase 15 Scheduler/Queue Status MVP
 
 - Durum: accepted

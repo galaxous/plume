@@ -48,8 +48,13 @@ COMMANDS:
   sync cron <op>             Install/remove/status hourly sync cron (op: install|remove|status|run)
   schedule status [--mode=...] [--path=...]
                              Laravel scheduler hint + user crontab detection (MVP)
+  schedule list [--path=...] Run php artisan schedule:list in project dir
+  schedule run-once [--path=...] [--dry-run]
+                             Run php artisan schedule:run once (--no-interaction)
   queue status [--mode=...] [--path=...]
                              Queue/Horizon/supervisor status from env + services runtime
+  queue list [--mode=...] [--path=...]
+                             Run php artisan queue:failed (Horizon: see queue.md)
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
                              Install/start web + DB + redis per ~/.config/plume/services.yml

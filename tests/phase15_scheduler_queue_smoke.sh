@@ -9,7 +9,9 @@ HOME_DIR="${TMP_ROOT}/home"
 STATE_DIR="${TMP_ROOT}/state"
 REG_DIR="${TMP_ROOT}/registry"
 PROJECT_DIR="${TMP_ROOT}/project"
-mkdir -p "${HOME_DIR}" "${STATE_DIR}" "${REG_DIR}" "${PROJECT_DIR}/public"
+BIN_DIR="${TMP_ROOT}/bin"
+CMD_LOG="${TMP_ROOT}/php-artisan.log"
+mkdir -p "${HOME_DIR}" "${STATE_DIR}" "${REG_DIR}" "${PROJECT_DIR}/public" "${BIN_DIR}"
 
 cleanup() {
   if [[ -n "${SITE_ID:-}" ]]; then
@@ -19,11 +21,42 @@ cleanup() {
 }
 trap cleanup EXIT
 
+cat > "${BIN_DIR}/php" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'php %s\n' "$*" >> "${PLUME_TEST_PHP_LOG}"
+if [[ "${1:-}" == "artisan" ]]; then
+  shift
+  case "${1:-}" in
+    schedule:list)
+      printf 'stub schedule:list\n'
+      exit 0
+      ;;
+    schedule:run)
+      printf 'stub schedule:run\n'
+      exit 0
+      ;;
+    queue:failed)
+      printf 'stub queue:failed\n'
+      exit 0
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+fi
+exit 0
+EOF
+chmod +x "${BIN_DIR}/php"
+
 BASE_ENV=(
   "HOME=${HOME_DIR}"
   "PLUME_STATE_DIR=${STATE_DIR}"
   "PLUME_SITE_REGISTRY_DIR=${REG_DIR}"
   "PLUME_SKIP_ON_FIRST_RUN_PROVISION=true"
+  "PATH=${BIN_DIR}:/usr/bin:/bin"
+  "PLUME_PHP_BIN=${BIN_DIR}/php"
+  "PLUME_TEST_PHP_LOG=${CMD_LOG}"
 )
 
 printf '#!/usr/bin/env php\n<?php\n' > "${PROJECT_DIR}/artisan"
@@ -50,6 +83,36 @@ echo "${sched_out}" | grep -q 'ARTISAN.*present' || {
   exit 1
 }
 
+list_out="$(env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule list --path="${PROJECT_DIR}")"
+echo "${list_out}" | grep -q 'stub schedule:list' || {
+  echo "[FAIL] schedule list should run artisan schedule:list" >&2
+  printf '%s\n' "${list_out}" >&2
+  exit 1
+}
+grep -Fq 'php artisan schedule:list' "${CMD_LOG}" || {
+  echo "[FAIL] schedule list should invoke php artisan schedule:list" >&2
+  cat "${CMD_LOG}" >&2
+  exit 1
+}
+
+dry_out="$(env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule run-once --path="${PROJECT_DIR}" --dry-run 2>&1)"
+echo "${dry_out}" | grep -qF "schedule:run --no-interaction" || {
+  echo "[FAIL] schedule run-once --dry-run missing planned command" >&2
+  printf '%s\n' "${dry_out}" >&2
+  exit 1
+}
+grep -Fq 'php artisan schedule:run' "${CMD_LOG}" && {
+  echo "[FAIL] dry-run should not execute artisan" >&2
+  exit 1
+} || true
+
+run_out="$(env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule run-once --path="${PROJECT_DIR}" 2>&1)"
+echo "${run_out}" | grep -q 'stub schedule:run' || {
+  echo "[FAIL] schedule run-once should run artisan" >&2
+  printf '%s\n' "${run_out}" >&2
+  exit 1
+}
+
 queue_out="$(env "${BASE_ENV[@]}" PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true "${ROOT_DIR}/plume.sh" queue status --mode=native --path="${PROJECT_DIR}")"
 echo "${queue_out}" | grep -q 'HORIZON.*env=true' || {
   echo "[FAIL] queue status should show horizon env enabled" >&2
@@ -58,6 +121,17 @@ echo "${queue_out}" | grep -q 'HORIZON.*env=true' || {
 }
 echo "${queue_out}" | grep -q 'services up horizon' || {
   echo "[FAIL] queue status should hint services up horizon" >&2
+  exit 1
+}
+
+queue_list_out="$(env "${BASE_ENV[@]}" PLUME_HORIZON_ENABLED=true "${ROOT_DIR}/plume.sh" queue list --mode=native --path="${PROJECT_DIR}" 2>&1)"
+echo "${queue_list_out}" | grep -q 'stub queue:failed' || {
+  echo "[FAIL] queue list should run queue:failed" >&2
+  printf '%s\n' "${queue_list_out}" >&2
+  exit 1
+}
+echo "${queue_list_out}" | grep -q 'horizon:status' || {
+  echo "[FAIL] queue list should hint horizon:status when horizon enabled" >&2
   exit 1
 }
 

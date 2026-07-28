@@ -15,6 +15,73 @@ plume_laravel_parse_path_from_args() {
   printf '%s' ""
 }
 
+plume_laravel_arg_has_dry_run() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --dry-run) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+plume_laravel_resolve_php_bin() {
+  local site_id="${PLUME_LARAVEL_SITE_ID:-}"
+  local file version php_bin
+
+  if [[ -n "${PLUME_PHP_BIN:-}" ]]; then
+    printf '%s' "${PLUME_PHP_BIN}"
+    return 0
+  fi
+
+  version=""
+  if [[ -n "${site_id}" ]]; then
+    file="$(plume_sites_file "${site_id}")"
+    if [[ -f "${file}" ]]; then
+      version="$(plume_sites_record_php_version "${file}" 2>/dev/null || true)"
+    fi
+  fi
+
+  if [[ -z "${version}" || "${version}" == "default" ]]; then
+    version="${PLUME_PHP_DEFAULT_VERSION:-${PLUME_PHP_VERSION:-8.3}}"
+  fi
+
+  if php_bin="$(plume_php_find_cli_bin "${version}" 2>/dev/null || true)" && [[ -n "${php_bin}" ]]; then
+    printf '%s' "${php_bin}"
+    return 0
+  fi
+
+  if command -v php >/dev/null 2>&1; then
+    printf '%s' "php"
+    return 0
+  fi
+
+  return 1
+}
+
+plume_laravel_require_artisan() {
+  local project_path="$1"
+  if [[ ! -f "${project_path}/artisan" ]]; then
+    plume_err "no artisan file under ${project_path}"
+    return 2
+  fi
+  return 0
+}
+
+plume_laravel_artisan_command_line() {
+  local project_path="$1"
+  local php_bin="$2"
+  shift 2
+  printf 'cd %s && %s artisan %s' "${project_path}" "${php_bin}" "$*"
+}
+
+plume_laravel_run_artisan() {
+  local project_path="$1"
+  local php_bin="$2"
+  shift 2
+  plume_project_run_in_path "${project_path}" "${php_bin}" artisan "$@"
+}
+
 plume_laravel_to_abs_path() {
   local value="$1"
   if [[ -z "${value}" ]]; then
@@ -270,13 +337,112 @@ cmd_queue_status() {
   plume_laravel_queue_hints "${mode}" "${horizon_enabled}" "${supervisor_enabled}" "${h_run}" "${s_run}"
 }
 
+plume_laravel_prepare_artisan_run() {
+  local explicit_raw="$1"
+  local project_path php_bin
+
+  if ! plume_laravel_resolve_project_context "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  if ! plume_laravel_require_artisan "${project_path}"; then
+    return 2
+  fi
+  if ! php_bin="$(plume_laravel_resolve_php_bin)"; then
+    plume_err "php CLI not found (set PLUME_PHP_BIN or install PHP for site version)"
+    return 2
+  fi
+  PLUME_LARAVEL_ARTISAN_PHP_BIN="${php_bin}"
+  return 0
+}
+
+cmd_schedule_list() {
+  local explicit_raw project_path php_bin rc
+
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if ! plume_laravel_prepare_artisan_run "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  php_bin="${PLUME_LARAVEL_ARTISAN_PHP_BIN}"
+
+  set +e
+  plume_laravel_run_artisan "${project_path}" "${php_bin}" schedule:list
+  rc=$?
+  set -e
+  return "${rc}"
+}
+
+cmd_schedule_run_once() {
+  local explicit_raw project_path php_bin cron_state cron_hint dry_run cmd_line rc
+
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if plume_laravel_arg_has_dry_run "$@"; then
+    dry_run="true"
+  else
+    dry_run="false"
+  fi
+
+  if ! plume_laravel_prepare_artisan_run "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  php_bin="${PLUME_LARAVEL_ARTISAN_PHP_BIN}"
+  cmd_line="$(plume_laravel_artisan_command_line "${project_path}" "${php_bin}" schedule:run --no-interaction)"
+
+  if [[ "${dry_run}" == "true" ]]; then
+    plume_info "[DRY-RUN] ${cmd_line}"
+    return 0
+  fi
+
+  set +e
+  plume_laravel_run_artisan "${project_path}" "${php_bin}" schedule:run --no-interaction
+  rc=$?
+  set -e
+
+  cron_state="$(plume_laravel_schedule_cron_state "${project_path}")"
+  if [[ "${cron_state}" == "not-configured" ]]; then
+    cron_hint="$(plume_laravel_schedule_cron_hint "${project_path}")"
+    plume_info "scheduler crontab not detected; for every-minute runs install: ${cron_hint}"
+  fi
+
+  return "${rc}"
+}
+
+cmd_queue_list() {
+  local mode explicit_raw project_path php_bin horizon_enabled rc
+
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if ! plume_laravel_prepare_artisan_run "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  php_bin="${PLUME_LARAVEL_ARTISAN_PHP_BIN}"
+  horizon_enabled="$(plume_service_enabled_for_mode horizon "${mode}")"
+
+  if [[ "${horizon_enabled}" == "true" ]]; then
+    plume_info "Horizon enabled: also try \`php artisan horizon:status\` in project (./plume.sh services status horizon --mode=${mode})"
+  fi
+
+  set +e
+  plume_laravel_run_artisan "${project_path}" "${php_bin}" queue:failed
+  rc=$?
+  set -e
+  return "${rc}"
+}
+
 cmd_schedule() {
   local sub="${1:-status}"
   shift || true
   case "${sub}" in
     status) cmd_schedule_status "$@" ;;
+    list) cmd_schedule_list "$@" ;;
+    run-once) cmd_schedule_run_once "$@" ;;
     *)
-      plume_err "unknown schedule subcommand: ${sub} (use status)"
+      plume_err "unknown schedule subcommand: ${sub} (use status|list|run-once)"
       return 2
       ;;
   esac
@@ -287,8 +453,9 @@ cmd_queue() {
   shift || true
   case "${sub}" in
     status) cmd_queue_status "$@" ;;
+    list) cmd_queue_list "$@" ;;
     *)
-      plume_err "unknown queue subcommand: ${sub} (use status)"
+      plume_err "unknown queue subcommand: ${sub} (use status|list)"
       return 2
       ;;
   esac

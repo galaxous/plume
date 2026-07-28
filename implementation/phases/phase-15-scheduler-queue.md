@@ -5,7 +5,7 @@ Herd/Laradock parity: Laravel `schedule:run`, queue workers, Horizon — native 
 ## Checklist
 
 - [x] `plume schedule status` / `plume queue status` MVP (proje yolu cozumleme, cron ipucu, horizon/supervisor runtime satirlari)
-- [ ] `list`, `run-once` alt komutlari ve plume-managed scheduler cron install
+- [x] `schedule list`, `schedule run-once`, `queue list` (queue:failed); `--dry-run` on run-once; plume-managed cron install backlog
 - [ ] Manifest: `services.horizon` / `php_worker` native provision sinirlari dokumante; docker-lite `laravel-horizon` ile hizalama (genisletme)
 - [x] Smoke: hermetik mock site + `artisan` stub; `tests/phase15_scheduler_queue_smoke.sh` release zincirinde
 - [x] `docs/commands/schedule.md`, `docs/commands/queue.md` + D-111 karar kaydi; release smoke gate
