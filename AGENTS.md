@@ -46,5 +46,5 @@ Bu proje icin AI/agent calisma kurallari:
 - Faz 1-15 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
 - Faz kapanisi: checklist `[x]`, [implementation/05-decision-log.md](implementation/05-decision-log.md) (D-xxx), ilgili `docs/commands/` + `docs/contracts/`, `./tests/run_smoke_suite.sh --release`.
 - Session bootstrap: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
-- Urun backlog: [implementation/phases/phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md).
+- Urun backlog: [implementation/future-roadmap.md](implementation/future-roadmap.md); aktif faz: [implementation/phases/phase-16.md](implementation/phases/phase-16.md); kaynak: [phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md).
 - Git: kullanici `.env` / gizli dosya commit etme; commit yalnizca kullanici istediginde.

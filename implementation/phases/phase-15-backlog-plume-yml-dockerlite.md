@@ -20,4 +20,5 @@ Planlanan genis schema:
 
 ## Trigger
 
-Bu backlog maddeleri Phase 15+ acilisinda ayri faz checklist ile baslatilir.
+- **plume.yml v2:** [phase-16.md](./phase-16.md) (tracker satiri 16, `not-started`)
+- **Docker-lite unfreeze:** henuz ayri faz yok — bkz. [future-roadmap.md](../future-roadmap.md) (Phase 17 adayi)

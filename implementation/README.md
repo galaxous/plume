@@ -21,6 +21,7 @@ Amac:
 - `08-documentation-strategy.md`: full docs seti ve dokumantasyon zorunlulugu
 - `09-answer-driven-constraints.md`: kullanici cevaplariyla netlesen zorunlu gereksinimler
 - `10-herd-parity-and-beyond.md`: herd parity + beyond kapsam checklisti
+- `future-roadmap.md`: tek sayfa todo ozeti (Faz 16+, parity acik maddeler)
 - `11-status-2026-07-28.md`: guncel readiness (Faz 1–15 kapandi; Faz 7 beta-frozen)
 - `11-status-2026-03-24.md`: tarihsel readiness notu
 - `12-quality-gate-report-2026-04-03.md`: phase-10 baseline matrix quality gate raporu

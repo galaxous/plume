@@ -30,6 +30,7 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 | 13 | Deploy Apply + Operate Journey | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-13](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-13.md) |
 | 14 | CI, Golden Contract, Release Packaging | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-14](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-14.md) |
 | 15 | Scheduler, Queue Ops & Manifest Alignment | done | @team | 2026-07-28 | 2026-07-28 | 2026-07-28 | [phase-15](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-15.md) |
+| 16 | Project plume.yml v2 (MVP) | not-started | @team | — | TBD | — | [phase-16](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-16.md) |
 
 ## Update Rules
 
