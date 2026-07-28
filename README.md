@@ -2,7 +2,7 @@
 
 Plume, Laravel projeleri icin Linux/macOS uzerinde calisacak 3 modlu (`native`, `docker-lite`, `laradock-bridge`) bir operasyon util'idir.
 
-**Guncel durum:** Faz 1–11 tamamlandi; aktif gelistirme faz 12–14 (native host provisioning, deploy apply, CI/release). Faz 7 (`docker-lite`) **beta-frozen**.
+**Guncel durum:** Faz 1–14 tamamlandi; **Faz 15** (scheduler/queue ops) devam ediyor. Faz 7 (`docker-lite`) **beta-frozen**.
 
 Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker.md)
 
@@ -12,7 +12,7 @@ Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker
 - Official CLI binary: `plumectl`
 - Local test wrapper: `./plume.sh`
 - Optional alias: `plume`
-- Repository: `laravel-plume`
+- Repository: `plume` (GitHub); Packagist/formula alias: `laravel-plume`
 
 ## Ozellik Ozeti
 

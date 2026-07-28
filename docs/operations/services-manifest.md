@@ -83,6 +83,20 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 
 Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yorum olarak dokümante edilir; native loader bu satırları okumaz.
 
+### Queue: `horizon`, `php_worker`, `supervisor` (D-113)
+
+| Servis | `services.yml` | Native host provision | Calistirma |
+|--------|----------------|----------------------|------------|
+| `horizon` | `enabled` → `PLUME_HORIZON_ENABLED` | **Yok** — paket kurulumu yok | `services up horizon` — **supervisor** bagimliligi (native); runtime state / compose reconcile |
+| `php_worker` | `enabled` → `PLUME_PHP_WORKER_ENABLED` | **Yok** | Genelde docker-lite / laradock **php-worker** container veya manuel `queue:work` |
+| `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | **Yok** | Horizon on kosulu; native’de OS supervisor kurulumu Plume disi |
+
+**Docker-lite:** Compose alias `laravel-horizon` ↔ Plume servis adi `horizon` (ve `supervisor` ayni container’a map edilebilir). Bkz. [services.md](../commands/services.md).
+
+**Laradock-bridge:** `laravel-horizon`, `php-worker` compose servisleri; manifest yalnizca env toggle yukler, compose’u degistirmez.
+
+**Operasyonel CLI:** `plume queue status`, `plume queue list`; Horizon acikken `services status horizon`. Manifest’te `horizon: { enabled: true }` yalnizca env hazirlar — otomatik Horizon kurulumu beklenmez.
+
 ## Komutlar
 
 Etkin yapılandırmayı görmek (`effective_*` satırları, adapter-parse):

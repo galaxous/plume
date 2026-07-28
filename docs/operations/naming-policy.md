@@ -12,7 +12,7 @@ Not: Linux ortaminda baska util'lerle cakisma riskini azaltmak icin resmi komut 
 
 ## Repository ve Package
 
-- GitHub repository: `laravel-plume`
+- GitHub repository: `plume` (ornek: `github.com/galaxous/plume`); alias `laravel-plume` Packagist/formula icin kullanilabilir
 - Packagist package: `<vendor>/laravel-plume`
 - Homebrew formula: `laravel-plume` veya `plumectl`
 

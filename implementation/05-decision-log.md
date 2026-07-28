@@ -2,6 +2,17 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-28 - D-113 - Phase 15 Tracker and Horizon Manifest Limits
+
+- Durum: accepted
+- Karar:
+  - Faz 15 resmi checklist: `implementation/phases/phase-15.md`; tracker satiri `in-progress`.
+  - `services.yml` icin horizon / php_worker / supervisor: yalnizca env toggle; native `provision --from-manifest` yok; docker-lite `laravel-horizon` eslemesi dokumante.
+- Gerekce:
+  - Phase 15 ikinci dilim sonrasi manifest belirsizligi giderilir; native'de Horizon icin supervisor beklentisi netlesir.
+- Etki:
+  - `docs/operations/services-manifest.md`, `implementation/phase-tracker.md`, `implementation/phases/phase-15.md`, `phase-15-scheduler-queue.md`.
+
 ## 2026-07-28 - D-112 - Phase 15 Schedule List / Run-Once / Queue Failed List
 
 - Durum: accepted

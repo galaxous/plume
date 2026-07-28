@@ -29,6 +29,7 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 | 12 | Native Host Service Provisioning | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-12](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-12.md) |
 | 13 | Deploy Apply + Operate Journey | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-13](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-13.md) |
 | 14 | CI, Golden Contract, Release Packaging | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-14](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-14.md) |
+| 15 | Scheduler, Queue Ops & Manifest Alignment | in-progress | @team | 2026-07-28 | — | — | [phase-15](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-15.md) |
 
 ## Update Rules
 
