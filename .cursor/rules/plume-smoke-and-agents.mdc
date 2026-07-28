@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Plume smoke tests and agent obligations
 
-- Follow [AGENTS.md](../../AGENTS.md): every code change updates related docs in the same change; new commands need `docs/commands/`; phase-gate = tests + docs + decision log; check `docs/contracts/`.
+- Follow [AGENTS.md](../../AGENTS.md): every code change updates related docs in the same change; new commands need `docs/commands/`; phase-gate = tests + docs + decision log; check `docs/contracts/`. §6-8: repo kimligi, config katmanlari, yeni faz bootstrap.
 - Pre-PR default: `./tests/run_smoke_suite.sh --release` (same as `--ci`). Broader: `--phase11-full`, `--all`, `--all --linux`.
 - Hermetic smokes: temp `HOME`, `PLUME_STATE_DIR`, registry dirs; never assert against real `~/.config/plume/.env`.
 - Mock brew PATH: `MOCK_BIN:/usr/bin:/bin` (optionally `/usr/sbin:/sbin`) — **not** `MOCK_BIN:$PATH` (Homebrew wins; phase12 lesson).

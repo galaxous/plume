@@ -283,6 +283,7 @@ PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
 - UI varsayilan: `http://127.0.0.1:8025` (`PLUME_MAILPIT_PORT`).
 - Laravel `.env`: `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, `MAIL_PORT=1025` (Mailpit SMTP).
 - Linux native: otomatik kurulum yok; `./plume.sh services up mailpit` WARN + exit 2 — `--mode=docker-lite` veya [Mailpit](https://github.com/axllent/mailpit) manuel.
+- Nginx port 80/8080 teshisi (D-109): `./plume.sh doctor web` — bkz. [services-web.md](./services-web.md).
 
 ## Manifest alt komutlari (native)
 

@@ -25,7 +25,7 @@ Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker
 - Ops: `doctor`, `backup`, `deploy plan|apply|rollback|failback`, `security`, `monitor`, `project init`
 - OS prereq: `prereq check|explain` (`brew` / `apt` / `dnf`)
 
-Native modda **PHP** icin gercek host kurulumu (`brew`/`apt`) vardir. Diger servisler varsayilan olarak state/port orchestration kullanir; gercek host kurulumu icin `PLUME_NATIVE_HOST_PROVISION=true` (bkz. [docs/commands/services.md](docs/commands/services.md)).
+Native modda **PHP** icin gercek host kurulumu (`brew`/`apt`) vardir. Diger servisler varsayilan olarak state/port orchestration kullanir; gercek host kurulumu icin `PLUME_NATIVE_HOST_PROVISION=true` (bkz. [docs/commands/services.md](docs/commands/services.md)). macOS'ta **Mailpit** native brew ile desteklenir (`services up mailpit`; D-109).
 
 ## Local Run
 

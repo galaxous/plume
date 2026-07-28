@@ -22,7 +22,8 @@ Bu runbook, Plume'u ilk kez kuran gelistiriciler icin onerilen sirayi ve host pr
    ./plume.sh doctor php
    ```
 7. **Shell shim (opsiyonel)** — `./plume.sh init shell`
-8. **Servisler** — `./plume.sh services up @core --mode=native`
+8. **Servisler** — `./plume.sh services up @core --mode=native`  
+   Opsiyonel gelistirme maili (macOS native): `./plume.sh services up mailpit --mode=native` — bkz. [services.md](../commands/services.md) (Mailpit, D-109).
 9. **Site** — `./plume.sh site add ... --publish`
 
 ## Host profili (`host.env`)
@@ -89,5 +90,6 @@ Host profili `apt`/`dnf` tespit eder. Nginx/php-fpm icin distro paketleri ve `sy
 ## Ilgili karar
 
 - D-103 — `services.yml` native stack manifest
+- D-109 — Native Mailpit (Homebrew) + doctor web port ipuclari
 - D-098 — Host profile persistence ve onboarding komutlari
 - D-099 — macOS FDA UX: binary listesi, `--fix` vs `--open-settings`

@@ -29,3 +29,22 @@ Bu proje icin AI/agent calisma kurallari:
 - Smoke scriptleri hermetik olmalidir (gecici HOME/PLUME_STATE_DIR; gercek `~/.config/plume` kullanilmaz).
 - Test/shell patternleri: mock brew PATH, pipefail+grep, nginx strict env — bkz. asagidaki rehber.
 - Yeni AI oturumlari icin session bootstrap ve tam strateji: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
+
+6. Repo ve urun kimligi
+- Urun: Plume; resmi CLI: `plumectl`; yerel wrapper: `./plume.sh`.
+- GitHub: [galaxous/plume](https://github.com/galaxous/plume) (yerel klasor adi ornegin `larasite` olabilir).
+- Kullanici state: `~/.config/plume` — smoke/testlerde ASLA kullanma (hermetik `HOME` / `PLUME_STATE_DIR`).
+
+7. Konfigurasyon katmanlari
+- Stack manifest: `~/.config/plume/services.yml` (D-103/D-104) — bkz. [docs/operations/services-manifest.md](docs/operations/services-manifest.md).
+- Ortam: `~/.config/plume/.env` (`.env` manifest uzerinde kazanir).
+- Makine profili: `host.env` (TCC/path; servis enable toggle degil).
+- Proje: phase-4 `plume.yml` baseline; v2 ayri faz — [implementation/phases/phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md) (D-089).
+
+8. Yeni faz / yeni agent oturumu
+- Baslangic okuma: [implementation/phase-tracker.md](implementation/phase-tracker.md), en guncel `implementation/11-status-*.md`.
+- Faz 1-15 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
+- Faz kapanisi: checklist `[x]`, [implementation/05-decision-log.md](implementation/05-decision-log.md) (D-xxx), ilgili `docs/commands/` + `docs/contracts/`, `./tests/run_smoke_suite.sh --release`.
+- Session bootstrap: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
+- Urun backlog: [implementation/phases/phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md).
+- Git: kullanici `.env` / gizli dosya commit etme; commit yalnizca kullanici istediginde.

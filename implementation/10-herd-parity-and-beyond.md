@@ -17,8 +17,8 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - [x] Native mode + Docker-lite + Laradock bridge bir arada (3 mod, mode switch)
 - [x] Service version pinning (mysql/redis/mariadb/postgres/php) (env + state metadata)
 - [x] Horizon + Supervisor tam entegrasyon (native contract + dependency guard)
-- [ ] Queue/Scheduler runtime yonetimi (kismen; tam scheduler ops backlog)
-- [ ] Production deploy orchestration + rollback (`deploy apply` faz 13; rollback mevcut)
+- [x] Queue/Scheduler runtime yonetimi (Faz 15 baseline: `schedule status|list|run-once|cron-install`, `queue status|list`; D-111–D-114 — bkz. [schedule.md](../docs/commands/schedule.md), [queue.md](../docs/commands/queue.md); tam worker/supervisor host kurulumu hâlâ manifest sinirlari icinde — D-113)
+- [x] Production deploy orchestration + rollback (`deploy apply` Faz 13, D-087; `deploy rollback|failback`; bkz. [deploy.md](../docs/commands/deploy.md))
 - [x] Secrets policy + firewall/os security checks (phase 9 baseline)
 - [x] Optional backup (config + db scope)
 - [ ] Pinned release + optional auto-update (manual release workflow; auto-update backlog)
@@ -26,12 +26,13 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 
 ## Laravel Ecosystem (Optional but Planned)
 
-- [ ] Mail sandbox (Mailpit/Mailhog) hizli ac-kapa
+- [x] Mail sandbox (Mailpit native macOS; D-109) — `services install|up mailpit`, manifest `mailpit.enabled`; bkz. [services.md](../docs/commands/services.md) (Mailpit), [services-manifest.md](../docs/operations/services-manifest.md), [services-provision.md](../docs/commands/services-provision.md)
 - [ ] Meilisearch/OpenSearch secenegi
 - [ ] MinIO/S3-compatible local object storage
 - [ ] Websocket stack (Reverb/Soketi) runtime management
 - [ ] Cache/session/store driver uyum dogrulamasi
-- [ ] `about`, `queue:failed`, `schedule:list` gibi artisan health probes
+- [x] `schedule:list`, `queue:failed` artisan sarmalayicilari (`schedule list`, `queue list`; D-112 — [schedule.md](../docs/commands/schedule.md), [queue.md](../docs/commands/queue.md))
+- [ ] `about` ve diger genisletilmis artisan health probes
 
 ## Laravel Project Lifecycle Coverage
 
@@ -54,6 +55,13 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - Faz 6-7: services + php versions + runtime
 - Faz 9: production ops + deploy + rollback + observability
 - Faz 10: parity checklist kapanis raporu
+- Faz 13: `deploy apply` orchestration
+- Faz 15: scheduler/queue CLI (D-111–D-114), native Mailpit host provision (D-109); gate D-115–D-116 — bkz. [phase-15.md](phases/phase-15.md), [11-status-2026-07-28.md](11-status-2026-07-28.md)
+
+## Phase 15 Impact Note
+
+- 2026-07-28: scheduler/queue MVP kapandi; Mailpit native brew yolu (D-109) parity checklist'te mail sandbox olarak isaretlendi.
+- Acik kalan parity: Composer/Node workspace entegrasyonu, `about` probe, Meilisearch/MinIO/Reverb, pinned auto-update.
 
 ## Phase 1 Impact Note
 

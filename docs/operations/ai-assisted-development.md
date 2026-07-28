@@ -1,10 +1,10 @@
-# AI-Assisted Development (Plume / larasite)
+# AI-Assisted Development (Plume)
 
 Kalici baglam: bu repoda insan + AI esli gelistirmede test ogrenimleri, dokuman yukumlulukleri ve smoke stratejisi unutulmasin diye.
 
 Iliskili dokumanlar:
 
-- [AGENTS.md](../../AGENTS.md) — agent zorunlu kurallari
+- [AGENTS.md](../../AGENTS.md) — agent kurallari (§1–8: dokuman, faz-gate, smoke, repo kimligi, config katmanlari, yeni faz bootstrap)
 - [release-readiness.md](./release-readiness.md) — yayin oncesi smoke zinciri
 - [macos-permissions.md](./macos-permissions.md) — TCC / FDA / `init permissions`
 - [implementation/05-decision-log.md](../../implementation/05-decision-log.md) — karar kayitlari (orn. D-101, D-102)
@@ -16,11 +16,12 @@ Iliskili dokumanlar:
 Asagidaki blogu yeni Cursor/agent oturumunun basinda yapistirin; sonra gorevi yazin.
 
 ```text
-Plume (larasite) uzerinde calisiyoruz. Repo: Laravel icin 3 modlu CLI (native, docker-lite, laradock-bridge).
-Wrapper: ./plume.sh; resmi binary adi plumectl. Gercek kullanici state: ~/.config/plume (testlerde ASLA buna guvenme).
+Plume uzerinde calisiyoruz. GitHub: galaxous/plume (yerel klasor adi farkli olabilir). Laravel icin 3 modlu CLI (native, docker-lite, laradock-bridge).
+Wrapper: ./plume.sh; resmi binary adi plumectl. Gercek kullanici state: ~/.config/plume (testlerde ASLA buna guvenme). Config: services.yml + .env + host.env (AGENTS.md §6–7).
 
-Zorunlu: AGENTS.md + docs/commands/ (yeni komut) + docs/contracts/ + implementation/05-decision-log.md (onemli karar).
-Faz-gate: test + dokuman + karar kaydi olmadan faz tamamlanmis sayilmaz.
+Zorunlu: AGENTS.md §1–8 + docs/commands/ (yeni komut) + docs/contracts/ + implementation/05-decision-log.md (onemli karar).
+Faz 1–15 tamamlandi (Faz 7 beta-frozen); yeni is = yeni implementation/phases/phase-NN.md + phase-tracker. Faz-gate: test + dokuman + karar kaydi.
+Baslangic okuma: implementation/phase-tracker.md, en guncel implementation/11-status-*.md.
 
 Smoke (PR oncesi varsayilan): ./tests/run_smoke_suite.sh --release  (CI ile ayni: --ci)
 Hermetic testler: gecici HOME + PLUME_STATE_DIR; mock brew PATH = MOCK_BIN:/usr/bin:/bin only (Homebrew PATH'e ekleme).
