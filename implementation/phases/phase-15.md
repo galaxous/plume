@@ -11,7 +11,7 @@ Hedef: Laravel zamanlayici ve kuyruk operasyonlari (Herd parity) + manifest’te
 - [x] `schedule status|list|run-once`, `queue status|list` (D-111, D-112)
 - [x] Release smoke: `phase15_scheduler_queue_smoke.sh`
 - [x] Horizon / php_worker / supervisor: manifest env + native vs docker-lite dokumantasyonu (D-113)
-- [ ] Plume-managed crontab install (`schedule cron-hint --install` veya esdeger)
+- [x] Plume-managed crontab install (`schedule cron-install`; D-114)
 - [ ] Phase 15 gate: checklist tamam + decision log + `--release` yesil
 
 ## Alt dokumanlar

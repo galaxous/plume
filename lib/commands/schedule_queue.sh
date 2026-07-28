@@ -25,6 +25,43 @@ plume_laravel_arg_has_dry_run() {
   return 1
 }
 
+plume_laravel_arg_has_remove() {
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --remove) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+plume_laravel_crontab_read() {
+  if [[ -n "${PLUME_CRONTAB_FILE:-}" ]]; then
+    if [[ -f "${PLUME_CRONTAB_FILE}" ]]; then
+      cat "${PLUME_CRONTAB_FILE}"
+    fi
+    return 0
+  fi
+  if ! command -v crontab >/dev/null 2>&1; then
+    return 1
+  fi
+  crontab -l 2>/dev/null || true
+  return 0
+}
+
+plume_laravel_crontab_write() {
+  local content="$1"
+  if [[ -n "${PLUME_CRONTAB_FILE:-}" ]]; then
+    printf '%s\n' "${content}" > "${PLUME_CRONTAB_FILE}"
+    return 0
+  fi
+  local tmp
+  tmp="$(mktemp)"
+  printf '%s\n' "${content}" > "${tmp}"
+  crontab "${tmp}"
+  rm -f "${tmp}"
+}
+
 plume_laravel_resolve_php_bin() {
   local site_id="${PLUME_LARAVEL_SITE_ID:-}"
   local file version php_bin
@@ -175,24 +212,25 @@ plume_laravel_schedule_cron_state() {
   local marker hit path_hit generic
   marker="$(plume_laravel_schedule_cron_marker)"
 
-  if ! command -v crontab >/dev/null 2>&1; then
+  local crontab_body
+  if ! crontab_body="$(plume_laravel_crontab_read)"; then
     printf '%s' "unknown"
     return 0
   fi
 
-  hit="$(crontab -l 2>/dev/null | grep -F "${marker}" || true)"
+  hit="$(printf '%s\n' "${crontab_body}" | grep -F "${marker}" || true)"
   if [[ -n "${hit}" ]]; then
     printf '%s' "configured"
     return 0
   fi
 
-  path_hit="$(crontab -l 2>/dev/null | grep -F "schedule:run" | grep -F "${project_path}" || true)"
+  path_hit="$(printf '%s\n' "${crontab_body}" | grep -F "schedule:run" | grep -F "${project_path}" || true)"
   if [[ -n "${path_hit}" ]]; then
     printf '%s' "configured"
     return 0
   fi
 
-  generic="$(crontab -l 2>/dev/null | grep -F 'schedule:run' || true)"
+  generic="$(printf '%s\n' "${crontab_body}" | grep -F 'schedule:run' || true)"
   if [[ -n "${generic}" ]]; then
     printf '%s' "maybe"
     return 0
@@ -201,9 +239,16 @@ plume_laravel_schedule_cron_state() {
   printf '%s' "not-configured"
 }
 
+plume_laravel_schedule_cron_line() {
+  local project_path="$1"
+  local php_bin="$2"
+  printf '* * * * * cd %s && %s artisan schedule:run >> /dev/null 2>&1 %s' \
+    "${project_path}" "${php_bin}" "$(plume_laravel_schedule_cron_marker)"
+}
+
 plume_laravel_schedule_cron_hint() {
   local project_path="$1"
-  printf '* * * * * cd %s && php artisan schedule:run >> /dev/null 2>&1 %s' "${project_path}" "$(plume_laravel_schedule_cron_marker)"
+  plume_laravel_schedule_cron_line "${project_path}" "php"
 }
 
 plume_laravel_queue_service_summary() {
@@ -281,7 +326,7 @@ cmd_schedule_status() {
   printf '%-18s %s\n' "SCHEDULER_CRON" "${cron_state}"
   printf '%-18s %s\n' "CRON_HINT" "${cron_hint}"
   if [[ "${cron_state}" == "not-configured" ]]; then
-    plume_info "install a user crontab line from CRON_HINT (every minute); plume does not install scheduler cron in MVP"
+    plume_info "install scheduler cron: ./plume.sh schedule cron-install --path=${project_path} (or copy CRON_HINT into crontab -e)"
   fi
   if [[ "${artisan}" == "missing" ]]; then
     plume_warn "no artisan file under PROJECT_PATH; schedule:run requires a Laravel app root"
@@ -409,6 +454,84 @@ cmd_schedule_run_once() {
   return "${rc}"
 }
 
+cmd_schedule_cron_install() {
+  local explicit_raw project_path php_bin cron_line dry_run remove
+  local marker existing new_content had_marker
+
+  if [[ "$(id -u 2>/dev/null || printf '0')" -eq 0 ]]; then
+    plume_err "refusing to modify crontab as root; run as your normal user"
+    return 2
+  fi
+
+  explicit_raw="$(plume_laravel_parse_path_from_args "$@")"
+  if plume_laravel_arg_has_dry_run "$@"; then
+    dry_run="true"
+  else
+    dry_run="false"
+  fi
+  if plume_laravel_arg_has_remove "$@"; then
+    remove="true"
+  else
+    remove="false"
+  fi
+
+  if ! plume_laravel_prepare_artisan_run "${explicit_raw}"; then
+    return 2
+  fi
+  project_path="${PLUME_LARAVEL_PROJECT_PATH}"
+  php_bin="${PLUME_LARAVEL_ARTISAN_PHP_BIN}"
+  cron_line="$(plume_laravel_schedule_cron_line "${project_path}" "${php_bin}")"
+  marker="$(plume_laravel_schedule_cron_marker)"
+
+  if [[ -z "${PLUME_CRONTAB_FILE:-}" ]] && ! command -v crontab >/dev/null 2>&1; then
+    plume_err "crontab command not found"
+    return 2
+  fi
+
+  if ! existing="$(plume_laravel_crontab_read)"; then
+    plume_err "could not read crontab"
+    return 2
+  fi
+  had_marker="$(printf '%s\n' "${existing}" | grep -F "${marker}" || true)"
+
+  if [[ "${remove}" == "true" ]]; then
+    if [[ -z "${had_marker}" ]]; then
+      plume_info "no plume scheduler cron line to remove"
+      return 0
+    fi
+    new_content="$(printf '%s\n' "${existing}" | grep -Fv "${marker}" || true)"
+    while [[ "${new_content}" == $'\n' ]]; do
+      new_content="${new_content#$'\n'}"
+    done
+    if [[ "${dry_run}" == "true" ]]; then
+      plume_info "[DRY-RUN] would remove plume scheduler cron line(s) marked ${marker}"
+      return 0
+    fi
+    plume_laravel_crontab_write "${new_content}"
+    plume_info "removed plume scheduler cron line(s)"
+    return 0
+  fi
+
+  if [[ -n "${had_marker}" ]]; then
+    plume_info "plume scheduler cron already installed (${marker})"
+    return 0
+  fi
+
+  if [[ "${dry_run}" == "true" ]]; then
+    plume_info "[DRY-RUN] ${cron_line}"
+    return 0
+  fi
+
+  if [[ -n "${existing}" ]]; then
+    new_content="${existing}"$'\n'"${cron_line}"
+  else
+    new_content="${cron_line}"
+  fi
+  plume_laravel_crontab_write "${new_content}"
+  plume_info "installed plume scheduler cron line for ${project_path}"
+  return 0
+}
+
 cmd_queue_list() {
   local mode explicit_raw project_path php_bin horizon_enabled rc
 
@@ -441,8 +564,9 @@ cmd_schedule() {
     status) cmd_schedule_status "$@" ;;
     list) cmd_schedule_list "$@" ;;
     run-once) cmd_schedule_run_once "$@" ;;
+    cron-install) cmd_schedule_cron_install "$@" ;;
     *)
-      plume_err "unknown schedule subcommand: ${sub} (use status|list|run-once)"
+      plume_err "unknown schedule subcommand: ${sub} (use status|list|run-once|cron-install)"
       return 2
       ;;
   esac

@@ -2,6 +2,20 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-28 - D-114 - Phase 15 Plume-Managed Scheduler Crontab Install
+
+- Durum: accepted
+- Karar:
+  - Alt komut: `plume schedule cron-install` (`--path=`, `--dry-run`, `--remove`); kullanici crontab (asla root).
+  - Tek satir: `* * * * * cd <project> && <php> artisan schedule:run >> /dev/null 2>&1 # plume-laravel-schedule-cron`; PHP cozumleme D-112 ile ayni (`PLUME_PHP_BIN` / site surumu).
+  - Kurulum: `crontab -l` birlestirme; marker varsa idempotent exit `0`; kaldirma yalnizca marker iceren satirlar.
+  - Hermetik test: `PLUME_CRONTAB_FILE` gecici dosya (gercek crontab dokunulmaz).
+  - `schedule status` INFO: `cron-install` onerisi; `CRON_HINT` generic `php` kalir.
+- Gerekce:
+  - Phase 15 ucuncu dilim: Herd-benzeri tek komutla dakikalik scheduler; MVP manuel kopya-yapistir yerine guvenli merge.
+- Etki:
+  - `lib/commands/schedule_queue.sh`, `lib/commands/help.sh`, `docs/commands/schedule.md`, `implementation/phases/phase-15.md`, `phase-15-scheduler-queue.md`, `implementation/05-decision-log.md`, `tests/phase15_scheduler_queue_smoke.sh`.
+
 ## 2026-07-28 - D-113 - Phase 15 Tracker and Horizon Manifest Limits
 
 - Durum: accepted

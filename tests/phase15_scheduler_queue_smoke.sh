@@ -11,6 +11,7 @@ REG_DIR="${TMP_ROOT}/registry"
 PROJECT_DIR="${TMP_ROOT}/project"
 BIN_DIR="${TMP_ROOT}/bin"
 CMD_LOG="${TMP_ROOT}/php-artisan.log"
+CRON_FILE="${TMP_ROOT}/user.crontab"
 mkdir -p "${HOME_DIR}" "${STATE_DIR}" "${REG_DIR}" "${PROJECT_DIR}/public" "${BIN_DIR}"
 
 cleanup() {
@@ -57,6 +58,7 @@ BASE_ENV=(
   "PATH=${BIN_DIR}:/usr/bin:/bin"
   "PLUME_PHP_BIN=${BIN_DIR}/php"
   "PLUME_TEST_PHP_LOG=${CMD_LOG}"
+  "PLUME_CRONTAB_FILE=${CRON_FILE}"
 )
 
 printf '#!/usr/bin/env php\n<?php\n' > "${PROJECT_DIR}/artisan"
@@ -134,6 +136,58 @@ echo "${queue_list_out}" | grep -q 'horizon:status' || {
   echo "[FAIL] queue list should hint horizon:status when horizon enabled" >&2
   exit 1
 }
+
+cron_dry_out="$(env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule cron-install --path="${PROJECT_DIR}" --dry-run 2>&1)"
+echo "${cron_dry_out}" | grep -qF '# plume-laravel-schedule-cron' || {
+  echo "[FAIL] cron-install --dry-run missing marker" >&2
+  printf '%s\n' "${cron_dry_out}" >&2
+  exit 1
+}
+echo "${cron_dry_out}" | grep -qF "${PROJECT_DIR}" || {
+  echo "[FAIL] cron-install --dry-run missing project path" >&2
+  exit 1
+}
+[[ ! -f "${CRON_FILE}" ]] || [[ ! -s "${CRON_FILE}" ]] || {
+  echo "[FAIL] cron-install --dry-run should not write crontab file" >&2
+  cat "${CRON_FILE}" >&2
+  exit 1
+}
+
+env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule cron-install --path="${PROJECT_DIR}" >/dev/null
+grep -Fq '# plume-laravel-schedule-cron' "${CRON_FILE}" || {
+  echo "[FAIL] cron-install should write marked line" >&2
+  cat "${CRON_FILE}" >&2
+  exit 1
+}
+grep -Fq "schedule:run" "${CRON_FILE}" || {
+  echo "[FAIL] cron-install missing schedule:run" >&2
+  exit 1
+}
+
+sched_after="$(env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule status --mode=native --path="${PROJECT_DIR}")"
+echo "${sched_after}" | grep -q 'SCHEDULER_CRON.*configured' || {
+  echo "[FAIL] schedule status should detect installed cron" >&2
+  printf '%s\n' "${sched_after}" >&2
+  exit 1
+}
+
+env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule cron-install --path="${PROJECT_DIR}" 2>&1 | grep -qi 'already installed' || {
+  echo "[FAIL] cron-install should be idempotent when marker present" >&2
+  exit 1
+}
+line_count="$(grep -c '# plume-laravel-schedule-cron' "${CRON_FILE}" || true)"
+[[ "${line_count}" -eq 1 ]] || {
+  echo "[FAIL] cron-install should keep exactly one marked line" >&2
+  cat "${CRON_FILE}" >&2
+  exit 1
+}
+
+env "${BASE_ENV[@]}" "${ROOT_DIR}/plume.sh" schedule cron-install --path="${PROJECT_DIR}" --remove >/dev/null
+grep -Fq '# plume-laravel-schedule-cron' "${CRON_FILE}" && {
+  echo "[FAIL] cron-install --remove should delete marked line" >&2
+  cat "${CRON_FILE}" >&2
+  exit 1
+} || true
 
 json_out="$(env "${BASE_ENV[@]}" ./plume.sh --json schedule status --path="${PROJECT_DIR}" --mode=native)"
 if command -v python3 >/dev/null 2>&1; then

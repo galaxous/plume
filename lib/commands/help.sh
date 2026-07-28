@@ -51,6 +51,8 @@ COMMANDS:
   schedule list [--path=...] Run php artisan schedule:list in project dir
   schedule run-once [--path=...] [--dry-run]
                              Run php artisan schedule:run once (--no-interaction)
+  schedule cron-install [--path=...] [--dry-run] [--remove]
+                             Add or remove user crontab line for schedule:run (marker # plume-laravel-schedule-cron)
   queue status [--mode=...] [--path=...]
                              Queue/Horizon/supervisor status from env + services runtime
   queue list [--mode=...] [--path=...]
