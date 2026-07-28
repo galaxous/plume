@@ -2,6 +2,18 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-28 - D-115 - Phase 15 Gate Closure (Scheduler / Queue / Manifest)
+
+- Durum: accepted
+- Karar:
+  - Faz 15 resmi kapanis: tracker `done`, tamamlanma 2026-07-28.
+  - Gate kriterleri: schedule/queue komut seti (D-111, D-112), horizon/php_worker manifest sinirlari (D-113), `schedule cron-install` (D-114), komut dokumanlari, `tests/phase15_scheduler_queue_smoke.sh` release zincirinde, `./tests/run_smoke_suite.sh --release` yesil.
+  - Kapsam disi (Faz 15+ backlog): `plume.yml` v2 ve docker-lite derinlestirme — [phase-15-backlog-plume-yml-dockerlite.md](phases/phase-15-backlog-plume-yml-dockerlite.md).
+- Gerekce:
+  - AGENTS.md faz-gate: test + dokumantasyon + karar kaydi; operasyonel scheduler/queue MVP hedefi karsilandi.
+- Etki:
+  - `implementation/phase-tracker.md`, `implementation/phases/phase-15.md`, `phase-15-scheduler-queue.md`, `implementation/11-status-2026-07-28.md`, `README.md`, `implementation/05-decision-log.md`.
+
 ## 2026-07-28 - D-114 - Phase 15 Plume-Managed Scheduler Crontab Install
 
 - Durum: accepted

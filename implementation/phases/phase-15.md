@@ -4,7 +4,9 @@ Hedef: Laravel zamanlayici ve kuyruk operasyonlari (Herd parity) + manifest’te
 
 ## Status
 
-**in-progress** (tracker: [phase-tracker.md](../phase-tracker.md))
+**done** (2026-07-28; tracker: [phase-tracker.md](../phase-tracker.md))
+
+Kapanis: schedule/queue komutlari, manifest horizon sinirlari, cron-install ve release smoke tamam; faz kapanisi **D-115**. `plume.yml` v2 ayri backlog ([phase-15-backlog-plume-yml-dockerlite.md](./phase-15-backlog-plume-yml-dockerlite.md)).
 
 ## Checklist
 
@@ -12,7 +14,7 @@ Hedef: Laravel zamanlayici ve kuyruk operasyonlari (Herd parity) + manifest’te
 - [x] Release smoke: `phase15_scheduler_queue_smoke.sh`
 - [x] Horizon / php_worker / supervisor: manifest env + native vs docker-lite dokumantasyonu (D-113)
 - [x] Plume-managed crontab install (`schedule cron-install`; D-114)
-- [ ] Phase 15 gate: checklist tamam + decision log + `--release` yesil
+- [x] Phase 15 gate: checklist tamam + decision log + `--release` yesil (D-115)
 
 ## Alt dokumanlar
 
