@@ -28,3 +28,6 @@ jobs:
 
       - name: Phase 13 deploy apply
         run: bash ./tests/phase13_deploy_apply_smoke.sh
+
+      - name: Phase 15 scheduler queue
+        run: bash ./tests/phase15_scheduler_queue_smoke.sh

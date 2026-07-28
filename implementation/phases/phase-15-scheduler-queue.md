@@ -1,8 +1,8 @@
-# Phase 15 — Scheduler & queue ops
+# Phase 15 — Scheduler & queue ops (kapandi / arsiv)
+
+> **Arsiv:** Faz 15 **2026-07-28** tarihinde kapandi. Resmi gate: [phase-15.md](./phase-15.md) (`done`, D-115). Yeni isler: [phase-15-backlog-plume-yml-dockerlite.md](./phase-15-backlog-plume-yml-dockerlite.md).
 
 Herd/Laradock parity: Laravel `schedule:run`, queue workers, Horizon — native ve docker-lite icin operasyonel komutlar.
-
-**Faz kapandi (2026-07-28).** Resmi gate checklist: [phase-15.md](./phase-15.md) (status **done**, D-115).
 
 ## Checklist
 

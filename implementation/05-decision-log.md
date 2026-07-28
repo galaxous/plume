@@ -2,6 +2,18 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-28 - D-116 - Phase 15 CI / Release Readiness Parity
+
+- Durum: accepted
+- Karar:
+  - `tests/run_smoke_suite.sh --release` icindeki `phase15_scheduler_queue_smoke.sh` adimi `.github/workflows/smoke-tests.yml` ile birebir hizalanir (README `--ci` iddiasi).
+  - `docs/operations/release-readiness.md` release zinciri listesine Faz 15 adimi eklenir.
+  - `implementation/phases/phase-15.md` gate yapisi faz 13/14 ile hizalanir; `phase-15-scheduler-queue.md` arsiv olarak isaretlenir.
+- Gerekce:
+  - D-115 kapanisinda yerel release runner yesildi ancak Actions workflow eksik kaldi; faz-gate dokumantasyon tutarliligi.
+- Etki:
+  - `.github/workflows/smoke-tests.yml`, `docs/operations/release-readiness.md`, `implementation/phases/phase-15.md`, `phase-15-scheduler-queue.md`, `implementation/11-status-2026-07-27.md`, `implementation/README.md`.
+
 ## 2026-07-28 - D-115 - Phase 15 Gate Closure (Scheduler / Queue / Manifest)
 
 - Durum: accepted

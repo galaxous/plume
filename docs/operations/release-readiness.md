@@ -18,6 +18,7 @@ Yerel pre-release ve CI ile ayni adimlar:
 3. `phase12_native_host_provision_smoke.sh`
 4. `phase12_site_publish_auto_provision_web_smoke.sh`
 5. `phase13_deploy_apply_smoke.sh`
+6. `phase15_scheduler_queue_smoke.sh` (Faz 15 scheduler / queue ops)
 
 Beklenen sonuc:
 
@@ -87,7 +88,7 @@ ve `docs/contracts/cli-output-contract.md` dosyasi guncellenmelidir.
 Asagidaki kanitlar toplanmis olmali:
 
 - Matrix komut ciktilari (`[PASS]` zinciri)
-- Phase checklist guncellemeleri (`implementation/phases/phase-10.md`)
+- Phase checklist guncellemeleri (`implementation/phases/phase-10.md`, `phase-15.md` vb.)
 - Tracker satiri (`implementation/phase-tracker.md`)
 - Decision log kaydi (`implementation/05-decision-log.md`)
 
