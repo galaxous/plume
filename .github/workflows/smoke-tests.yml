@@ -31,3 +31,6 @@ jobs:
 
       - name: Phase 15 scheduler queue
         run: bash ./tests/phase15_scheduler_queue_smoke.sh
+
+      - name: Phase 16 plume.yml v2 MVP
+        run: bash ./tests/phase16_plume_yml_v2_smoke.sh

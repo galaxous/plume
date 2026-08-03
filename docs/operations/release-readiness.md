@@ -19,6 +19,7 @@ Yerel pre-release ve CI ile ayni adimlar:
 4. `phase12_site_publish_auto_provision_web_smoke.sh`
 5. `phase13_deploy_apply_smoke.sh`
 6. `phase15_scheduler_queue_smoke.sh` (Faz 15 scheduler / queue ops)
+7. `phase16_plume_yml_v2_smoke.sh` (Faz 16 project `plume.yml` MVP)
 
 Beklenen sonuc:
 

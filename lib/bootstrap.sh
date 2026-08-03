@@ -25,6 +25,8 @@ source "${ROOT_DIR}/lib/common/macos_permissions.sh"
 source "${ROOT_DIR}/lib/config/defaults.sh"
 # shellcheck source=common/services_manifest.sh
 source "${ROOT_DIR}/lib/common/services_manifest.sh"
+# shellcheck source=common/plume_yml.sh
+source "${ROOT_DIR}/lib/common/plume_yml.sh"
 # shellcheck source=services/native_host_provision.sh
 source "${ROOT_DIR}/lib/services/native_host_provision.sh"
 # shellcheck source=services/native_web_nginx_config.sh

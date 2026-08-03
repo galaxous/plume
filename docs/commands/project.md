@@ -8,6 +8,7 @@
 
 ```bash
 plumectl project init --path=/abs/project
+plumectl project config show --path=/abs/project
 plumectl project init --path=/abs/project --migrate --seed --npm-install --npm-build
 plumectl project init --path=/abs/project --dry-run
 plumectl project env sync-secrets --path=/abs/project --keys=APP_KEY,DB_PASSWORD
@@ -41,6 +42,15 @@ plumectl project env sync-secrets --path=/abs/project --keys=APP_KEY,DB_PASSWORD
    - opsiyonel `migrate` / `db:seed`
 4. `package.json` varsa opsiyonel npm adimlari
 5. `project env sync-secrets`, state'deki `secrets.env` keylerini proje `.env` dosyasina yazar/gunceller
+6. `project config show`, proje `plume.yml` MVP alanlarini okur — ayrinti: [project-config.md](project-config.md)
+
+## Alt komutlar
+
+| Alt komut | Dokuman |
+|-----------|---------|
+| `init` | bu dosya |
+| `config show` | [project-config.md](project-config.md) |
+| `env sync-secrets` | bu dosya |
 
 ## Exit Kodlari
 

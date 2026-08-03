@@ -206,3 +206,15 @@ OVERALL            OK
 ```
 
 Dry-run modunda `OVERALL OK (dry-run)` satiri doner.
+
+## project config show (text)
+
+`project config show --path=...` ciktisi `key=value` satirlari (stdout); `--json` desteklenmez ve `adapter.json_critical_commands` listesinde degildir (Faz 16 MVP).
+
+Ornek:
+
+```text
+manifest=/abs/project/plume.yml
+mode=native
+php_version=8.3
+```

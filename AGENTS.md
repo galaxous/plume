@@ -39,12 +39,12 @@ Bu proje icin AI/agent calisma kurallari:
 - Stack manifest: `~/.config/plume/services.yml` (D-103/D-104) — bkz. [docs/operations/services-manifest.md](docs/operations/services-manifest.md).
 - Ortam: `~/.config/plume/.env` (`.env` manifest uzerinde kazanir).
 - Makine profili: `host.env` (TCC/path; servis enable toggle degil).
-- Proje: phase-4 `plume.yml` baseline; v2 ayri faz — [implementation/phases/phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md) (D-089).
+- Proje: `plume.yml` MVP (Faz 16, D-117) — [docs/operations/project-plume-yml.md](docs/operations/project-plume-yml.md); genis schema / registry sync stretch backlog.
 
 8. Yeni faz / yeni agent oturumu
 - Baslangic okuma: [implementation/phase-tracker.md](implementation/phase-tracker.md), en guncel `implementation/11-status-*.md`.
-- Faz 1-15 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
+- Faz 1-16 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
 - Faz kapanisi: checklist `[x]`, [implementation/05-decision-log.md](implementation/05-decision-log.md) (D-xxx), ilgili `docs/commands/` + `docs/contracts/`, `./tests/run_smoke_suite.sh --release`.
 - Session bootstrap: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
-- Urun backlog: [implementation/future-roadmap.md](implementation/future-roadmap.md); aktif faz: [implementation/phases/phase-16.md](implementation/phases/phase-16.md); kaynak: [phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md).
+- Urun backlog: [implementation/future-roadmap.md](implementation/future-roadmap.md); son kapanis: [implementation/11-status-2026-07-29.md](implementation/11-status-2026-07-29.md); kaynak: [phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md) (D-089).
 - Git: kullanici `.env` / gizli dosya commit etme; commit yalnizca kullanici istediginde.

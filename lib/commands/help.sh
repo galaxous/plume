@@ -71,6 +71,7 @@ COMMANDS:
   site remove <site-id> [--dry-run]
                              Remove site from registry
   project init --path=...    Bootstrap Laravel project (.env/composer/artisan/npm)
+  project config show --path=...  Read project plume.yml MVP fields (mode, php_version, type)
   project env sync-secrets --path=... [--keys=K1,K2] [--dry-run] [--create-env]
                              Sync plume secrets store into Laravel project .env
   deploy plan [--mode=...]

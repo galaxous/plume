@@ -45,7 +45,8 @@ plumectl site remove <site-id>
 
 Not:
 
-- `--mode` verilmezse, önce proje klasöründeki `plume.yml` içinde `project.mode` veya `mode` aranır.
+- `--mode` verilmezse, önce proje klasöründeki `plume.yml` içinde `project.mode` veya `mode` aranır (`project.mode` önceliklidir).
+- `--php` / `--php-version` verilmezse `project.php_version` hint olarak kullanılır (kurulu sürüm doğrulaması geçer).
 - Bulunamazsa aktif mod (`plume mode current`) kullanılır.
 - Site kaydında `mode` varsa `site update/publish/remove` bu mod öncelikli olarak kullanılacaktır.
 - `PLUME_SITE_RELOAD_REQUIRED=true` ise `--reload` başarısız olursa komut `exit 2` döner.

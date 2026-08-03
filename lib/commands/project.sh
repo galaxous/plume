@@ -8,6 +8,7 @@ plumectl project <subcommand>
 subcommands:
   init    Bootstrap a Laravel project folder
   env     Project environment operations
+  config  Read project-local plume.yml (MVP fields)
 
 Init options:
   --path=</abs/project/path>      Required
@@ -35,6 +36,7 @@ Examples:
   plumectl project init --path=/var/www/myapp --migrate --seed --npm-install --npm-build
   plumectl project init --path=/var/www/myapp --dry-run
   plumectl project env sync-secrets --path=/var/www/myapp --keys=APP_KEY,DB_PASSWORD
+  plumectl project config show --path=/var/www/myapp
 EOF
 }
 
@@ -348,6 +350,74 @@ cmd_project_env_sync_secrets() {
   plume_info "project env sync complete: path=${path}, synced=${synced}, missing=${missing}"
 }
 
+cmd_project_config_show() {
+  local path=""
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --path=*) path="${arg#*=}" ;;
+      *)
+        plume_err "unknown project config show option: ${arg}"
+        return 2
+        ;;
+    esac
+  done
+
+  if [[ -z "${path}" ]]; then
+    plume_err "project config show requires --path=</abs/project/path>"
+    return 2
+  fi
+
+  if [[ ! -d "${path}" ]]; then
+    plume_err "invalid path: ${path}"
+    return 2
+  fi
+
+  path="$(cd "${path}" && pwd)"
+
+  local manifest="" schema_version="" mode="" php_version="" project_type=""
+  if manifest="$(plume_yml_manifest_path "${path}")"; then
+    :
+  else
+    plume_err "project manifest not found (expected plume.yml under ${path})"
+    return 2
+  fi
+
+  schema_version="$(plume_yml_schema_version "${path}" 2>/dev/null || true)"
+  mode="$(plume_yml_project_mode "${path}" 2>/dev/null || true)"
+  php_version="$(plume_yml_project_php_version "${path}" 2>/dev/null || true)"
+  project_type="$(plume_yml_project_type "${path}" 2>/dev/null || true)"
+
+  if [[ -n "${project_type}" ]] && ! plume_yml_validate_project_type "${project_type}"; then
+    plume_err "invalid project.type in manifest: ${project_type}"
+    return 2
+  fi
+
+  if [[ -n "${mode}" ]] && ! plume_site_validate_mode "${mode}"; then
+    plume_err "invalid project mode in manifest: ${mode}"
+    return 2
+  fi
+
+  printf 'manifest=%s\n' "${manifest}"
+  [[ -n "${schema_version}" ]] && printf 'schema_version=%s\n' "${schema_version}"
+  [[ -n "${mode}" ]] && printf 'mode=%s\n' "${mode}"
+  [[ -n "${php_version}" ]] && printf 'php_version=%s\n' "${php_version}"
+  [[ -n "${project_type}" ]] && printf 'project_type=%s\n' "${project_type}"
+  return 0
+}
+
+cmd_project_config() {
+  local sub="${1:-show}"
+  shift || true
+  case "${sub}" in
+    show) cmd_project_config_show "$@" ;;
+    *)
+      plume_err "unknown project config subcommand: ${sub}"
+      return 2
+      ;;
+  esac
+}
+
 cmd_project_env() {
   local sub="${1:-sync-secrets}"
   shift || true
@@ -367,6 +437,7 @@ cmd_project() {
   case "${sub}" in
     init) cmd_project_init "$@" ;;
     env) cmd_project_env "$@" ;;
+    config) cmd_project_config "$@" ;;
     help|-h|--help) plume_project_usage ;;
     *)
       plume_err "unknown project subcommand: ${sub}"

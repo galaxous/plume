@@ -1,23 +1,13 @@
 # Future Roadmap (tek sayfa todo ozeti)
 
-**Guncelleme:** 2026-07-28. Faz 1–15 kapandi (Faz 7 `beta-frozen`). Detayli faz kurallari: [AGENTS.md](../AGENTS.md) §8.
+**Guncelleme:** 2026-07-29. Faz 1–16 kapandi (Faz 7 `beta-frozen`). Detayli faz kurallari: [AGENTS.md](../AGENTS.md) §8.
 
 | Kaynak | Rol |
 |--------|-----|
 | [phase-tracker.md](./phase-tracker.md) | Resmi faz durumu (master board) |
-| [11-status-2026-07-28.md](./11-status-2026-07-28.md) | Son kapanis + handoff |
+| [11-status-2026-07-29.md](./11-status-2026-07-29.md) | Son kapanis + handoff |
 | [10-herd-parity-and-beyond.md](./10-herd-parity-and-beyond.md) | Parity checkbox’lari |
 | [phase-15-backlog-plume-yml-dockerlite.md](./phases/phase-15-backlog-plume-yml-dockerlite.md) | D-089 urun backlog |
-
----
-
-## Aktif faz taslağı
-
-### Phase 16 — `plume.yml` v2 MVP
-
-- Checklist: [phases/phase-16.md](./phases/phase-16.md)
-- Tracker: `not-started`
-- Odak: `project.mode`, `project.php_version`, loader + merge kurallari + hermetik smoke
 
 ---
 
@@ -29,6 +19,7 @@
 | P2 | **Native servis genisletme** | Postgres/memcached vb. host provision veya wizard |
 | P3 | **Release / dagitim** | Packagist/Homebrew, pinned release, opsiyonel auto-update |
 | P4 | **Composer + Node workspace** | Herd parity; laradock/docker-lite agirlikli |
+| — | **plume.yml stretch** | Registry sync, `services.enabled[]` (phase-16 stretch / 16b) |
 
 Yeni faz acilirken: `phases/phase-NN.md` + tracker satiri + D-xxx.
 
@@ -60,8 +51,7 @@ Kaynak: [10-herd-parity-and-beyond.md](./10-herd-parity-and-beyond.md) (`[ ]` sa
 
 ## Yeni agent oturumu — hizli secim
 
-1. **Buyuk ozellik:** bu dosyada P1 veya Phase 16 → `@implementation/phases/phase-16.md` + `@AGENTS.md`
-2. **Tek parity maddesi:** `@implementation/10-herd-parity-and-beyond.md` + ilgili `docs/commands/`
-3. **Dogrulama:** `./tests/run_smoke_suite.sh --release`
+1. **Buyuk ozellik:** P1 Docker-lite → yeni `phase-17.md` + `@AGENTS.md`; veya parity tek madde → `@implementation/10-herd-parity-and-beyond.md`
+2. **Dogrulama:** `./tests/run_smoke_suite.sh --release`
 
 Bootstrap metni: [docs/operations/ai-assisted-development.md](../docs/operations/ai-assisted-development.md) (Session bootstrap).

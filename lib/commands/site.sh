@@ -195,50 +195,13 @@ plume_site_resolve_php_version() {
   printf '%s' "${normalized}"
 }
 
-plume_site_mode_from_yaml() {
+plume_site_php_version_from_manifest() {
   local project_root="$1"
-  local manifest_file="${project_root%/}/plume.yml"
-
-  if [[ ! -f "${manifest_file}" ]]; then
+  local hint=""
+  if ! hint="$(plume_yml_project_php_version "${project_root}")"; then
     return 1
   fi
-
-  local line trimmed mode="" in_project="false"
-
-  while IFS= read -r line; do
-    line="${line%%#*}"
-    trimmed="$(printf '%s' "${line}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-    [[ -z "${trimmed}" ]] && continue
-
-    if [[ "${trimmed}" == "project:" ]]; then
-      in_project="true"
-      continue
-    fi
-
-    if [[ "${in_project}" == "true" && ! "${line}" =~ ^[[:space:]] ]]; then
-      in_project="false"
-    fi
-
-    if [[ "${trimmed}" == "mode:"* ]]; then
-      mode="${trimmed#mode:}"
-      mode="$(printf '%s' "${mode}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-      mode="${mode#\"}"; mode="${mode%\"}"
-      mode="${mode#\'}"; mode="${mode%\'}"
-      printf '%s' "${mode}"
-      return 0
-    fi
-
-    if [[ "${in_project}" == "true" && "${trimmed}" == "mode:"* ]]; then
-      mode="${trimmed#mode:}"
-      mode="$(printf '%s' "${mode}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-      mode="${mode#\"}"; mode="${mode%\"}"
-      mode="${mode#\'}"; mode="${mode%\'}"
-      printf '%s' "${mode}"
-      return 0
-    fi
-  done < "${manifest_file}"
-
-  return 1
+  printf '%s' "${hint}"
 }
 
 plume_site_resolve_mode() {
@@ -250,7 +213,7 @@ plume_site_resolve_mode() {
   if [[ -n "${explicit}" ]]; then
     mode="${explicit}"
   elif [[ -n "${project_root}" ]]; then
-    if mode="$(plume_site_mode_from_yaml "${project_root}")"; then
+    if mode="$(plume_yml_project_mode "${project_root}")"; then
       :
     fi
   fi
@@ -481,6 +444,14 @@ cmd_site_add() {
   fi
 
   path="$(cd "${path}" && pwd)"
+
+  if [[ "${PLUME_SITE_PHP_VERSION_SET}" != "true" ]]; then
+    local manifest_php=""
+    if manifest_php="$(plume_site_php_version_from_manifest "${path}")"; then
+      php_version="${manifest_php}"
+    fi
+  fi
+
   resolved_mode="$(plume_site_resolve_mode "${PLUME_SITE_MODE}" "${path}" "${PLUME_MODE_HINT:-}")"
   if ! plume_site_validate_mode "${resolved_mode}"; then
     plume_err "invalid mode: ${resolved_mode}"

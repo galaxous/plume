@@ -253,6 +253,7 @@ versions:
 
 ## Notlar
 
+- **Phase 16 MVP** (yukaridaki ornekte isaretli): `project.mode`, `project.php_version`, `project.type` + opsiyonel kok `version` / legacy kok `mode`. Yukleyici: `lib/common/plume_yml.sh`. Runbook: [docs/operations/project-plume-yml.md](../docs/operations/project-plume-yml.md).
 - `port` alanlari istege baglidir; verilmezse engine otomatik atar.
 - `mode` tek secimdir; feature flag'ler gecis asamasinda backward-compat icin kalir.
 - `prerequisites.policy=fail-fast` oldugunda eksik core paket varsa komut calismaz.

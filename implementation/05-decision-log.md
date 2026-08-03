@@ -2,6 +2,33 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-07-29 - D-118 - Phase 16 Gate Closure (plume.yml v2 MVP)
+
+- Durum: accepted
+- Karar:
+  - Faz 16 resmi kapanis: tracker `done`, tamamlanma 2026-07-29.
+  - Gate: MVP loader + `project config show` + `site add` php/mode hint, D-117, `tests/phase16_plume_yml_v2_smoke.sh` release zincirinde, `./tests/run_smoke_suite.sh --release` yesil.
+  - Stretch (manifest sync, `services.enabled[]`) Faz 16b veya sonraki faz backlog'unda kalir.
+- Gerekce:
+  - AGENTS.md faz-gate: test + dokumantasyon + karar kaydi.
+- Etki:
+  - `implementation/phases/phase-16.md`, `implementation/phase-tracker.md`, `implementation/10-herd-parity-and-beyond.md`, `implementation/11-status-2026-07-29.md`, `implementation/future-roadmap.md`.
+
+## 2026-07-28 - D-117 - Phase 16 plume.yml v2 MVP (Schema, Loader, Merge)
+
+- Durum: accepted
+- Karar:
+  - Proje kokundeki `plume.yml` icin MVP alanlari: `project.mode`, `project.php_version`, `project.type` (opsiyonel); opsiyonel kok `version` ve phase-4 geriye uyumlu kok `mode`.
+  - Mode cozumleme onceligi (manifest tarafi): CLI `--mode` > `project.mode` > kok `mode` > `PLUME_MODE` / hint > `mode current`.
+  - PHP surumu: `site add` icinde `--php` / `--php-version` verilmediyse `project.php_version` hint olarak kullanilir; kurulu surum listesi (`PLUME_PHP_INSTALLED_VERSIONS` / env) validation'da son soz sahibidir.
+  - Stack enable / servis profili: kullanici `~/.config/plume/services.yml` + `.env` (D-103/D-104); proje manifest servis toggle'lari Phase 16 stretch — bu fazda yuklenmez.
+  - Site registry (`~/.config/plume/sites` veya `PLUME_SITE_REGISTRY_DIR`): kayit alanlari (domain, path, mode, php_version) manifest ile cakismada CLI ve registry kaydi site operasyonu icin authoritative; manifest yalnizca onboarding hint/cozumleme katmanidir (otomatik registry sync yok).
+  - Loader: `lib/common/plume_yml.sh`; gorunurluk: `plumectl project config show --path=...`.
+- Gerekce:
+  - D-089 backlog'un dar MVP dilimini kod + hermetik smoke ile teslim etmek; phase-4 mode davranisini bozmadan `project.*` alanlarini netlestirmek.
+- Etki:
+  - `lib/common/plume_yml.sh`, `lib/commands/site.sh`, `lib/commands/project.sh`, `tests/phase16_plume_yml_v2_smoke.sh`, `tests/run_smoke_suite.sh --release`, `docs/operations/project-plume-yml.md`, `docs/commands/project-config.md`.
+
 ## 2026-07-28 - D-116 - Phase 15 CI / Release Readiness Parity
 
 - Durum: accepted

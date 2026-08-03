@@ -37,6 +37,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 ## Laravel Project Lifecycle Coverage
 
 - [x] `project init` (bootstrap)
+- [x] Project-local `plume.yml` MVP (`project config show`, `site add` mode/php hint; D-117–D-118 — [project-plume-yml.md](../docs/operations/project-plume-yml.md), [project-config.md](../docs/commands/project-config.md))
 - [x] `site add` + web server publish
 - [x] `services install/up/status` (command surface + native PHP host install; diger servisler opt-in host provision)
 - [x] `deploy run` + health gate (`deploy apply` faz 13)
@@ -47,7 +48,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - 2026-03-06: `site add/list/check/remove` temelini tamamladı.
 - Merkezî site registry modeli (`~/.config/plume/sites`) çalışır hale getirildi.
 - publish akışı snippet + opsiyonel reload/hosts/strict publish ile tamamlandi (faz 5+).
-- `plume.yml` tabanlı site manifest desteği bu fazın test kapsamının dışında tutuldu; sonraki fazlarda (post-testing) project-local manifest standardı planlanıyor.
+- **2026-07-29 (Faz 16):** Proje kokunde `plume.yml` MVP — `project.mode`, `project.php_version`, `project.type`; registry ile otomatik sync yok; merge kurallari D-117. Phase-4 tek alan `mode` davranisi `project.mode` onceligi ile genisletildi.
 
 ## Phase Mapping
 
@@ -57,6 +58,11 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - Faz 10: parity checklist kapanis raporu
 - Faz 13: `deploy apply` orchestration
 - Faz 15: scheduler/queue CLI (D-111–D-114), native Mailpit host provision (D-109); gate D-115–D-116 — bkz. [phase-15.md](phases/phase-15.md), [11-status-2026-07-28.md](11-status-2026-07-28.md)
+- Faz 16: project `plume.yml` v2 MVP (D-117–D-118) — bkz. [phase-16.md](phases/phase-16.md), [11-status-2026-07-29.md](11-status-2026-07-29.md)
+
+## Phase 16 Impact Note
+
+- 2026-07-29: `lib/common/plume_yml.sh`, `project config show`, `site add` manifest hint; stretch (registry sync, services.enabled) backlog.
 
 ## Phase 15 Impact Note
 
