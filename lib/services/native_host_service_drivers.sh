@@ -206,7 +206,7 @@ plume_native_driver_post_install() {
     redis)
       plume_native_credentials_set redis host "127.0.0.1"
       plume_native_credentials_set redis port "$(plume_native_driver_default_port redis)"
-      plume_native_credentials_set redis password "${PLUME_REDIS_PASSWORD:-secret_redis}"
+      plume_native_credentials_set redis password "$(plume_native_redis_effective_password)"
       ;;
     rabbitmq)
       plume_native_credentials_set rabbitmq host "127.0.0.1"
@@ -239,6 +239,9 @@ plume_native_driver_install_packages() {
   if plume_native_driver_is_mock; then
     plume_info "native driver mock install: ${service}"
     plume_native_driver_post_install "${service}" || true
+    if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
+      plume_native_redis_sync_config "false" "false" || true
+    fi
     return 0
   fi
 
@@ -298,6 +301,9 @@ plume_native_driver_install_packages() {
       ;;
   esac
   plume_native_driver_post_install "${service}" || true
+  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
+    plume_native_redis_sync_config "false" "false" || true
+  fi
 }
 
 plume_native_driver_start_npm_service() {
@@ -381,6 +387,12 @@ plume_native_driver_start_service() {
 
   plume_native_driver_post_install "${service}" || true
 
+  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
+    plume_native_redis_sync_config "false" "false" || {
+      plume_warn "native redis: config sync failed; continuing start (fix with: services redis sync-config --reload)"
+    }
+  fi
+
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
     plume_native_driver_start_npm_service "${service}"
     return $?
@@ -463,7 +475,7 @@ plume_native_driver_health_probe() {
 
   case "${service}" in
     redis)
-      command -v redis-cli >/dev/null 2>&1 && redis-cli ping 2>/dev/null | grep -q PONG
+      plume_native_redis_cli_ping
       ;;
     postgres)
       command -v pg_isready >/dev/null 2>&1 && pg_isready -q 2>/dev/null

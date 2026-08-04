@@ -33,6 +33,8 @@ source "${ROOT_DIR}/lib/common/plume_yml.sh"
 source "${ROOT_DIR}/lib/services/native_host_provision.sh"
 # shellcheck source=services/native_web_nginx_config.sh
 source "${ROOT_DIR}/lib/services/native_web_nginx_config.sh"
+# shellcheck source=services/native_redis_config.sh
+source "${ROOT_DIR}/lib/services/native_redis_config.sh"
 # shellcheck source=services/registry.sh
 source "${ROOT_DIR}/lib/services/registry.sh"
 # shellcheck source=commands/help.sh

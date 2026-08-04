@@ -2,6 +2,18 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-08-05 - D-122 - Native Redis Config Management
+
+- Durum: accepted
+- Karar:
+  - `PLUME_NATIVE_REDIS_MANAGE_CONFIG=true` (varsayilan): `PLUME_REDIS_PORT`, `PLUME_REDIS_PASSWORD`, `PLUME_NATIVE_REDIS_BIND` → `state/native/redis/plume-redis.conf` + system `redis.conf` include.
+  - `services redis sync-config [--reload|--dry-run]`; `install|up|restart redis` otomatik sync.
+  - Health: `redis-cli` port + sifre ile ping.
+- Gerekce:
+  - Laradock parity: env'deki sifre/port native Redis'e uygulanmali; kullaniciya manuel `redis.conf` duzenletilmemeli.
+- Etki:
+  - `lib/services/native_redis_config.sh`, drivers, `services.sh`, docs, smoke.
+
 ## 2026-08-05 - D-121 - Stack Service Env Defaults (Laradock Parity)
 
 - Durum: accepted

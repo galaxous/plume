@@ -63,6 +63,7 @@ COMMANDS:
   services provision --from-manifest [--dry-run]
   services url <service>           Native HTTP URL (phpmyadmin, mongo_webui, redis_webui, …)
   services credentials <service>     Native DB/broker credentials (postgres, mariadb, redis, …)
+  services redis sync-config [--reload|--dry-run]  Apply PLUME_REDIS_* to native redis.conf
   site add --path --domain --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--publish] [--server-config=] [--dry-run]
                              Register and onboard site for local serving
   site update <site-id> --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--port=80] [--publish] [--server-config=] [--dry-run]

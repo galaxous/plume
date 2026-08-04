@@ -64,6 +64,8 @@ plume_load_defaults() {
   : "${PLUME_REDIS_ENABLED:=false}"
   : "${PLUME_REDIS_PORT:=6379}"
   : "${PLUME_REDIS_PASSWORD:=secret_redis}"
+  : "${PLUME_NATIVE_REDIS_MANAGE_CONFIG:=true}"
+  : "${PLUME_NATIVE_REDIS_BIND:=127.0.0.1}"
   : "${PLUME_MEMCACHED_ENABLED:=false}"
   : "${PLUME_MEMCACHED_PORT:=11211}"
   : "${PLUME_RABBITMQ_ENABLED:=false}"

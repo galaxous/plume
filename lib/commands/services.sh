@@ -3424,6 +3424,36 @@ cmd_services_web() {
   esac
 }
 
+cmd_services_redis_sync_config() {
+  local dry_run="false" do_reload="false"
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --dry-run) dry_run="true" ;;
+      --reload) do_reload="true" ;;
+      *)
+        plume_err "unknown services redis sync-config option: ${arg}"
+        return 2
+        ;;
+    esac
+  done
+  plume_native_redis_sync_config "${dry_run}" "${do_reload}"
+}
+
+cmd_services_redis() {
+  local action="${1:-}"
+  shift || true
+  case "${action}" in
+    sync-config)
+      cmd_services_redis_sync_config "$@"
+      ;;
+    *)
+      plume_err "unknown services redis action: ${action} (use sync-config)"
+      return 2
+      ;;
+  esac
+}
+
 cmd_services_manifest() {
   local action="${1:-show}"
   shift || true
@@ -3517,6 +3547,9 @@ cmd_services_credentials() {
 plume_services_restart_one() {
   local mode="$1"
   local service="$2"
+  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
+    plume_native_redis_sync_config "false" "false" || true
+  fi
   PLUME_MODE="${mode}" plume_service_stop "${service}" || true
   PLUME_MODE="${mode}" plume_service_start "${service}"
 }
@@ -3717,6 +3750,9 @@ cmd_services() {
       ;;
     web)
       cmd_services_web "$@"
+      ;;
+    redis)
+      cmd_services_redis "$@"
       ;;
     manifest)
       cmd_services_manifest "$@"

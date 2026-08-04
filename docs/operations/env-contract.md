@@ -125,4 +125,6 @@ Native cache/DB/broker/web UI baglanti ayarlari `PLUME_*` ile yonetilir. Varsayi
 | `PLUME_REDIS_WEBUI_USERNAME` / `PASSWORD` | `REDIS_WEBUI_USERNAME` / `PASSWORD` | `laradock` / `laradock` |
 | `PLUME_REDIS_WEBUI_HOST` / `REDIS_PORT` | `REDIS_WEBUI_CONNECT_HOST` / `PORT` | `127.0.0.1` / `6379` |
 
-Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Bkz. [services-env.md](../commands/services-env.md).
+Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Redis icin ayrica `services redis sync-config --reload`. Bkz. [services-env.md](../commands/services-env.md), [services-redis.md](../commands/services-redis.md).
+
+Native Redis config yonetimi (`PLUME_NATIVE_REDIS_MANAGE_CONFIG=true`, varsayilan): Plume `state/native/redis/plume-redis.conf` uretir ve system `redis.conf` icine `include` ekler; `requirepass` ve `port` buradan uygulanir.

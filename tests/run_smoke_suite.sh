@@ -124,6 +124,7 @@ run_ci_release_suite() {
   run_step "phase17-native-stack-broker" "phase17_native_stack_broker_smoke.sh"
   run_step "phase17-native-stack-webui" "phase17_native_stack_webui_smoke.sh"
   run_step "phase17-native-stack-env" "phase17_native_stack_env_smoke.sh"
+  run_step "phase17-native-redis-config" "phase17_native_redis_config_smoke.sh"
 }
 
 run_phase11_full_suite() {
