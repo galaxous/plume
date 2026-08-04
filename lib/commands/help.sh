@@ -20,7 +20,7 @@ COMMANDS:
   help                       Show help
   version                    Show version
   context                    Show global context (mode/path/lock) in one table
-  env where|init             Show/init global plume env file (~/.config/plume/.env)
+  env where|init|set          Show/init/set global plume env (~/.config/plume/.env)
   init shell                 Configure shell rc to auto-enable plume php shims
   init host [--force] [--json] [--apply]  Detect host profile; bootstrap services.yml; --apply runs manifest provision
   init onboarding [--fix] [--open-settings]  First-run checklist; --fix starts brew nginx/php
@@ -38,6 +38,8 @@ COMMANDS:
   services install <target>  Run install hook (target: service|all)
   services up <target>       Run start hook (target: service|all-enabled)
   services down <target>     Run stop hook (target: service|all-enabled)
+  services restart <target>  Stop then start (apply .env changes; native webui/npm)
+  services env show|set      Stack connection env (redis, mongodb, rabbitmq, webui)
   services health [target]   Show health state (target: service|all)
   services logs <target>     Show service logs (--tail=30)
   services exec <target>     Open shell/command in container (docker-lite/laradock-bridge only)
@@ -59,7 +61,8 @@ COMMANDS:
                              Run php artisan queue:failed (Horizon: see queue.md)
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
-                             Install/start web + DB + redis per ~/.config/plume/services.yml
+  services url <service>           Native HTTP URL (phpmyadmin, mongo_webui, redis_webui, …)
+  services credentials <service>     Native DB/broker credentials (postgres, mariadb, redis, …)
   site add --path --domain --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--publish] [--server-config=] [--dry-run]
                              Register and onboard site for local serving
   site update <site-id> --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--port=80] [--publish] [--server-config=] [--dry-run]

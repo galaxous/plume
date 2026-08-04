@@ -43,8 +43,15 @@ Bu proje icin AI/agent calisma kurallari:
 
 8. Yeni faz / yeni agent oturumu
 - Baslangic okuma: [implementation/phase-tracker.md](implementation/phase-tracker.md), en guncel `implementation/11-status-*.md`.
-- Faz 1-16 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
+- Faz 1-17 tamamlandi (Faz 7 beta-frozen); yeni ozellik = yeni `implementation/phases/phase-NN.md` + phase-tracker satiri.
 - Faz kapanisi: checklist `[x]`, [implementation/05-decision-log.md](implementation/05-decision-log.md) (D-xxx), ilgili `docs/commands/` + `docs/contracts/`, `./tests/run_smoke_suite.sh --release`.
 - Session bootstrap: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
-- Urun backlog: [implementation/future-roadmap.md](implementation/future-roadmap.md); son kapanis: [implementation/11-status-2026-07-29.md](implementation/11-status-2026-07-29.md); kaynak: [phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md) (D-089).
+- Urun backlog: [implementation/future-roadmap.md](implementation/future-roadmap.md); son kapanis: [implementation/11-status-2026-08-04.md](implementation/11-status-2026-08-04.md); kaynak: [phase-15-backlog-plume-yml-dockerlite.md](implementation/phases/phase-15-backlog-plume-yml-dockerlite.md) (D-089).
+- Aktif faz yok; sonraki aday: Docker-lite unfreeze (future-roadmap P1).
 - Git: kullanici `.env` / gizli dosya commit etme; commit yalnizca kullanici istediginde.
+
+9. Native stack — OS matrisi (Phase 17+)
+- Oncelik: **macOS** (Homebrew) ve **Linux** (apt, dnf); Windows native tam stack desteklenmez.
+- Her yeni native servis PR: [docs/operations/native-stack-os-matrix.md](docs/operations/native-stack-os-matrix.md) satiri + mock smoke + `docs/commands/` guncellemesi zorunlu.
+- macOS host kurulum: TCC/brew onay — [docs/operations/macos-permissions.md](docs/operations/macos-permissions.md).
+- Linux smoke: mock `apt-get`/`dnf` + sahte `systemctl` (gercek `~/.config/plume` kullanma).

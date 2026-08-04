@@ -2,7 +2,7 @@
 
 Plume, Laravel projeleri icin Linux/macOS uzerinde calisacak 3 modlu (`native`, `docker-lite`, `laradock-bridge`) bir operasyon util'idir.
 
-**Guncel durum:** Faz 1–16 tamamlandi; sonraki aday **Faz 17** (docker-lite unfreeze, bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)). Faz 7 (`docker-lite`) **beta-frozen**.
+**Guncel durum:** Faz 1–17 tamamlandi; sonraki aday **Docker-lite unfreeze** (Phase 18, bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)). Faz 7 (`docker-lite`) **beta-frozen**.
 
 Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker.md)
 

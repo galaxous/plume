@@ -5,6 +5,20 @@ plume_global_env_file() {
   printf '%s' "${PLUME_GLOBAL_ENV_FILE:-$HOME/.config/plume/.env}"
 }
 
+plume_global_env_set_kv() {
+  local env_file="$1"
+  local key="$2"
+  local value="$3"
+  local tmp
+
+  tmp="$(mktemp)"
+  if [[ -f "${env_file}" ]]; then
+    grep -Ev "^(export[[:space:]]+)?${key}=" "${env_file}" > "${tmp}" 2>/dev/null || true
+  fi
+  printf '%s=%s\n' "${key}" "${value}" >> "${tmp}"
+  mv "${tmp}" "${env_file}"
+}
+
 plume_builtin_env_example_file() {
   printf '%s' "${PLUME_BUILTIN_ENV_EXAMPLE_FILE:-${ROOT_DIR}/templates/native-core.env.example}"
 }

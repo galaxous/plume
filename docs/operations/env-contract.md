@@ -102,3 +102,27 @@ Laradock path policy:
 Not:
 
 - `.env` icindeki `PLUME_MODE`, `PLUME_DOCKER_LITE_COMPOSE_FILE`, `PLUME_LARADOCK_PATH` degerleri uygulanmaz.
+
+## Stack Service Env (Laradock mapping)
+
+Native cache/DB/broker/web UI baglanti ayarlari `PLUME_*` ile yonetilir. Varsayilanlar Laradock `.env` ile hizali (D-121).
+
+| Plume | Laradock (ornek) | Varsayilan |
+|-------|------------------|------------|
+| `PLUME_REDIS_PORT` | `REDIS_PORT` | `6379` |
+| `PLUME_REDIS_PASSWORD` | `REDIS_PASSWORD` | `secret_redis` |
+| `PLUME_MONGODB_PORT` | `MONGODB_PORT` | `27017` |
+| `PLUME_MONGODB_USERNAME` | `MONGO_USERNAME` | `root` |
+| `PLUME_MONGODB_PASSWORD` | `MONGO_PASSWORD` | `example` |
+| `PLUME_MONGODB_DATABASE` | — | `admin` |
+| `PLUME_RABBITMQ_PORT` | `RABBITMQ_NODE_HOST_PORT` | `5672` |
+| `PLUME_RABBITMQ_MANAGEMENT_PORT` | `RABBITMQ_MANAGEMENT_HTTP_HOST_PORT` | `15672` |
+| `PLUME_RABBITMQ_USER` / `PASSWORD` | `RABBITMQ_DEFAULT_USER` / `PASS` | `guest` / `guest` |
+| `PLUME_MONGO_WEBUI_PORT` | `MONGO_WEBUI_PORT` | `8082` (Plume; Laradock often `3000`) |
+| `PLUME_MONGO_WEBUI_URI` | `MONGO_WEBUI_MONGO_URL` | otomatik (`mongodb://user:pass@127.0.0.1:27017/admin`) |
+| `PLUME_MONGO_WEBUI_USERNAME` / `PASSWORD` | mongo-express basic auth | `admin` / `pass` |
+| `PLUME_REDIS_WEBUI_PORT` | `REDIS_WEBUI_PORT` | `8083` (Plume; Laradock often `9987`) |
+| `PLUME_REDIS_WEBUI_USERNAME` / `PASSWORD` | `REDIS_WEBUI_USERNAME` / `PASSWORD` | `laradock` / `laradock` |
+| `PLUME_REDIS_WEBUI_HOST` / `REDIS_PORT` | `REDIS_WEBUI_CONNECT_HOST` / `PORT` | `127.0.0.1` / `6379` |
+
+Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Bkz. [services-env.md](../commands/services-env.md).

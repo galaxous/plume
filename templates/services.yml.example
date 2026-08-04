@@ -30,12 +30,13 @@ services:
     enabled: false
 
   composer: { enabled: true }
-  phpmyadmin: { enabled: false }   # native: not auto-provisioned; use docker-lite or laradock-bridge
+  phpmyadmin: { enabled: false }   # native Phase 17: npm/php built-in or apt phpmyadmin
   postgres: { enabled: false, version: "16" }
   memcached: { enabled: false }
   rabbitmq: { enabled: false }
   mongodb: { enabled: false }
   mongo_webui: { enabled: false }
+  redis_webui: { enabled: false }   # native: redis-commander (npm); Laradock alias redis-webui
   mailpit: { enabled: true }   # native: macOS brew install/start; Linux → docker-lite or manual
   meilisearch: { enabled: false }
   minio: { enabled: false }

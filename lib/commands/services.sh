@@ -65,9 +65,11 @@ plume_services_parse_mode() {
   local mode
   mode="$(plume_mode_current)"
   local arg
+  PLUME_SERVICES_NO_PROVISION="false"
   for arg in "$@"; do
     case "${arg}" in
       --mode=*) mode="${arg#*=}" ;;
+      --no-provision) PLUME_SERVICES_NO_PROVISION="true" ;;
     esac
   done
 
@@ -86,6 +88,22 @@ plume_services_first_positional() {
   local arg
   for arg in "$@"; do
     if [[ "${arg}" == --* ]]; then
+      continue
+    fi
+    printf '%s' "${arg}"
+    return 0
+  done
+}
+
+plume_services_second_positional() {
+  local found="false"
+  local arg
+  for arg in "$@"; do
+    if [[ "${arg}" == --* ]]; then
+      continue
+    fi
+    if [[ "${found}" == "false" ]]; then
+      found="true"
       continue
     fi
     printf '%s' "${arg}"
@@ -378,7 +396,10 @@ plume_services_group_members_raw() {
       printf '%s\n' nginx apache2 caddy
       ;;
     native:db|docker-lite:db)
-      printf '%s\n' mariadb mysql postgres redis memcached rabbitmq mongodb mongo_webui phpmyadmin
+      printf '%s\n' mariadb mysql postgres phpmyadmin
+      ;;
+    native:cache|docker-lite:cache)
+      printf '%s\n' redis mongodb rabbitmq mongo_webui redis_webui memcached
       ;;
     native:queue|docker-lite:queue)
       printf '%s\n' php_worker horizon supervisor
@@ -3438,6 +3459,173 @@ cmd_services_provision() {
   plume_services_manifest_provision_services "${dry_run}"
 }
 
+cmd_services_url() {
+  local mode service url
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  service="$(plume_services_first_positional "$@")"
+  if [[ -z "${service}" ]]; then
+    plume_err "services url requires <service> (phpmyadmin|mongo_webui|redis_webui|rabbitmq|mailpit)"
+    return 2
+  fi
+  service="$(plume_service_contract_normalize "${service}" "${mode}")"
+  if [[ "${mode}" != "native" ]]; then
+    plume_err "services url is native-only in Phase 17 (service=${service})"
+    return 2
+  fi
+  if ! url="$(plume_native_host_service_url "${service}" 2>/dev/null)"; then
+    port="$(plume_service_default_port "${service}" 2>/dev/null || true)"
+    if [[ -n "${port}" ]]; then
+      printf 'url=http://127.0.0.1:%s\n' "${port}"
+      return 0
+    fi
+    plume_err "no url mapping for service: ${service}"
+    return 2
+  fi
+  printf 'url=%s\n' "${url}"
+}
+
+cmd_services_credentials() {
+  local mode service
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  service="$(plume_services_first_positional "$@")"
+  if [[ -z "${service}" ]]; then
+    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui)"
+    return 2
+  fi
+  service="$(plume_service_contract_normalize "${service}" "${mode}")"
+  if [[ "${mode}" != "native" ]]; then
+    plume_err "services credentials is native-only in Phase 17"
+    return 2
+  fi
+  case "${service}" in
+    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui) ;;
+    *)
+      plume_err "credentials not supported for service: ${service}"
+      return 2
+      ;;
+  esac
+  if ! plume_native_host_print_credentials "${service}"; then
+    plume_err "no credentials stored for ${service}; run services install ${service} --mode=native"
+    return 2
+  fi
+}
+
+plume_services_restart_one() {
+  local mode="$1"
+  local service="$2"
+  PLUME_MODE="${mode}" plume_service_stop "${service}" || true
+  PLUME_MODE="${mode}" plume_service_start "${service}"
+}
+
+cmd_services_restart() {
+  local mode target
+  if ! plume_services_parse_version "$@"; then
+    return 2
+  fi
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  if [[ "${mode}" == "laradock-bridge" ]]; then
+    plume_services_laradock_runtime_prepare "$@" || return 2
+  fi
+  target="$(plume_services_first_positional "$@")"
+  target="${target:-}"
+  if [[ -z "${target}" ]]; then
+    plume_err "service name required (or all-enabled)"
+    return 2
+  fi
+  services_each_target "${target}" "plume_services_restart_one_wrapper" enabled "${mode}"
+  plume_context_lock_activate "services restart" "${mode}"
+}
+
+plume_services_restart_one_wrapper() {
+  local service="$1"
+  plume_services_restart_one "${PLUME_MODE:-native}" "${service}"
+}
+
+cmd_services_env_show() {
+  local mode service key val
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  service="$(plume_services_first_positional "$@")"
+  if [[ -z "${service}" ]]; then
+    plume_err "services env show requires <service> (redis|mongodb|rabbitmq|mongo_webui|redis_webui)"
+    return 2
+  fi
+  service="$(plume_service_contract_normalize "${service}" "${mode}")"
+  if ! plume_stack_service_env_keys_for_service "${service}" >/dev/null 2>&1; then
+    plume_err "env show not supported for service: ${service}"
+    return 2
+  fi
+  while IFS= read -r key; do
+    [[ -n "${key}" ]] || continue
+    val="${!key:-}"
+    printf '%s=%s\n' "${key}" "${val}"
+  done < <(plume_stack_service_env_keys_for_service "${service}")
+}
+
+cmd_services_env_set() {
+  local mode service assignment restart="false"
+  local resolved key value affected
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  local -a args=("$@")
+  local arg
+  for arg in "${args[@]}"; do
+    case "${arg}" in
+      --restart) restart="true" ;;
+    esac
+  done
+  service="$(plume_services_first_positional "$@")"
+  assignment="$(plume_services_second_positional "$@")"
+  if [[ -z "${service}" || -z "${assignment}" ]]; then
+    plume_err "services env set requires <service> <KEY=VALUE|short=VALUE>"
+    return 2
+  fi
+  service="$(plume_service_contract_normalize "${service}" "${mode}")"
+  if ! resolved="$(plume_stack_service_env_resolve_assignment "${service}" "${assignment}")"; then
+    plume_err "unknown env assignment for ${service}: ${assignment}"
+    plume_info "use: ./plume.sh services env show ${service} --mode=native"
+    return 2
+  fi
+  key="${resolved%%=*}"
+  value="${resolved#*=}"
+  plume_stack_service_env_write_and_export "${key}" "${value}" || return $?
+  if [[ "${restart}" == "true" ]]; then
+    while IFS= read -r affected; do
+      [[ -n "${affected}" ]] || continue
+      plume_services_restart_one "${mode}" "${affected}" || return $?
+    done < <(plume_stack_service_env_affected_services "${key}")
+  else
+    plume_info "restart to apply: ./plume.sh services restart ${service} --mode=${mode}"
+    if plume_stack_service_env_affected_services "${key}" >/dev/null 2>&1; then
+      while IFS= read -r affected; do
+        [[ -n "${affected}" && "${affected}" != "${service}" ]] || continue
+        plume_info "  also restart: ./plume.sh services restart ${affected} --mode=${mode}"
+      done < <(plume_stack_service_env_affected_services "${key}")
+    fi
+  fi
+}
+
+cmd_services_env() {
+  local sub="${1:-show}"
+  shift || true
+  case "${sub}" in
+    show) cmd_services_env_show "$@" ;;
+    set) cmd_services_env_set "$@" ;;
+    *)
+      plume_err "unknown services env subcommand: ${sub} (use show|set)"
+      return 2
+      ;;
+  esac
+}
+
 cmd_services_update() {
   plume_require_root
   local mode
@@ -3503,6 +3691,12 @@ cmd_services() {
     down)
       cmd_services_down "$@"
       ;;
+    restart)
+      cmd_services_restart "$@"
+      ;;
+    env)
+      cmd_services_env "$@"
+      ;;
     health)
       cmd_services_health "$@"
       ;;
@@ -3529,6 +3723,12 @@ cmd_services() {
       ;;
     provision)
       cmd_services_provision "$@"
+      ;;
+    url)
+      cmd_services_url "$@"
+      ;;
+    credentials)
+      cmd_services_credentials "$@"
       ;;
     update)
       cmd_services_update "$@"

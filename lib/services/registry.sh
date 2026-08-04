@@ -116,7 +116,8 @@ plume_service_default_port() {
     memcached) echo "${PLUME_MEMCACHED_PORT:-11211}" ;;
     rabbitmq) echo "${PLUME_RABBITMQ_PORT:-5672}" ;;
     mongodb) echo "${PLUME_MONGODB_PORT:-27017}" ;;
-    mongo_webui) echo "${PLUME_MONGO_WEBUI_PORT:-8081}" ;;
+    mongo_webui) echo "${PLUME_MONGO_WEBUI_PORT:-8082}" ;;
+    redis_webui) echo "${PLUME_REDIS_WEBUI_PORT:-8083}" ;;
     mailpit) echo "${PLUME_MAILPIT_PORT:-8025}" ;;
     meilisearch) echo "${PLUME_MEILISEARCH_PORT:-7700}" ;;
     minio) echo "${PLUME_MINIO_PORT:-9000}" ;;
@@ -639,6 +640,7 @@ memcached
 rabbitmq
 mongodb
 mongo_webui
+redis_webui
 mailpit
 meilisearch
 minio
@@ -664,6 +666,7 @@ memcached
 rabbitmq
 mongodb
 mongo_webui
+redis_webui
 mailpit
 meilisearch
 minio
@@ -686,6 +689,7 @@ memcached
 rabbitmq
 mongodb
 mongo_webui
+redis_webui
 mailpit
 meilisearch
 minio
@@ -718,6 +722,7 @@ plume_service_env_key() {
     rabbitmq) echo "PLUME_RABBITMQ_ENABLED" ;;
     mongodb) echo "PLUME_MONGODB_ENABLED" ;;
     mongo_webui) echo "PLUME_MONGO_WEBUI_ENABLED" ;;
+    redis_webui) echo "PLUME_REDIS_WEBUI_ENABLED" ;;
     mailpit) echo "PLUME_MAILPIT_ENABLED" ;;
     meilisearch) echo "PLUME_MEILISEARCH_ENABLED" ;;
     minio) echo "PLUME_MINIO_ENABLED" ;;
@@ -745,6 +750,7 @@ plume_service_version_env_key() {
     rabbitmq) echo "PLUME_RABBITMQ_VERSION" ;;
     mongodb) echo "PLUME_MONGODB_VERSION" ;;
     mongo_webui) echo "PLUME_MONGO_WEBUI_VERSION" ;;
+    redis_webui) echo "PLUME_REDIS_WEBUI_VERSION" ;;
     meilisearch) echo "PLUME_MEILISEARCH_VERSION" ;;
     mailpit) echo "PLUME_MAILPIT_VERSION" ;;
     minio) echo "PLUME_MINIO_VERSION" ;;
@@ -942,6 +948,7 @@ plume_service_contract_normalize() {
     workspace) echo "composer" ;;
     php-worker) echo "php_worker" ;;
     laravel-horizon) echo "horizon" ;;
+    redis-webui) echo "redis_webui" ;;
     *) echo "${service}" ;;
   esac
 }
@@ -1021,6 +1028,7 @@ plume_service_contract_variants() {
     composer) reverse_alt="workspace" ;;
     php_worker) reverse_alt="php-worker" ;;
     horizon) reverse_alt="laravel-horizon" ;;
+    redis_webui) reverse_alt="redis-webui" ;;
     *) reverse_alt="" ;;
   esac
   if [[ -n "${reverse_alt}" ]]; then
@@ -1484,6 +1492,9 @@ plume_service_install_native() {
       plume_warn "native mailpit: Homebrew (macOS) only; use --mode=docker-lite or install Mailpit manually"
       return 2
     fi
+    if [[ "${service}" == "mongodb" ]] && [[ "$(plume_detect_package_manager)" != "brew" ]] && ! plume_native_driver_is_mock; then
+      plume_warn "native mongodb: limited Linux support; see docs/operations/native-stack-os-matrix.md"
+    fi
   fi
   if [[ "${service}" == "php" ]]; then
     plume_native_php_install_host_version "${normalized}" || return 2
@@ -1521,6 +1532,9 @@ plume_service_start_native() {
     if [[ "${service}" == "mailpit" ]] && ! plume_native_host_provision_supported mailpit; then
       plume_warn "native mailpit: Homebrew (macOS) only; use --mode=docker-lite or install Mailpit manually"
       return 2
+    fi
+    if [[ "${service}" == "mongodb" ]] && [[ "$(plume_detect_package_manager)" != "brew" ]] && ! plume_native_driver_is_mock; then
+      plume_warn "native mongodb: limited Linux support; see docs/operations/native-stack-os-matrix.md"
     fi
   fi
   if ! plume_service_require_dependencies "${service}" native; then
@@ -2022,6 +2036,18 @@ plume_service_health() {
     return 0
   fi
   if [[ "${running}" == "true" ]]; then
+    if declare -F plume_native_host_health_probe >/dev/null 2>&1; then
+      if plume_native_host_health_probe "${service}" 2>/dev/null; then
+        printf '%s' "healthy"
+        return 0
+      fi
+      if plume_native_driver_is_mock 2>/dev/null; then
+        printf '%s' "healthy"
+        return 0
+      fi
+      printf '%s' "starting"
+      return 0
+    fi
     printf '%s' "healthy"
     return 0
   fi

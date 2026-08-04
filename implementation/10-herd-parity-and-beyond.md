@@ -16,6 +16,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 
 - [x] Native mode + Docker-lite + Laradock bridge bir arada (3 mod, mode switch)
 - [x] Service version pinning (mysql/redis/mariadb/postgres/php) (env + state metadata)
+- [x] Native DB/cache stack host provision (Phase 17: postgres, phpmyadmin, mongodb, rabbitmq, mongo_webui, redis_webui; D-119–D-120)
 - [x] Horizon + Supervisor tam entegrasyon (native contract + dependency guard)
 - [x] Queue/Scheduler runtime yonetimi (Faz 15 baseline: `schedule status|list|run-once|cron-install`, `queue status|list`; D-111–D-114 — bkz. [schedule.md](../docs/commands/schedule.md), [queue.md](../docs/commands/queue.md); tam worker/supervisor host kurulumu hâlâ manifest sinirlari icinde — D-113)
 - [x] Production deploy orchestration + rollback (`deploy apply` Faz 13, D-087; `deploy rollback|failback`; bkz. [deploy.md](../docs/commands/deploy.md))
@@ -59,6 +60,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - Faz 13: `deploy apply` orchestration
 - Faz 15: scheduler/queue CLI (D-111–D-114), native Mailpit host provision (D-109); gate D-115–D-116 — bkz. [phase-15.md](phases/phase-15.md), [11-status-2026-07-28.md](11-status-2026-07-28.md)
 - Faz 16: project `plume.yml` v2 MVP (D-117–D-118) — bkz. [phase-16.md](phases/phase-16.md), [11-status-2026-07-29.md](11-status-2026-07-29.md)
+- Faz 17: native stack host parity (D-119–D-120) — bkz. [phase-17.md](phases/phase-17.md), [11-status-2026-08-04.md](11-status-2026-08-04.md)
 
 ## Phase 16 Impact Note
 

@@ -67,7 +67,7 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 
 ## Parametreler
 
-- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@queue`, `group:web`)
+- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@cache`, `@queue`, `group:web`)
   - adapter-contract aliaslari mode'dan bagimsiz kabul edilir:
     - `php-fpm -> php`
     - `workspace -> composer`
@@ -186,7 +186,8 @@ Native veya container modunda servisleri kurmak ve yonetmek.
   - `phpmyadmin` icin `PMA_DB_ENGINE` (`mariadb|mysql`, alias: `PMA_ENGINE`) secimi zorunlu; secili engine `enabled=true` olmalidir
 - Phase 2 notu (guncel):
   - Varsayilan (`PLUME_NATIVE_HOST_PROVISION=false`): non-PHP servisler state/port orchestration kullanir.
-  - `PLUME_NATIVE_HOST_PROVISION=true`: `nginx`, `apache2`, `mariadb`, `mysql`, `redis` icin gercek host kurulum/start/stop (brew/apt/dnf).
+  - `PLUME_NATIVE_SERVICE_AUTO_PROVISION=true` (default): native modda `enabled=true` servisler `services up` ile host install+start (Phase 17); `--no-provision` ile kapatilir.
+  - `PLUME_NATIVE_HOST_PROVISION=true`: tum desteklenen servisler icin gercek host kurulum/start/stop (brew/apt/dnf + npm web UI).
   - Native **mailpit** (D-109): macOS Homebrew `brew install mailpit` + `brew services start mailpit`; `services up mailpit` global provision bayragi olmadan da brew yolunu dener. Linux native: WARN + exit 2; docker-lite veya manuel kurulum.
   - Native `php` icin `services install php --mode=native --version=<x.y>` gercek host binary kurulumunu dener:
     - macOS (brew): `php@x.y`

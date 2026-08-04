@@ -1,11 +1,11 @@
 # Future Roadmap (tek sayfa todo ozeti)
 
-**Guncelleme:** 2026-07-29. Faz 1–16 kapandi (Faz 7 `beta-frozen`). Detayli faz kurallari: [AGENTS.md](../AGENTS.md) §8.
+**Guncelleme:** 2026-08-04. Faz 1–17 kapandi (Faz 7 `beta-frozen`). Detayli faz kurallari: [AGENTS.md](../AGENTS.md) §8.
 
 | Kaynak | Rol |
 |--------|-----|
 | [phase-tracker.md](./phase-tracker.md) | Resmi faz durumu (master board) |
-| [11-status-2026-07-29.md](./11-status-2026-07-29.md) | Son kapanis + handoff |
+| [11-status-2026-08-04.md](./11-status-2026-08-04.md) | Son kapanis + handoff |
 | [10-herd-parity-and-beyond.md](./10-herd-parity-and-beyond.md) | Parity checkbox’lari |
 | [phase-15-backlog-plume-yml-dockerlite.md](./phases/phase-15-backlog-plume-yml-dockerlite.md) | D-089 urun backlog |
 
@@ -15,8 +15,7 @@
 
 | Oncelik | Tema | Not |
 |---------|------|-----|
-| P1 | **Docker-lite unfreeze** | D-089; `PLUME_DOCKER_LITE_COMPOSE_REQUIRED`, template slimming, prod-lite compose — ayri **Phase 17** onerilir |
-| P2 | **Native servis genisletme** | Postgres/memcached vb. host provision veya wizard |
+| **P1** | **Docker-lite unfreeze** | D-089; Phase 18 adayi |
 | P3 | **Release / dagitim** | Packagist/Homebrew, pinned release, opsiyonel auto-update |
 | P4 | **Composer + Node workspace** | Herd parity; laradock/docker-lite agirlikli |
 | — | **plume.yml stretch** | Registry sync, `services.enabled[]` (phase-16 stretch / 16b) |

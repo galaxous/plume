@@ -19,6 +19,8 @@ source "${ROOT_DIR}/lib/common/state_db.sh"
 source "${ROOT_DIR}/lib/common/sites.sh"
 # shellcheck source=common/env.sh
 source "${ROOT_DIR}/lib/common/env.sh"
+# shellcheck source=common/stack_service_env.sh
+source "${ROOT_DIR}/lib/common/stack_service_env.sh"
 # shellcheck source=common/macos_permissions.sh
 source "${ROOT_DIR}/lib/common/macos_permissions.sh"
 # shellcheck source=config/defaults.sh

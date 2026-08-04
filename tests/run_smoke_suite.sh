@@ -120,6 +120,10 @@ run_ci_release_suite() {
   run_step "phase13-deploy-apply" "phase13_deploy_apply_smoke.sh"
   run_step "phase15-scheduler-queue" "phase15_scheduler_queue_smoke.sh"
   run_step "phase16-plume-yml-v2" "phase16_plume_yml_v2_smoke.sh"
+  run_step "phase17-native-stack-db" "phase17_native_stack_db_smoke.sh"
+  run_step "phase17-native-stack-broker" "phase17_native_stack_broker_smoke.sh"
+  run_step "phase17-native-stack-webui" "phase17_native_stack_webui_smoke.sh"
+  run_step "phase17-native-stack-env" "phase17_native_stack_env_smoke.sh"
 }
 
 run_phase11_full_suite() {

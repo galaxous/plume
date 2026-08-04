@@ -61,6 +61,7 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 | `rabbitmq` | `PLUME_RABBITMQ_ENABLED` | `PLUME_RABBITMQ_VERSION` |
 | `mongodb` | `PLUME_MONGODB_ENABLED` | `PLUME_MONGODB_VERSION` |
 | `mongo_webui` | `PLUME_MONGO_WEBUI_ENABLED` | `PLUME_MONGO_WEBUI_VERSION` |
+| `redis_webui` | `PLUME_REDIS_WEBUI_ENABLED` | `PLUME_REDIS_WEBUI_VERSION` |
 | `mailpit` | `PLUME_MAILPIT_ENABLED` | `PLUME_MAILPIT_VERSION` |
 | `meilisearch` | `PLUME_MEILISEARCH_ENABLED` | `PLUME_MEILISEARCH_VERSION` |
 | `minio` | `PLUME_MINIO_ENABLED` | `PLUME_MINIO_VERSION` |
@@ -76,10 +77,11 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 |--------|-------------------|--------------------------------------|
 | web (nginx/apache2) | Evet | Kurulum + start |
 | mariadb, mysql, redis | Evet | Kurulum + start (`database.auto_start` DB için) |
+| postgres, mongodb, rabbitmq, phpmyadmin, mongo_webui, redis_webui | Evet (Phase 17) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
 | mailpit | Evet (env) | macOS Homebrew: kurulum + start; Linux: uyarı (docker-lite / manuel) |
 | php (`versions[]`) | Evet | Best-effort brew/apt PHP kurulumu + matrix kaydı |
-| postgres, memcached, … | Evet (env) | **Yok** — uyarı; docker-lite / laradock-bridge veya manuel |
-| phpmyadmin, composer, horizon, … | Evet (env) | **Yok** — genelde container / workspace |
+| postgres, memcached, … | Evet (env) | **memcached:** yok — docker-lite / manuel |
+| phpmyadmin, composer, horizon, … | Evet (env) | **composer/horizon:** container veya manuel |
 
 Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yorum olarak dokümante edilir; native loader bu satırları okumaz.
 

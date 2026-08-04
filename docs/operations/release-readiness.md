@@ -20,6 +20,9 @@ Yerel pre-release ve CI ile ayni adimlar:
 5. `phase13_deploy_apply_smoke.sh`
 6. `phase15_scheduler_queue_smoke.sh` (Faz 15 scheduler / queue ops)
 7. `phase16_plume_yml_v2_smoke.sh` (Faz 16 project `plume.yml` MVP)
+8. `phase17_native_stack_db_smoke.sh` (Faz 17 native DB/phpmyadmin)
+9. `phase17_native_stack_broker_smoke.sh` (Faz 17 redis/mongodb/rabbitmq)
+10. `phase17_native_stack_webui_smoke.sh` (Faz 17 web UI + url)
 
 Beklenen sonuc:
 

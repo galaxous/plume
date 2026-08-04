@@ -31,6 +31,7 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 | 14 | CI, Golden Contract, Release Packaging | done | @team | 2026-07-25 | 2026-07-26 | 2026-07-25 | [phase-14](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-14.md) |
 | 15 | Scheduler, Queue Ops & Manifest Alignment | done | @team | 2026-07-28 | 2026-07-28 | 2026-07-28 | [phase-15](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-15.md) |
 | 16 | Project plume.yml v2 (MVP) | done | @team | 2026-07-28 | TBD | 2026-07-29 | [phase-16](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-16.md) |
+| 17 | Native Stack Host Parity | done | @team | 2026-08-04 | TBD | 2026-08-04 | [phase-17](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-17.md) |
 
 ## Update Rules
 

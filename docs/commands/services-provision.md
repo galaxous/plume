@@ -4,9 +4,11 @@
 
 Native modda `~/.config/plume/services.yml` manifest’ine göre host paketlerini kurmak ve (tanımlıysa) başlatmak.
 
-**Native otomatik kurulum:** web (nginx/apache2 driver), MariaDB/MySQL, Redis, **mailpit (macOS Homebrew)**; manifest `php.versions` listesi için best-effort host PHP (brew/apt).
+**Native otomatik kurulum:** web (nginx/apache2 driver), MariaDB/MySQL, **PostgreSQL**, Redis, **MongoDB**, **RabbitMQ**, **phpMyAdmin**, **mongo_webui**, **redis_webui**, **mailpit (macOS Homebrew)**; manifest `php.versions` listesi için best-effort host PHP (brew/apt).
 
-**Yalnızca YAML/env toggle (native paket yok):** postgres, memcached, rabbitmq, mongodb, phpmyadmin, horizon, vb. — `enabled: true` env’i yükler; kurulum için docker-lite, laradock-bridge veya manuel adımlar. **mailpit** Linux native’de paket yok (docker-lite veya manuel).
+**Yalnızca YAML/env toggle (native paket yok):** memcached, horizon, supervisor, vb. — `enabled: true` env’i yükler; kurulum için docker-lite, laradock-bridge veya manuel adımlar.
+
+**Auto-provision (D-119):** `PLUME_NATIVE_SERVICE_AUTO_PROVISION=true` (default) — native modda `enabled=true` servisler `services up` ile host install+start dener. Escape: `--no-provision`.
 
 ## Kullanım
 

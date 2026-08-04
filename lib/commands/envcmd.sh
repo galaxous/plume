@@ -66,14 +66,42 @@ cmd_env_init() {
   plume_info "source: ${source_file}"
 }
 
+cmd_env_set() {
+  local kv key value
+  if [[ $# -lt 1 ]]; then
+    plume_err "env set requires KEY=VALUE"
+    return 2
+  fi
+  kv="$1"
+  if [[ "${kv}" != *=* ]]; then
+    plume_err "env set requires KEY=VALUE"
+    return 2
+  fi
+  key="${kv%%=*}"
+  value="${kv#*=}"
+  if [[ ! "${key}" =~ ^PLUME_[A-Z0-9_]+$ ]]; then
+    plume_err "env set only accepts PLUME_* keys (got: ${key})"
+    return 2
+  fi
+  plume_stack_service_env_write_and_export "${key}" "${value}" || return $?
+  if plume_stack_service_env_affected_services "${key}" >/dev/null 2>&1; then
+    plume_info "restart affected services to apply runtime config:"
+    while IFS= read -r svc; do
+      [[ -n "${svc}" ]] || continue
+      plume_info "  ./plume.sh services restart ${svc} --mode=native"
+    done < <(plume_stack_service_env_affected_services "${key}")
+  fi
+}
+
 cmd_env() {
   local sub="${1:-where}"
   shift || true
   case "${sub}" in
     where) cmd_env_where "$@" ;;
     init) cmd_env_init "$@" ;;
+    set) cmd_env_set "$@" ;;
     *)
-      plume_err "unknown env subcommand: ${sub} (use where|init)"
+      plume_err "unknown env subcommand: ${sub} (use where|init|set)"
       return 2
       ;;
   esac

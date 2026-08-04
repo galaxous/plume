@@ -2,6 +2,44 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-08-05 - D-121 - Stack Service Env Defaults (Laradock Parity)
+
+- Durum: accepted
+- Karar:
+  - Redis, MongoDB, RabbitMQ, mongo_webui, redis_webui icin Laradock-hizali `PLUME_*` varsayilanlari (`defaults.sh`, `.env.example`): port, kullanici, sifre, management port, web UI auth.
+  - `.env` degisikligi sonrasi runtime uygulama: `services restart <svc> --mode=native`; npm web UI servisleri env'i start sirasinda okur.
+  - CLI: `env set PLUME_*=...`, `services env show|set <svc> <short=val>` (`password=`, `port=`, …); `--restart` ile aninda uygulama.
+  - Laradock esleme tablosu: `docs/operations/env-contract.md`.
+- Gerekce:
+  - Native stack operasyonu Laradock `.env` aliskanligina yakin; sifre/port degisikligi belgelenmis restart yolu gerektirir.
+- Etki:
+  - `lib/common/stack_service_env.sh`, `lib/config/defaults.sh`, `native_host_service_drivers.sh`, `envcmd.sh`, `services.sh`, tests, docs.
+
+## 2026-08-04 - D-120 - Phase 17 Gate Closure (Native Stack Host Parity)
+
+- Durum: accepted
+- Karar:
+  - Faz 17 resmi kapanis: tracker `done`, tamamlanma 2026-08-04.
+  - Gate: native drivers + `services url|credentials` + `@cache` + auto-provision D-119, phase17 smoke release zincirinde, `./tests/run_smoke_suite.sh --release` yesil.
+- Gerekce:
+  - AGENTS.md faz-gate.
+- Etki:
+  - `implementation/phases/phase-17.md`, `implementation/11-status-2026-08-04.md`, release runner, CI workflow.
+
+## 2026-08-04 - D-119 - Phase 17 Native Stack Host Parity (Scope)
+
+- Durum: accepted
+- Karar:
+  - Native modda Phase 17 servisleri: mariadb, mysql, postgres, phpmyadmin, redis, mongodb, rabbitmq, mongo_webui, **redis_webui** (yeni registry; Laradock `redis-webui` alias).
+  - OS matrisi: macOS brew + Linux apt/dnf; dokuman [native-stack-os-matrix.md](../docs/operations/native-stack-os-matrix.md); AGENTS.md §9.
+  - **redis_webui** urunu: **redis-commander** (npm global); RedisInsight doc alternatif.
+  - Auto-provision: `PLUME_NATIVE_SERVICE_AUTO_PROVISION=true` default — native `services up` enabled servislerde host install+start (mailpit modeli genisletildi); `--no-provision` escape.
+  - CLI: `services url`, `services credentials`; `@cache` grubu; `@db` safe-order (DB engine → phpmyadmin).
+- Gerekce:
+  - Laradock-parity native deneyimi; YAML/env disinda operasyonel komut yuzeyi.
+- Etki:
+  - `lib/services/native_host_service_drivers.sh`, `native_host_provision.sh`, `registry.sh`, `services.sh`, tests, docs.
+
 ## 2026-07-29 - D-118 - Phase 16 Gate Closure (plume.yml v2 MVP)
 
 - Durum: accepted

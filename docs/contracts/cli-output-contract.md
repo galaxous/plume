@@ -218,3 +218,15 @@ manifest=/abs/project/plume.yml
 mode=native
 php_version=8.3
 ```
+
+## services url / credentials (text)
+
+Native-only key=value stdout; `--json` desteklenmez.
+
+```text
+url=http://127.0.0.1:8083
+host=127.0.0.1
+port=5432
+```
+
+Bkz. [docs/commands/services-url.md](../commands/services-url.md).
