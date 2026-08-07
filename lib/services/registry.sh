@@ -184,6 +184,34 @@ plume_service_allocate_port() {
   plume_service_allocate_explicit_port "${service}" "${preferred}"
 }
 
+# Allocated runtime port (services_ports_*.env) or configured default.
+plume_service_effective_port() {
+  local service="$1"
+  local mode="${2:-$(plume_mode_current)}"
+  local port=""
+  port="$(plume_services_ports_get "${service}" "${mode}" || true)"
+  if [[ -n "${port}" ]]; then
+    printf '%s' "${port}"
+    return 0
+  fi
+  plume_service_default_port "${service}"
+}
+
+# Mirror docker-lite: export allocated host port before native config sync / health probe.
+plume_service_export_allocated_port() {
+  local service="$1"
+  local port="$2"
+  local env_key=""
+  [[ -n "${port}" ]] || return 0
+  env_key="$(plume_docker_lite_port_env_key "${service}")"
+  if [[ -n "${env_key}" ]]; then
+    export "${env_key}=${port}"
+  fi
+  if [[ "${service}" == "web" ]]; then
+    export "PLUME_WEB_PORT=${port}"
+  fi
+}
+
 plume_service_log_file() {
   local service="$1"
   local mode="${2:-$(plume_mode_current)}"
@@ -884,6 +912,14 @@ plume_service_require_dependencies() {
 
   if [[ "${service}" != "horizon" ]]; then
     if [[ "${service}" == "phpmyadmin" ]]; then
+      if [[ "${mode}" == "native" && "$(plume_bool "${PMA_ARBITRARY:-1}")" == "true" ]]; then
+        if [[ "$(plume_service_enabled_for_mode mariadb "${mode}")" == "true" ]] \
+          || [[ "$(plume_service_enabled_for_mode mysql "${mode}")" == "true" ]]; then
+          return 0
+        fi
+        plume_err "phpmyadmin requires mariadb or mysql to be enabled"
+        return 2
+      fi
       local engine="${PMA_DB_ENGINE:-${PMA_ENGINE:-mariadb}}"
       case "${engine}" in
         mariadb|mysql) ;;
@@ -1507,6 +1543,7 @@ plume_service_install_native() {
   allocated_port="$(plume_service_allocate_port "${service}")" || return 2
   if [[ -n "${allocated_port}" ]]; then
     plume_services_ports_set "${service}" "${allocated_port}" native
+    plume_service_export_allocated_port "${service}" "${allocated_port}"
   fi
   plume_services_runtime_set "${service}" "installed" "true" native
   plume_services_runtime_set "${service}" "version" "${normalized}" native
@@ -1540,17 +1577,64 @@ plume_service_start_native() {
   if ! plume_service_require_dependencies "${service}" native; then
     return 2
   fi
+  if [[ "${service}" == "mariadb" || "${service}" == "mysql" ]]; then
+    plume_native_db_brew_dual_engine_assert || return 2
+  fi
   if [[ "${service}" == "php" ]]; then
     plume_native_php_start_fpm_service "${normalized}" || return 2
   fi
-  local allocated_port=""
+  local allocated_port="" preferred_port=""
+  preferred_port="$(plume_service_default_port "${service}")"
   allocated_port="$(plume_service_allocate_port "${service}")" || return 2
   if [[ -n "${allocated_port}" ]]; then
     plume_services_ports_set "${service}" "${allocated_port}" native
+    plume_service_export_allocated_port "${service}" "${allocated_port}"
+  fi
+  if plume_native_host_provision_service_wants "${service}"; then
+    plume_native_host_provision_start "${service}" || {
+      plume_services_runtime_set "${service}" "running" "false" native
+      return 2
+    }
+  elif plume_native_host_provision_supported "${service}"; then
+    plume_native_host_start_service "${service}" || {
+      plume_services_runtime_set "${service}" "running" "false" native
+      return 2
+    }
+  fi
+  if [[ -n "${allocated_port}" && "${service}" != "php" ]]; then
+    if [[ -n "${preferred_port}" && "${allocated_port}" != "${preferred_port}" ]] \
+      && declare -F plume_native_stack_config_manage_enabled >/dev/null 2>&1 \
+      && plume_native_stack_config_manage_enabled "${service}" 2>/dev/null; then
+      plume_native_stack_config_reload_service "${service}" || true
+    fi
+  fi
+  if [[ "${service}" != "php" ]] \
+    && declare -F plume_native_host_runtime_managed >/dev/null 2>&1 \
+    && plume_native_host_runtime_managed "${service}" \
+    && declare -F plume_native_host_health_probe >/dev/null 2>&1; then
+    local probe_ok="false" attempt
+    for attempt in 1 2 3; do
+      if plume_native_host_health_probe "${service}" >/dev/null 2>&1; then
+        probe_ok="true"
+        break
+      fi
+      if [[ "${attempt}" -lt 3 ]] \
+        && declare -F plume_native_stack_config_manage_enabled >/dev/null 2>&1 \
+        && plume_native_stack_config_manage_enabled "${service}" 2>/dev/null; then
+        plume_native_stack_config_reload_service "${service}" >/dev/null 2>&1 || true
+        sleep 1
+      fi
+    done
+    if [[ "${probe_ok}" != "true" ]]; then
+      if ! plume_native_driver_is_mock 2>/dev/null; then
+        plume_services_runtime_set "${service}" "running" "false" native
+        plume_warn "native ${service}: start completed but health probe failed"
+        return 2
+      fi
+    fi
   fi
   plume_services_runtime_set "${service}" "running" "true" native
   plume_services_runtime_set "${service}" "version" "${normalized}" native
-  plume_native_host_provision_start "${service}" || return 2
   plume_service_append_log "${service}" "start (native) version=${normalized} port=${allocated_port:-none}" native
   plume_info "start hook: ${service} (native) [version=${normalized}]"
 }
@@ -1958,18 +2042,16 @@ plume_service_status() {
     fi
     [[ -n "${port}" ]] || port="-"
   else
-    running="$(plume_services_runtime_get "${service}" running "${mode}" || true)"
+    health="$(plume_service_health "${service}" "${mode}")"
+    case "${health}" in
+      healthy|registry) running="true" ;;
+      stopped|disabled) running="false" ;;
+      *) running="$(plume_services_runtime_get "${service}" running "${mode}" || true)" ;;
+    esac
     port="$(plume_services_ports_get "${service}" "${mode}" || true)"
     [[ -n "${port}" ]] || port="-"
     if [[ -z "${running}" ]]; then
       running="false"
-    fi
-    if [[ "${enabled}" != "true" ]]; then
-      health="disabled"
-    elif [[ "${running}" == "true" ]]; then
-      health="healthy"
-    else
-      health="stopped"
     fi
   fi
   printf '%s\t%s\t%s\t%s\t%s\t%s\n' "${service}" "${enabled}" "${running}" "${health}" "${port}" "${version}"
@@ -2036,6 +2118,15 @@ plume_service_health() {
     return 0
   fi
   if [[ "${running}" == "true" ]]; then
+    if declare -F plume_native_host_registry_only_service >/dev/null 2>&1 \
+      && plume_native_host_registry_only_service "${service}"; then
+      printf '%s' "registry"
+      return 0
+    fi
+    if [[ "${service}" == "php" || "${service}" == "composer" ]]; then
+      printf '%s' "healthy"
+      return 0
+    fi
     if declare -F plume_native_host_health_probe >/dev/null 2>&1; then
       if plume_native_host_health_probe "${service}" 2>/dev/null; then
         printf '%s' "healthy"

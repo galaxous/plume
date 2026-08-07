@@ -23,7 +23,7 @@ Kaynak karar: D-119. Agent kurallari: [AGENTS.md](../../AGENTS.md) §9.
 | mongodb | `mongodb-community` (tap) | WARN + manual repo | WARN | `mongosh` ping |
 | rabbitmq | `rabbitmq` | `rabbitmq-server` | `rabbitmq-server` | `rabbitmq-diagnostics ping` |
 | mailpit | macOS-only | — | — | HTTP |
-| phpmyadmin | npm/php built-in port | `phpmyadmin` + nginx | benzer | HTTP |
+| phpmyadmin | brew `phpmyadmin` + `php -S` | `phpmyadmin` + nginx | benzer | HTTP |
 | mongo_webui | npm `mongo-express` | npm | npm | HTTP |
 | redis_webui | npm `redis-commander` | npm | npm | HTTP |
 

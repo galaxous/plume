@@ -84,6 +84,7 @@ plume_native_driver_brew_formula() {
     mongodb) echo "mongodb-community" ;;
     rabbitmq) echo "rabbitmq" ;;
     mailpit) echo "mailpit" ;;
+    phpmyadmin) echo "phpmyadmin" ;;
     *) return 1 ;;
   esac
 }
@@ -154,7 +155,6 @@ plume_native_driver_npm_package() {
   case "${service}" in
     mongo_webui) echo "mongo-express" ;;
     redis_webui) echo "redis-commander" ;;
-    phpmyadmin) echo "phpmyadmin" ;;
     *) return 1 ;;
   esac
 }
@@ -170,6 +170,7 @@ plume_native_driver_default_port() {
     mariadb|mysql) echo "${PLUME_MARIADB_PORT:-3306}" ;;
     redis) echo "${PLUME_REDIS_PORT:-6379}" ;;
     mongodb) echo "${PLUME_MONGODB_PORT:-27017}" ;;
+    mailpit) echo "${PLUME_MAILPIT_PORT:-8025}" ;;
     *) return 1 ;;
   esac
 }
@@ -182,19 +183,21 @@ plume_native_driver_post_install() {
       plume_native_credentials_set postgres port "$(plume_native_driver_default_port postgres)"
       plume_native_credentials_set postgres user "${PLUME_POSTGRES_USER:-postgres}"
       plume_native_credentials_set postgres database "${PLUME_POSTGRES_DB:-postgres}"
-      plume_native_credentials_set postgres password "${PLUME_POSTGRES_PASSWORD:-postgres}"
+      plume_native_credentials_set postgres password "$(plume_native_postgres_effective_password)"
       ;;
     mariadb)
       plume_native_credentials_set mariadb host "127.0.0.1"
       plume_native_credentials_set mariadb port "$(plume_native_driver_default_port mariadb)"
       plume_native_credentials_set mariadb user "root"
       plume_native_credentials_set mariadb database "mysql"
+      plume_native_credentials_set mariadb password "$(plume_native_mariadb_effective_root_password mariadb)"
       ;;
     mysql)
       plume_native_credentials_set mysql host "127.0.0.1"
-      plume_native_credentials_set mysql port "3306"
+      plume_native_credentials_set mysql port "$(plume_native_mariadb_effective_port mysql)"
       plume_native_credentials_set mysql user "root"
       plume_native_credentials_set mysql database "mysql"
+      plume_native_credentials_set mysql password "$(plume_native_mariadb_effective_root_password mysql)"
       ;;
     mongodb)
       plume_native_credentials_set mongodb host "127.0.0.1"
@@ -221,6 +224,18 @@ plume_native_driver_post_install() {
       plume_native_credentials_set mongo_webui password "${PLUME_MONGO_WEBUI_PASSWORD:-pass}"
       plume_native_credentials_set mongo_webui port "$(plume_native_driver_default_port mongo_webui)"
       ;;
+    phpmyadmin)
+      local engine
+      plume_native_credentials_set phpmyadmin http_port "$(plume_native_driver_default_port phpmyadmin)"
+      while IFS= read -r engine; do
+        [[ -n "${engine}" ]] || continue
+        plume_native_credentials_set phpmyadmin "${engine}_server" "${engine}"
+        plume_native_credentials_set phpmyadmin "${engine}_host" "$(plume_native_phpmyadmin_engine_connect_host "${engine}")"
+        plume_native_credentials_set phpmyadmin "${engine}_port" "$(plume_native_phpmyadmin_engine_port "${engine}")"
+        plume_native_credentials_set phpmyadmin "${engine}_user" "$(plume_native_phpmyadmin_db_user_for_engine "${engine}")"
+        plume_native_credentials_set phpmyadmin "${engine}_password" "$(plume_native_phpmyadmin_db_password_for_engine "${engine}")"
+      done < <(plume_native_phpmyadmin_list_operational_db_engines)
+      ;;
     redis_webui)
       plume_native_credentials_set redis_webui username "${PLUME_REDIS_WEBUI_USERNAME:-laradock}"
       plume_native_credentials_set redis_webui password "${PLUME_REDIS_WEBUI_PASSWORD:-laradock}"
@@ -239,8 +254,10 @@ plume_native_driver_install_packages() {
   if plume_native_driver_is_mock; then
     plume_info "native driver mock install: ${service}"
     plume_native_driver_post_install "${service}" || true
-    if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
-      plume_native_redis_sync_config "false" "false" || true
+    if [[ "${service}" == "phpmyadmin" ]]; then
+      plume_native_phpmyadmin_sync_config "false" || true
+    else
+      plume_native_stack_sync_on_lifecycle "${service}" || true
     fi
     return 0
   fi
@@ -301,8 +318,13 @@ plume_native_driver_install_packages() {
       ;;
   esac
   plume_native_driver_post_install "${service}" || true
-  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
-    plume_native_redis_sync_config "false" "false" || true
+  if [[ "${service}" == "phpmyadmin" ]]; then
+    plume_native_phpmyadmin_sync_config "false" || true
+  else
+    plume_native_stack_sync_on_lifecycle "${service}" || true
+    case "${service}" in
+      mariadb|mysql) plume_native_db_hosts_sync || true ;;
+    esac
   fi
 }
 
@@ -353,18 +375,6 @@ plume_native_driver_start_npm_service() {
           nohup "$(command -v redis-commander || echo redis-commander)" --port "${port}" >>"${log_file}" 2>&1 &
       fi
       ;;
-    phpmyadmin)
-      local pma_root="${PLUME_STATE_DIR:-$HOME/.config/plume/state}/native/phpmyadmin"
-      mkdir -p "${pma_root}"
-      if [[ ! -d "${pma_root}/index.php" && ! -f "${pma_root}/index.php" ]]; then
-        if plume_native_driver_is_mock; then
-          printf 'mock phpmyadmin\n' > "${pma_root}/index.php"
-        elif command -v brew >/dev/null 2>&1 && brew --prefix phpmyadmin >/dev/null 2>&1; then
-          ln -sf "$(brew --prefix phpmyadmin)/share/phpmyadmin" "${pma_root}" 2>/dev/null || true
-        fi
-      fi
-      nohup php -S "127.0.0.1:${port}" -t "${pma_root}" >>"${log_file}" 2>&1 &
-      ;;
     *) return 2 ;;
   esac
   echo $! > "${pid_file}"
@@ -386,11 +396,18 @@ plume_native_driver_start_service() {
   local pm os
 
   plume_native_driver_post_install "${service}" || true
+  if [[ "${service}" == "phpmyadmin" ]]; then
+    plume_native_phpmyadmin_sync_config "false" || true
+  else
+    plume_native_stack_sync_on_lifecycle "${service}" || true
+    case "${service}" in
+      mariadb|mysql) plume_native_db_hosts_sync || true ;;
+    esac
+  fi
 
-  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
-    plume_native_redis_sync_config "false" "false" || {
-      plume_warn "native redis: config sync failed; continuing start (fix with: services redis sync-config --reload)"
-    }
+  if [[ "${service}" == "phpmyadmin" ]]; then
+    plume_native_phpmyadmin_start_server
+    return $?
   fi
 
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
@@ -426,10 +443,15 @@ plume_native_driver_start_service() {
       return 2
       ;;
   esac
+  plume_native_stack_apply_runtime_credentials "${service}" || true
 }
 
 plume_native_driver_stop_service() {
   local service="$1"
+  if [[ "${service}" == "phpmyadmin" ]]; then
+    plume_native_phpmyadmin_stop_server
+    return 0
+  fi
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
     plume_native_driver_stop_npm_service "${service}"
     return 0
@@ -461,7 +483,8 @@ plume_native_driver_health_probe() {
   local service="$1"
   local port host
 
-  if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
+  if plume_native_driver_npm_package "${service}" >/dev/null 2>&1 \
+    || [[ "${service}" == "phpmyadmin" ]]; then
     port="$(plume_native_driver_default_port "${service}")"
     if command -v curl >/dev/null 2>&1 && curl -sf "http://127.0.0.1:${port}/" >/dev/null 2>&1; then
       return 0
@@ -478,10 +501,35 @@ plume_native_driver_health_probe() {
       plume_native_redis_cli_ping
       ;;
     postgres)
-      command -v pg_isready >/dev/null 2>&1 && pg_isready -q 2>/dev/null
+      local ppass pport puser
+      pport="$(plume_native_driver_default_port postgres)"
+      puser="${PLUME_POSTGRES_USER:-postgres}"
+      ppass="$(plume_native_postgres_effective_password)"
+      if command -v pg_isready >/dev/null 2>&1; then
+        pg_isready -h127.0.0.1 -p"${pport}" -q 2>/dev/null
+      elif command -v psql >/dev/null 2>&1; then
+        if [[ -n "${ppass}" ]]; then
+          PGPASSWORD="${ppass}" psql -h127.0.0.1 -p"${pport}" -U"${puser}" -d postgres -c "SELECT 1" >/dev/null 2>&1
+        else
+          psql -h127.0.0.1 -p"${pport}" -U"${puser}" -d postgres -c "SELECT 1" >/dev/null 2>&1
+        fi
+      else
+        return 1
+      fi
       ;;
     mariadb|mysql)
-      command -v mysqladmin >/dev/null 2>&1 && mysqladmin ping -h127.0.0.1 --silent 2>/dev/null
+      plume_native_driver_is_mock && return 0
+      local mpass mport sock
+      mport="$(plume_native_mariadb_effective_port "${service}")"
+      mpass="$(plume_native_mariadb_effective_root_password "${service}")"
+      command -v mysqladmin >/dev/null 2>&1 || return 1
+      if [[ -n "${mpass}" ]]; then
+        mysqladmin ping -h127.0.0.1 -P"${mport}" -uroot -p"${mpass}" --silent --batch </dev/null 2>/dev/null
+      else
+        sock="$(plume_native_mariadb_socket_path 2>/dev/null || true)"
+        [[ -n "${sock}" ]] || return 1
+        mysqladmin ping --socket="${sock}" -uroot --silent --batch </dev/null 2>/dev/null
+      fi
       ;;
     rabbitmq)
       command -v rabbitmq-diagnostics >/dev/null 2>&1 && rabbitmq-diagnostics -q ping 2>/dev/null
@@ -495,7 +543,19 @@ plume_native_driver_health_probe() {
         return 1
       fi
       ;;
-    mailpit|nginx|apache2|mariadb|mysql|postgres|redis)
+    mailpit)
+      plume_native_driver_is_mock && return 0
+      if declare -F plume_service_effective_port >/dev/null 2>&1; then
+        port="$(plume_service_effective_port mailpit native 2>/dev/null || true)"
+      fi
+      [[ -n "${port}" ]] || port="$(plume_native_driver_default_port mailpit 2>/dev/null || true)"
+      [[ -n "${port}" ]] || port="${PLUME_MAILPIT_PORT:-8025}"
+      if command -v curl >/dev/null 2>&1 && curl -sf "http://127.0.0.1:${port}/" >/dev/null 2>&1; then
+        return 0
+      fi
+      return 1
+      ;;
+    nginx|apache2)
       plume_native_driver_is_mock && return 0
       return 1
       ;;

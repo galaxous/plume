@@ -143,6 +143,25 @@ plume_native_host_health_probe() {
   plume_native_driver_health_probe "${resolved}"
 }
 
+# Phase 17 registry-only: horizon/supervisor/php_worker have no native brew/npm driver.
+plume_native_host_registry_only_service() {
+  local service="$1"
+  case "${service}" in
+    horizon|supervisor|php_worker) return 0 ;;
+  esac
+  return 1
+}
+
+plume_native_host_runtime_managed() {
+  local service="$1"
+  if plume_native_host_registry_only_service "${service}"; then
+    return 1
+  fi
+  local resolved
+  resolved="$(plume_native_host_resolve_service "${service}" 2>/dev/null || printf '%s' "${service}")"
+  plume_native_driver_service_supported "${resolved}"
+}
+
 plume_native_host_service_url() {
   local service="$1"
   plume_native_driver_service_url "${service}"

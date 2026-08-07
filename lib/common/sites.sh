@@ -602,15 +602,7 @@ plume_sites_upsert_host_entries() {
     printf '%s\t%s\t# %s\n' "${ip}" "${domain}" "${marker}" >> "${tmp_file}"
   done < <(plume_sites_record_domains "${id_file}")
 
-  if ! (
-    if [[ -w "${host_file}" ]]; then
-      cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    elif command -v sudo >/dev/null 2>&1; then
-      sudo cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    else
-      cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    fi
-  ); then
+  if ! plume_fs_copy_no_tty "${tmp_file}" "${host_file}"; then
     rm -f "${tmp_file}"
     if [[ "${PLUME_SITE_HOSTS_REQUIRED:-false}" == "true" ]]; then
       return 2
@@ -640,15 +632,7 @@ plume_sites_remove_host_entries() {
     index($0, marker) == 0
   ' "${host_file}" > "${tmp_file}"
 
-  if ! (
-    if [[ -w "${host_file}" ]]; then
-      cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    elif command -v sudo >/dev/null 2>&1; then
-      sudo cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    else
-      cp "${tmp_file}" "${host_file}" >/dev/null 2>&1
-    fi
-  ); then
+  if ! plume_fs_copy_no_tty "${tmp_file}" "${host_file}"; then
     rm -f "${tmp_file}"
     if [[ "${PLUME_SITE_HOSTS_REQUIRED:-false}" == "true" ]]; then
       return 2

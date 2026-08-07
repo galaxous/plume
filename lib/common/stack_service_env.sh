@@ -3,12 +3,170 @@ set -euo pipefail
 
 # Laradock-aligned stack connection env (PLUME_*). See docs/operations/env-contract.md.
 
+# Laradock-style short names ↔ internal PLUME_* (D-130). Short name wins when both set.
+plume_env_laradock_alias_pairs() {
+  cat <<'EOF'
+REDIS_ENABLED|PLUME_REDIS_ENABLED
+MARIADB_ENABLED|PLUME_MARIADB_ENABLED
+MYSQL_ENABLED|PLUME_MYSQL_ENABLED
+PHPMYADMIN_ENABLED|PLUME_PHPMYADMIN_ENABLED
+POSTGRES_ENABLED|PLUME_POSTGRES_ENABLED
+MEMCACHED_ENABLED|PLUME_MEMCACHED_ENABLED
+RABBITMQ_ENABLED|PLUME_RABBITMQ_ENABLED
+MONGODB_ENABLED|PLUME_MONGODB_ENABLED
+MONGO_WEBUI_ENABLED|PLUME_MONGO_WEBUI_ENABLED
+REDIS_WEBUI_ENABLED|PLUME_REDIS_WEBUI_ENABLED
+MAILPIT_ENABLED|PLUME_MAILPIT_ENABLED
+MEILISEARCH_ENABLED|PLUME_MEILISEARCH_ENABLED
+MINIO_ENABLED|PLUME_MINIO_ENABLED
+SUPERVISOR_ENABLED|PLUME_SUPERVISOR_ENABLED
+HORIZON_ENABLED|PLUME_HORIZON_ENABLED
+PHP_WORKER_ENABLED|PLUME_PHP_WORKER_ENABLED
+COMPOSER_ENABLED|PLUME_COMPOSER_ENABLED
+REDIS_PORT|PLUME_REDIS_PORT
+REDIS_PASSWORD|PLUME_REDIS_PASSWORD
+MARIADB_PORT|PLUME_MARIADB_PORT
+MARIADB_ROOT_PASSWORD|PLUME_MARIADB_ROOT_PASSWORD
+MYSQL_PORT|PLUME_MYSQL_PORT
+MYSQL_ROOT_PASSWORD|PLUME_MYSQL_ROOT_PASSWORD
+POSTGRES_PORT|PLUME_POSTGRES_PORT
+POSTGRES_USER|PLUME_POSTGRES_USER
+POSTGRES_PASSWORD|PLUME_POSTGRES_PASSWORD
+POSTGRES_DB|PLUME_POSTGRES_DB
+MONGODB_PORT|PLUME_MONGODB_PORT
+MONGO_USERNAME|PLUME_MONGODB_USERNAME
+MONGO_PASSWORD|PLUME_MONGODB_PASSWORD
+RABBITMQ_NODE_HOST_PORT|PLUME_RABBITMQ_PORT
+RABBITMQ_MANAGEMENT_HTTP_HOST_PORT|PLUME_RABBITMQ_MANAGEMENT_PORT
+RABBITMQ_DEFAULT_USER|PLUME_RABBITMQ_USER
+RABBITMQ_DEFAULT_PASS|PLUME_RABBITMQ_PASSWORD
+MONGO_WEBUI_PORT|PLUME_MONGO_WEBUI_PORT
+REDIS_WEBUI_PORT|PLUME_REDIS_WEBUI_PORT
+REDIS_WEBUI_USERNAME|PLUME_REDIS_WEBUI_USERNAME
+REDIS_WEBUI_PASSWORD|PLUME_REDIS_WEBUI_PASSWORD
+REDIS_WEBUI_CONNECT_HOST|PLUME_REDIS_WEBUI_HOST
+REDIS_WEBUI_CONNECT_PORT|PLUME_REDIS_WEBUI_REDIS_PORT
+EOF
+}
+
+plume_env_laradock_short_name() {
+  local pair short plume
+  short="$1"
+  while IFS='|' read -r pair_short plume_key; do
+    [[ -n "${pair_short}" ]] || continue
+    if [[ "${pair_short}" == "${short}" ]]; then
+      printf '%s' "${plume_key}"
+      return 0
+    fi
+  done < <(plume_env_laradock_alias_pairs)
+  return 1
+}
+
+plume_env_laradock_plume_to_short() {
+  local plume="$1"
+  local short plume_key
+  while IFS='|' read -r short plume_key; do
+    [[ -n "${short}" && -n "${plume_key}" ]] || continue
+    if [[ "${plume_key}" == "${plume}" ]]; then
+      printf '%s' "${short}"
+      return 0
+    fi
+  done < <(plume_env_laradock_alias_pairs)
+  return 1
+}
+
+plume_env_is_laradock_short_name() {
+  plume_env_laradock_short_name "$1" >/dev/null 2>&1
+}
+
+plume_env_sync_alias_pair() {
+  local short="$1"
+  local plume="$2"
+  local direction="${3:-both}"
+  local short_set="false" plume_set="false"
+
+  if [[ -n "${!short+x}" ]]; then
+    short_set="true"
+  fi
+  if [[ -n "${!plume+x}" ]]; then
+    plume_set="true"
+  fi
+
+  case "${direction}" in
+    outward)
+      if [[ "${plume_set}" == "true" && "${short_set}" != "true" ]]; then
+        export "${short}=${!plume}"
+      fi
+      ;;
+    inward)
+      if [[ "${short_set}" == "true" ]]; then
+        export "${plume}=${!short}"
+      elif [[ "${plume_set}" == "true" ]]; then
+        export "${short}=${!plume}"
+      fi
+      ;;
+    refresh)
+      if [[ "${plume_set}" == "true" ]]; then
+        export "${short}=${!plume}"
+      fi
+      ;;
+    both)
+      if [[ "${short_set}" == "true" ]]; then
+        export "${plume}=${!short}"
+      elif [[ "${plume_set}" == "true" ]]; then
+        export "${short}=${!plume}"
+      fi
+      ;;
+    *)
+      plume_err "invalid laradock alias direction: ${direction}"
+      return 2
+      ;;
+  esac
+}
+
+plume_env_apply_laradock_aliases_outward() {
+  local short plume
+  while IFS='|' read -r short plume; do
+    [[ -n "${short}" && -n "${plume}" ]] || continue
+    plume_env_sync_alias_pair "${short}" "${plume}" outward
+  done < <(plume_env_laradock_alias_pairs)
+}
+
+plume_env_apply_laradock_aliases_inward() {
+  local short plume
+  while IFS='|' read -r short plume; do
+    [[ -n "${short}" && -n "${plume}" ]] || continue
+    plume_env_sync_alias_pair "${short}" "${plume}" inward
+  done < <(plume_env_laradock_alias_pairs)
+}
+
+plume_env_apply_laradock_aliases_refresh() {
+  local short plume
+  while IFS='|' read -r short plume; do
+    [[ -n "${short}" && -n "${plume}" ]] || continue
+    plume_env_sync_alias_pair "${short}" "${plume}" refresh
+  done < <(plume_env_laradock_alias_pairs)
+}
+
+plume_env_apply_laradock_aliases() {
+  plume_env_apply_laradock_aliases_outward
+  plume_env_apply_laradock_aliases_inward
+}
+
 plume_stack_service_env_short_to_key() {
   local service="$1"
   local short="$2"
   case "${service}:${short}" in
     redis:password) echo "PLUME_REDIS_PASSWORD" ;;
     redis:port) echo "PLUME_REDIS_PORT" ;;
+    mariadb:password|mariadb:root_password) echo "PLUME_MARIADB_ROOT_PASSWORD" ;;
+    mariadb:port) echo "PLUME_MARIADB_PORT" ;;
+    mysql:password|mysql:root_password) echo "PLUME_MYSQL_ROOT_PASSWORD" ;;
+    mysql:port) echo "PLUME_MYSQL_PORT" ;;
+    postgres:password) echo "PLUME_POSTGRES_PASSWORD" ;;
+    postgres:port) echo "PLUME_POSTGRES_PORT" ;;
+    postgres:user|postgres:username) echo "PLUME_POSTGRES_USER" ;;
+    postgres:database|postgres:db) echo "PLUME_POSTGRES_DB" ;;
     mongodb:username|mongodb:user) echo "PLUME_MONGODB_USERNAME" ;;
     mongodb:password) echo "PLUME_MONGODB_PASSWORD" ;;
     mongodb:port) echo "PLUME_MONGODB_PORT" ;;
@@ -37,6 +195,19 @@ plume_stack_service_env_keys_for_service() {
   case "${service}" in
     redis)
       printf '%s\n' PLUME_REDIS_PORT PLUME_REDIS_PASSWORD
+      ;;
+    mariadb)
+      printf '%s\n' PLUME_MARIADB_PORT PLUME_MARIADB_ROOT_PASSWORD
+      ;;
+    mysql)
+      printf '%s\n' PLUME_MYSQL_PORT PLUME_MYSQL_ROOT_PASSWORD
+      ;;
+    postgres)
+      printf '%s\n' \
+        PLUME_POSTGRES_PORT \
+        PLUME_POSTGRES_USER \
+        PLUME_POSTGRES_PASSWORD \
+        PLUME_POSTGRES_DB
       ;;
     mongodb)
       printf '%s\n' \
@@ -78,6 +249,15 @@ plume_stack_service_env_affected_services() {
   case "${key}" in
     PLUME_REDIS_*)
       printf '%s\n' redis redis_webui
+      ;;
+    PLUME_MARIADB_*)
+      printf '%s\n' mariadb
+      ;;
+    PLUME_MYSQL_*)
+      printf '%s\n' mysql
+      ;;
+    PLUME_POSTGRES_*)
+      printf '%s\n' postgres
       ;;
     PLUME_MONGODB_*)
       printf '%s\n' mongodb mongo_webui

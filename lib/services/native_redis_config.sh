@@ -64,9 +64,17 @@ plume_native_redis_effective_bind() {
   printf '%s' "${PLUME_NATIVE_REDIS_BIND:-127.0.0.1}"
 }
 
+plume_native_redis_effective_port() {
+  if declare -F plume_service_effective_port >/dev/null 2>&1; then
+    plume_service_effective_port redis native
+  else
+    plume_native_driver_default_port redis
+  fi
+}
+
 plume_native_redis_write_plume_conf() {
   local port password bind plume_conf
-  port="$(plume_native_driver_default_port redis)"
+  port="$(plume_native_redis_effective_port)"
   password="$(plume_native_redis_effective_password)"
   bind="$(plume_native_redis_effective_bind)"
   plume_conf="$(plume_native_redis_plume_conf_path)"
@@ -169,7 +177,7 @@ plume_native_redis_sync_config() {
 
   main_conf="$(plume_native_redis_main_conf_path)"
   plume_conf="$(plume_native_redis_plume_conf_path)"
-  port="$(plume_native_driver_default_port redis)"
+  port="$(plume_native_redis_effective_port)"
   password="$(plume_native_redis_effective_password)"
 
   if plume_native_driver_is_mock; then
@@ -220,7 +228,7 @@ plume_native_redis_sync_config() {
 
 plume_native_redis_cli_ping() {
   local port password
-  port="$(plume_native_driver_default_port redis)"
+  port="$(plume_native_redis_effective_port)"
   password="$(plume_native_redis_effective_password)"
   command -v redis-cli >/dev/null 2>&1 || return 1
   if [[ -n "${password}" ]]; then

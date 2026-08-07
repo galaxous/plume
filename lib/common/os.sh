@@ -104,3 +104,19 @@ plume_require_native_install_privileges() {
       ;;
   esac
 }
+
+# Copy src -> dest without interactive sudo password prompts (CI-safe; D-136).
+# Uses sudo -n only when dest is not writable. Never opens /dev/tty.
+plume_fs_copy_no_tty() {
+  local src="$1"
+  local dest="$2"
+  if [[ -w "${dest}" ]] || { [[ ! -e "${dest}" ]] && [[ -w "$(dirname "${dest}")" ]]; }; then
+    cp "${src}" "${dest}" >/dev/null 2>&1
+    return $?
+  fi
+  if command -v sudo >/dev/null 2>&1; then
+    sudo -n cp "${src}" "${dest}" >/dev/null 2>&1
+    return $?
+  fi
+  cp "${src}" "${dest}" >/dev/null 2>&1
+}

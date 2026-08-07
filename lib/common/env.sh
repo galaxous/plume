@@ -89,15 +89,41 @@ plume_load_env() {
         || grep -q "^export[[:space:]]\\+${key}=" "${env_file}" 2>/dev/null
     }
 
+    plume_env_file_defines_key_or_laradock_alias() {
+      local key="$1"
+      local counterpart=""
+
+      if plume_env_file_defines_key "${key}"; then
+        return 0
+      fi
+      if plume_env_is_laradock_short_name "${key}" 2>/dev/null; then
+        counterpart="$(plume_env_laradock_short_name "${key}" || true)"
+      elif [[ "${key}" == PLUME_* ]]; then
+        counterpart="$(plume_env_laradock_plume_to_short "${key}" || true)"
+      fi
+      [[ -n "${counterpart}" ]] && plume_env_file_defines_key "${counterpart}"
+    }
+
     while IFS='=' read -r preserved_key _; do
       case "${preserved_key}" in
         PLUME_*|PMA_*)
-          if plume_env_file_defines_key "${preserved_key}"; then
+          if plume_env_file_defines_key_or_laradock_alias "${preserved_key}"; then
             continue
           fi
           if [[ -n "${!preserved_key+x}" ]]; then
             preserved_keys+=("${preserved_key}")
             preserved_values+=("${!preserved_key}")
+          fi
+          ;;
+        *)
+          if plume_env_is_laradock_short_name "${preserved_key}" 2>/dev/null; then
+            if plume_env_file_defines_key_or_laradock_alias "${preserved_key}"; then
+              continue
+            fi
+            if [[ -n "${!preserved_key+x}" ]]; then
+              preserved_keys+=("${preserved_key}")
+              preserved_values+=("${!preserved_key}")
+            fi
           fi
           ;;
       esac
@@ -125,6 +151,16 @@ plume_load_env() {
     fi
     # shellcheck disable=SC1091
     source "${env_file}"
+
+    # File-only PLUME_* must override stale short names left from defaults/manifest.
+    local short plume
+    while IFS='|' read -r short plume; do
+      [[ -n "${short}" && -n "${plume}" ]] || continue
+      if plume_env_file_defines_key "${plume}" && ! plume_env_file_defines_key "${short}"; then
+        export "${short}=${!plume}"
+      fi
+    done < <(plume_env_laradock_alias_pairs)
+
     for preserved_idx in "${!preserved_keys[@]}"; do
       export "${preserved_keys[$preserved_idx]}=${preserved_values[$preserved_idx]}"
     done

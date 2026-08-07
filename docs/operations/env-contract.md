@@ -4,11 +4,12 @@ Plume ayarlari `.env` uzerinden yonetilebilir.
 
 ## Ortak Kural
 
-- Ortak degisken prefixi: `PLUME_`
+- Plume-özel degisken prefixi: `PLUME_` (state, mode, site, native driver ayarlari)
+- Stack servis toggle/port/credential: **Laradock-style kisa isimler** (ornek `REDIS_ENABLED`, `MARIADB_PORT`) — canonical config dosyalarinda (D-130)
 - Varsayilan ornek dosya: `.env.example`
 - Degiskenler mode fark etmeden ayni isimlendirme standardini kullanir.
 - Varsayilan config dosyasi: `plume.yml` (proje-local site manifest)
-- Native stack manifest: `~/.config/plume/services.yml` — birlesme sirasi: defaults → `services.yml` → `~/.config/plume/.env` (env kazanir). Bkz. [services-manifest.md](./services-manifest.md)
+- Native stack manifest: `~/.config/plume/services.yml` — birlesme sirasi: defaults → `services.yml` (`${REDIS_ENABLED}` vb. cozulur) → `~/.config/plume/.env` (env kazanir). Bkz. [services-manifest.md](./services-manifest.md)
 
 ## Mode-Ozel Prefixler
 
@@ -58,7 +59,8 @@ Not:
   - `PLUME_NATIVE_PHP_FPM_UPSTREAM` (default php)
   - `PLUME_NATIVE_PHP_FPM_UPSTREAM_81`, `..._82`, `..._84`
 - `PLUME_NATIVE_HOST_PROVISION=true|false`: native modda `web`, `mariadb`, `mysql`, `redis` (ve apache2 driver) icin gercek host paket kurulum/start/stop. Varsayilan `false` (state simulate).
-- `PLUME_NONINTERACTIVE=true|false`: macOS permission menu ve TTY brew/sudo onaylarini atla (CI; global `--yes` ile uyumlu).
+- `PLUME_NONINTERACTIVE=true|false`: macOS permission menu ve TTY brew/sudo onaylarini atla (CI; global `--yes` ile uyumlu). Native MariaDB/MySQL root sifre bootstrap sifresiz TCP denemesi yapmaz (tty `Password:` prompt yok; D-134). Hosts sync `sudo -n` kullanir (interaktif sudo Password yok; D-136).
+- `PLUME_NATIVE_DB_HOSTS_SYNC=true|false`: native mariadb/mysql up sonrasi `/etc/hosts` alias sync (varsayilan `true`; smoke/CI: `false`).
 - `PLUME_INTERACTIVE=true|false`: TTY disinda veya icinde interaktif prompt davranisi (bkz. `docs/operations/macos-permissions.md`).
 - `PLUME_SITE_AUTO_PROVISION_WEB=true|false`: native `site publish --reload` sirasinda web sunucusu yoksa otomatik host kurulum/baslatma. Varsayilan `true`.
 - Native Homebrew nginx ana config port yonetimi:
@@ -105,26 +107,53 @@ Not:
 
 ## Stack Service Env (Laradock mapping)
 
-Native cache/DB/broker/web UI baglanti ayarlari `PLUME_*` ile yonetilir. Varsayilanlar Laradock `.env` ile hizali (D-121).
+Stack servis toggle/port/credential ayarlari `.env` ve `services.yml` icinde **Laradock-style kisa isimlerle** yazilir. Runtime icinde `plume_env_apply_laradock_aliases_*` (`lib/common/stack_service_env.sh`) senkronize eder:
 
-| Plume | Laradock (ornek) | Varsayilan |
+1. **outward** (defaults sonrasi, manifest oncesi): `PLUME_*` → kisa isim (yalnizca kisa isim bosken; `${REDIS_ENABLED}` interpolation)
+2. **refresh** (manifest sonrasi): manifest'in guncelledigi `PLUME_*` → kisa isim (her zaman)
+3. **inward** (`.env` sonrasi): kisa isim → `PLUME_*` (`.env` / CLI kisa isim kazanir)
+
+Env yukleme (`plume_load_env`): dosya alias ciftinin yalnizca bir ucunu tanimliyorsa (ornek `PLUME_REDIS_ENABLED=true`), eslestirilen kisa isim defaults/manifest oncesi deger olarak korunmaz; source sonrasi yalnizca `PLUME_*` varsa kisa isim buna senkronize edilir (D-131).
+
+Yalnizca `PLUME_*` (eski stil) hâlâ calisir; deprecated.
+
+| Laradock (canonical) | Internal (`PLUME_*`) | Varsayilan |
 |-------|------------------|------------|
-| `PLUME_REDIS_PORT` | `REDIS_PORT` | `6379` |
-| `PLUME_REDIS_PASSWORD` | `REDIS_PASSWORD` | `secret_redis` |
-| `PLUME_MONGODB_PORT` | `MONGODB_PORT` | `27017` |
-| `PLUME_MONGODB_USERNAME` | `MONGO_USERNAME` | `root` |
-| `PLUME_MONGODB_PASSWORD` | `MONGO_PASSWORD` | `example` |
+| `REDIS_ENABLED` | `PLUME_REDIS_ENABLED` | `false` |
+| `MARIADB_ENABLED` | `PLUME_MARIADB_ENABLED` | `true` |
+| `MYSQL_ENABLED` | `PLUME_MYSQL_ENABLED` | `false` |
+| `PHPMYADMIN_ENABLED` | `PLUME_PHPMYADMIN_ENABLED` | `false` |
+| `POSTGRES_ENABLED` | `PLUME_POSTGRES_ENABLED` | `false` |
+| `REDIS_PORT` | `PLUME_REDIS_PORT` | `6379` |
+| `REDIS_PASSWORD` | `PLUME_REDIS_PASSWORD` | `secret_redis` |
+| `MONGODB_PORT` | `PLUME_MONGODB_PORT` | `27017` |
+| `MONGO_USERNAME` | `PLUME_MONGODB_USERNAME` | `root` |
+| `MONGO_PASSWORD` | `PLUME_MONGODB_PASSWORD` | `example` |
 | `PLUME_MONGODB_DATABASE` | — | `admin` |
-| `PLUME_RABBITMQ_PORT` | `RABBITMQ_NODE_HOST_PORT` | `5672` |
-| `PLUME_RABBITMQ_MANAGEMENT_PORT` | `RABBITMQ_MANAGEMENT_HTTP_HOST_PORT` | `15672` |
-| `PLUME_RABBITMQ_USER` / `PASSWORD` | `RABBITMQ_DEFAULT_USER` / `PASS` | `guest` / `guest` |
-| `PLUME_MONGO_WEBUI_PORT` | `MONGO_WEBUI_PORT` | `8082` (Plume; Laradock often `3000`) |
+| `RABBITMQ_NODE_HOST_PORT` | `PLUME_RABBITMQ_PORT` | `5672` |
+| `RABBITMQ_MANAGEMENT_HTTP_HOST_PORT` | `PLUME_RABBITMQ_MANAGEMENT_PORT` | `15672` |
+| `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASS` | `PLUME_RABBITMQ_USER` / `PASSWORD` | `guest` / `guest` |
+| `MONGO_WEBUI_PORT` | `PLUME_MONGO_WEBUI_PORT` | `8082` (Plume; Laradock often `3000`) |
 | `PLUME_MONGO_WEBUI_URI` | `MONGO_WEBUI_MONGO_URL` | otomatik (`mongodb://user:pass@127.0.0.1:27017/admin`) |
 | `PLUME_MONGO_WEBUI_USERNAME` / `PASSWORD` | mongo-express basic auth | `admin` / `pass` |
-| `PLUME_REDIS_WEBUI_PORT` | `REDIS_WEBUI_PORT` | `8083` (Plume; Laradock often `9987`) |
-| `PLUME_REDIS_WEBUI_USERNAME` / `PASSWORD` | `REDIS_WEBUI_USERNAME` / `PASSWORD` | `laradock` / `laradock` |
-| `PLUME_REDIS_WEBUI_HOST` / `REDIS_PORT` | `REDIS_WEBUI_CONNECT_HOST` / `PORT` | `127.0.0.1` / `6379` |
+| `REDIS_WEBUI_PORT` | `PLUME_REDIS_WEBUI_PORT` | `8083` (Plume; Laradock often `9987`) |
+| `REDIS_WEBUI_USERNAME` / `PASSWORD` | `PLUME_REDIS_WEBUI_USERNAME` / `PASSWORD` | `laradock` / `laradock` |
+| `REDIS_WEBUI_CONNECT_HOST` / `REDIS_WEBUI_CONNECT_PORT` | `PLUME_REDIS_WEBUI_HOST` / `REDIS_PORT` | `127.0.0.1` / `6379` |
 
 Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Redis icin ayrica `services redis sync-config --reload`. Bkz. [services-env.md](../commands/services-env.md), [services-redis.md](../commands/services-redis.md).
 
-Native Redis config yonetimi (`PLUME_NATIVE_REDIS_MANAGE_CONFIG=true`, varsayilan): Plume `state/native/redis/plume-redis.conf` uretir ve system `redis.conf` icine `include` ekler; `requirepass` ve `port` buradan uygulanir.
+Native Redis config yonetimi (`PLUME_NATIVE_REDIS_MANAGE_CONFIG=true`, varsayilan): Plume `state/native/redis/plume-redis.conf` uretir ve system `redis.conf` icine `include` ekler.
+
+Native DB/broker config (`PLUME_NATIVE_MARIADB_MANAGE_CONFIG`, `PLUME_NATIVE_POSTGRES_MANAGE_CONFIG`, `PLUME_NATIVE_MONGODB_MANAGE_CONFIG`, `PLUME_NATIVE_RABBITMQ_MANAGE_CONFIG`, varsayilan `true`):
+
+| Laradock (canonical) | Internal (`PLUME_*`) | Varsayilan |
+|-------|----------|------------|
+| `MARIADB_PORT` | `PLUME_MARIADB_PORT` | `3306` |
+| `MARIADB_ROOT_PASSWORD` | `PLUME_MARIADB_ROOT_PASSWORD` | `root` |
+| `POSTGRES_PORT` | `PLUME_POSTGRES_PORT` | `5432` |
+| `POSTGRES_USER` | `PLUME_POSTGRES_USER` | `postgres` |
+| `POSTGRES_PASSWORD` | `PLUME_POSTGRES_PASSWORD` | `postgres` |
+| `MYSQL_ROOT_PASSWORD` | `PLUME_MYSQL_ROOT_PASSWORD` | `root` |
+| `MYSQL_PORT` | `PLUME_MYSQL_PORT` | `3307` |
+
+Degisiklik sonrasi: `./plume.sh services restart <svc> --mode=native` (config sync otomatik).

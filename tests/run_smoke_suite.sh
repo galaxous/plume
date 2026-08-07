@@ -66,6 +66,7 @@ fi
 
 # Avoid real-host manifest on_first_run during aggregated smokes (see D-108; phase11 covers it).
 export PLUME_SKIP_ON_FIRST_RUN_PROVISION="${PLUME_SKIP_ON_FIRST_RUN_PROVISION:-true}"
+export PLUME_NONINTERACTIVE="${PLUME_NONINTERACTIVE:-1}"
 # Host brew FPM listen path may differ from canonical socket until pool sync; contract smokes check health only.
 export PLUME_PHP_FPM_VERIFY_AFTER_START="${PLUME_PHP_FPM_VERIFY_AFTER_START:-false}"
 
@@ -125,6 +126,9 @@ run_ci_release_suite() {
   run_step "phase17-native-stack-webui" "phase17_native_stack_webui_smoke.sh"
   run_step "phase17-native-stack-env" "phase17_native_stack_env_smoke.sh"
   run_step "phase17-native-redis-config" "phase17_native_redis_config_smoke.sh"
+  run_step "phase17-native-db-broker-config" "phase17_native_stack_db_broker_config_smoke.sh"
+  run_step "phase17-native-phpmyadmin" "phase17_native_phpmyadmin_smoke.sh"
+  run_step "phase17-native-db-engine" "phase17_native_db_engine_smoke.sh"
 }
 
 run_phase11_full_suite() {

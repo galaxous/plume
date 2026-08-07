@@ -1,6 +1,7 @@
 # Plume native stack manifest (Laradock-style central config).
 # Copy to ~/.config/plume/services.yml (or set PLUME_SERVICES_MANIFEST_FILE).
 # Merge order: built-in defaults → this file → ~/.config/plume/.env (env wins).
+# ${VAR} placeholders resolve from Laradock-style env at manifest load; .env overrides after.
 
 version: 1
 
@@ -22,31 +23,54 @@ services:
     extensions_profile: matrix
 
   database:
-    engine: mariadb   # mariadb | mysql
+    engine: mariadb   # mariadb | mysql — native brew: ONE engine only (not both enabled)
     version: "11.0"
     auto_start: true
 
   redis:
-    enabled: false
+    enabled: "${REDIS_ENABLED}"
 
-  composer: { enabled: true }
-  phpmyadmin: { enabled: false }   # native Phase 17: npm/php built-in or apt phpmyadmin
-  postgres: { enabled: false, version: "16" }
-  memcached: { enabled: false }
-  rabbitmq: { enabled: false }
-  mongodb: { enabled: false }
-  mongo_webui: { enabled: false }
-  redis_webui: { enabled: false }   # native: redis-commander (npm); Laradock alias redis-webui
-  mailpit: { enabled: true }   # native: macOS brew install/start; Linux → docker-lite or manual
-  meilisearch: { enabled: false }
-  minio: { enabled: false }
-  supervisor: { enabled: false }
-  horizon: { enabled: false }
-  php_worker: { enabled: false }
+  composer:
+    enabled: "${COMPOSER_ENABLED}"
+  phpmyadmin:
+    enabled: "${PHPMYADMIN_ENABLED}"   # native Phase 17: brew/php built-in or apt phpmyadmin
+  mariadb:
+    enabled: "${MARIADB_ENABLED}"
+  mysql:
+    enabled: "${MYSQL_ENABLED}"
+  postgres:
+    enabled: "${POSTGRES_ENABLED}"
+    version: "16"
+  memcached:
+    enabled: "${MEMCACHED_ENABLED}"
+  rabbitmq:
+    enabled: "${RABBITMQ_ENABLED}"
+  mongodb:
+    enabled: "${MONGODB_ENABLED}"
+  mongo_webui:
+    enabled: "${MONGO_WEBUI_ENABLED}"
+  redis_webui:
+    enabled: "${REDIS_WEBUI_ENABLED}"   # native: redis-commander (npm); Laradock alias redis-webui
+  mailpit:
+    enabled: "${MAILPIT_ENABLED}"   # native: macOS brew install/start; Linux → docker-lite or manual
+  meilisearch:
+    enabled: "${MEILISEARCH_ENABLED}"
+  minio:
+    enabled: "${MINIO_ENABLED}"
+  supervisor:
+    enabled: "${SUPERVISOR_ENABLED}"
+  horizon:
+    enabled: "${HORIZON_ENABLED}"
+  php_worker:
+    enabled: "${PHP_WORKER_ENABLED}"
 
   # Laradock-bridge compose aliases (informational; ignored in native-only mode):
-  # workspace: { mode: laradock-bridge, enabled: false }   # maps to composer/workspace
-  # php-fpm: { mode: laradock-bridge, enabled: false }     # maps to php service in compose
+  # workspace:
+  #   mode: laradock-bridge
+  #   enabled: false   # maps to composer/workspace
+  # php-fpm:
+  #   mode: laradock-bridge
+  #   enabled: false   # maps to php service in compose
 
   provision:
     on_first_run: true

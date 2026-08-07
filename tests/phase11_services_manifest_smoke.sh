@@ -53,6 +53,7 @@ RUN=(
   "PLUME_AUTO_HOST_BOOTSTRAP=false"
   "PLUME_SERVICES_MANIFEST_FILE=${MANIFEST}"
   "PLUME_ENV_FILE=${GLOBAL_ENV}"
+  "PLUME_SKIP_ON_FIRST_RUN_PROVISION=false"
 )
 
 OUT="$("${RUN[@]}" ./plume.sh services manifest show 2>/dev/null)"
@@ -159,6 +160,7 @@ ON_FIRST_RUN=(
   "PLUME_NONINTERACTIVE=1"
   "PATH=${MOCK_BIN}:/usr/bin:/bin"
   "PLUME_ALLOW_NON_ROOT_INSTALL=true"
+  "PLUME_SKIP_ON_FIRST_RUN_PROVISION=false"
 )
 
 "${ON_FIRST_RUN[@]}" ./plume.sh mode use native --force --yes >/dev/null

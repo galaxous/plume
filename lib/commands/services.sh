@@ -3523,7 +3523,7 @@ cmd_services_credentials() {
   fi
   service="$(plume_services_first_positional "$@")"
   if [[ -z "${service}" ]]; then
-    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui)"
+    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin)"
     return 2
   fi
   service="$(plume_service_contract_normalize "${service}" "${mode}")"
@@ -3532,7 +3532,7 @@ cmd_services_credentials() {
     return 2
   fi
   case "${service}" in
-    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui) ;;
+    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin) ;;
     *)
       plume_err "credentials not supported for service: ${service}"
       return 2
@@ -3547,8 +3547,10 @@ cmd_services_credentials() {
 plume_services_restart_one() {
   local mode="$1"
   local service="$2"
-  if [[ "${service}" == "redis" ]] && plume_native_redis_manage_config_enabled; then
-    plume_native_redis_sync_config "false" "false" || true
+  if [[ "${service}" == "phpmyadmin" ]]; then
+    plume_native_phpmyadmin_sync_config "false" || true
+  else
+    plume_native_stack_sync_on_lifecycle "${service}" || true
   fi
   PLUME_MODE="${mode}" plume_service_stop "${service}" || true
   PLUME_MODE="${mode}" plume_service_start "${service}"

@@ -2,6 +2,195 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-08-07 - D-137 - Mock MariaDB include only when MAIN_CONF overridden
+
+- Durum: accepted
+- Karar:
+  - Mock `mariadb`/`mysql` sync: `!include` yalnizca `PLUME_NATIVE_MARIADB_MAIN_CONF` set ise (hermetic temp file).
+  - Gercek Homebrew `my.cnf` mock lifecycle'da degistirilmez.
+- Gerekce:
+  - D-134 mock include skip: `phase17-native-db-broker-config` `[FAIL] mariadb include`.
+- Etki:
+  - `lib/services/native_db_broker_config.sh`.
+
+## 2026-08-07 - D-136 - Hosts sync never uses interactive sudo
+
+- Durum: accepted
+- Karar:
+  - `plume_fs_copy_no_tty`: writable `cp` veya `sudo -n cp` (tty Password: yok).
+  - `plume_native_db_hosts_sync` + site hosts add/remove bu helper'i kullanir.
+  - Smoke: `PLUME_NATIVE_DB_HOSTS_SYNC=false` (phase11).
+- Gerekce:
+  - Release smoke `phase11-native-core-services-parity`: mariadb up sonrasi `sudo cp /etc/hosts` interaktif Password prompt (stderr redirect yetmez; /dev/tty).
+- Etki:
+  - `lib/common/os.sh`, `lib/services/native_db_hosts.sh`, `lib/common/sites.sh`, `tests/phase11_native_core_services_parity_smoke.sh`.
+
+## 2026-08-07 - D-135 - Mailpit native health probe (mock + HTTP)
+
+- Durum: accepted
+- Karar:
+  - `plume_native_driver_default_port` mailpit: `PLUME_MAILPIT_PORT` (8025).
+  - Health probe: allocated port (`plume_service_effective_port`) + curl.
+  - `phase12-native-host-provision-mailpit` smoke: mock `curl` (8025) + mock brew.
+- Gerekce:
+  - Release smoke: `services up mailpit` exit 2 — health probe `return 1` (mailpit npm/phpmyadmin path disinda).
+- Etki:
+  - `lib/services/native_host_service_drivers.sh`, `tests/phase12_native_host_provision_mailpit_smoke.sh`.
+
+## 2026-08-07 - D-134 - MariaDB root bootstrap never prompts on tty
+
+- Durum: accepted
+- Karar:
+  - `plume_native_mariadb_apply_root_password`: sifresiz TCP `mysql` denemesi kaldirildi (tty'de `Password:` ile CI/smoke takilmasi).
+  - Socket auth (Homebrew varsayilan) sonra `--batch` ALTER USER; basarisizsa sessizce atla.
+  - `mysqladmin` health probe: `--batch` + `</dev/null`; sifre yoksa socket ping, sifresiz TCP yok.
+  - Mock driver config sync host `my.cnf` dosyasina yazmaz.
+  - Smoke suite: `PLUME_NONINTERACTIVE=1` varsayilan; phase11 DB mock'a `mysql` shim eklendi.
+- Gerekce:
+  - Release smoke `phase11-native-core-services-parity`: gercek brew mariadb sonrasi interaktif `Password:` prompt.
+- Etki:
+  - `lib/services/native_db_broker_config.sh`, `lib/services/native_host_service_drivers.sh`, `tests/run_smoke_suite.sh`, `tests/phase11_native_core_services_parity_smoke.sh`.
+
+## 2026-08-07 - D-133 - Phase11 DB parity smokes use hermetic mock driver
+
+- Durum: accepted
+- Karar:
+  - `phase11-native-core-services-parity` mariadb/mysql/phpmyadmin adimlari mock brew + mysqladmin/php ile calisir (`PATH=${MOCK_BIN}:/usr/bin:/bin`).
+  - php-fpm ve web driver adimlari gercek host entegrasyonu olarak kalir; SQL motorlari brew tek-formula kisiti nedeniyle mock.
+  - Invalid-engine smoke: `PMA_ARBITRARY=0` (varsayilan `1` iken engine dogrulamasi atlanir).
+- Gerekce:
+  - Release smoke: `mysql start native` fail — host'ta yalnizca `mariadb` formula, `brew services start mysql` + health probe exit 2.
+- Etki:
+  - `tests/phase11_native_core_services_parity_smoke.sh`.
+
+## 2026-08-06 - D-132 - Native registry-only services skip health gate
+
+- Durum: accepted
+- Karar:
+  - `horizon`, `supervisor`, `php_worker` native modda brew/npm host driver yok; `services up` yalnizca registry/runtime kaydi yapar.
+  - D-128 health gate yalnizca `plume_native_host_runtime_managed` servislerde calisir; `horizon`/`supervisor`/`php_worker` registry-only listesinde probe atlanir.
+  - `plume_service_health`: registry-only -> `registry`; `php`/`composer` running -> `healthy` (host driver disi, ayri yasam dongusu).
+- Gerekce:
+  - `phase6-service-update-path` smoke: `horizon starts when supervisor enabled` exit 2 (probe fail) D-128 sonrasi.
+- Etki:
+  - `lib/services/native_host_provision.sh`, `lib/services/registry.sh`.
+
+## 2026-08-06 - D-131 - Env-file load respects Laradock alias pairs
+
+- Durum: accepted
+- Karar:
+  - `plume_load_env` preservation: env dosyasi alias ciftinin bir ucunu tanimliyorsa (`REDIS_ENABLED` veya `PLUME_REDIS_ENABLED`), diger uc preserve edilmez.
+  - Env source sonrasi: dosyada yalnizca `PLUME_*` tanimliysa kisa isim ona senkronize edilir (defaults/manifest'ten kalan stale `REDIS_ENABLED=false` inward sync'te kazanmasin).
+  - `plume_env_laradock_plume_to_short` eklendi.
+- Gerekce:
+  - D-130 sonrasi `--env-file` ile yalnizca `PLUME_REDIS_ENABLED=true` yazildiginda, onceden export edilen `REDIS_ENABLED=false` preserve ediliyordu; inward alias kisa ismi kazandiriyordu.
+- Etki:
+  - `lib/common/env.sh`, `lib/common/stack_service_env.sh`, `docs/operations/env-contract.md`.
+
+## 2026-08-06 - D-130 - Laradock-style env names (config canonical)
+
+- Durum: accepted
+- Karar:
+  - `.env.example`, `services.yml`, kullanici `.env`: stack servis toggle/port/credential icin `PLUME_` prefixi kaldirildi (ornek `REDIS_ENABLED`, `MARIADB_PORT`).
+  - `plume_env_apply_laradock_aliases_*` (`stack_service_env.sh`): outward (defaults→short) → manifest → refresh (PLUME→short) → `.env` → inward (short→PLUME).
+  - `services.yml` `${VAR}`: Laradock-style kisa isimler (ornek `${REDIS_ENABLED}`); eski `${PLUME_*}` geriye uyumlu.
+  - Plume-ozel anahtarlar (`PLUME_STATE_DIR`, `PLUME_MODE`, native driver ayarlari) `PLUME_` prefixinde kalir.
+- Gerekce:
+  - Laradock parity; config dosyalarinda tanidik isimlendirme; runtime kod degisikligi minimize (alias katmani).
+- Etki:
+  - `stack_service_env.sh`, `env.sh`, `bootstrap.sh`, `.env.example`, `templates/services.yml.example`, docs, smoke.
+
+## 2026-08-06 - D-129 - Native allocated port export + health probe retry
+
+- Durum: accepted
+- Karar:
+  - `plume_service_start_native`: allocate sonrasi `PLUME_*_PORT` export (docker-lite parity); port degisti ve config-manage aciksa reload; health probe 3 deneme (reload + 1s bekleme).
+  - Explicit `services up <svc>`: `provision_service_wants` false olsa da desteklenen servislerde `plume_native_host_start_service` calisir.
+  - Redis config/health: `plume_service_effective_port` (allocated port oncelikli).
+  - `services.yml` sablon: block YAML + quoted `${PLUME_*}` (IDE YAML parser uyumu).
+- Gerekce:
+  - D-128 health gate: 6379 mesgul → 6380 allocate ama probe/config 6379; brew restart olmadan fail.
+- Etki:
+  - `registry.sh`, `native_redis_config.sh`, template, docs, phase11 smoke hermetic skip.
+
+## 2026-08-05 - D-128 - Native DB status probe, manifest `${VAR}`, brew dual-engine guard
+
+- Durum: accepted
+- Karar:
+  - `plume_service_start_native`: `running=true` yalnizca basarili start + `plume_native_host_health_probe` sonrasi (mysqladmin stdout /dev/null).
+  - `plume_service_status` (native): saglik `plume_service_health` ile; stale `running` bayragi tek basina `healthy` gostermez.
+  - Manifest loader: `${PLUME_*}` placeholder interpolation (defaults sonrasi, `.env` oncesi); `.env` kazanir.
+  - Native brew: `PLUME_MARIADB_ENABLED` + `PLUME_MYSQL_ENABLED` ikisi birden → manifest uyari, start/provision hata.
+  - `database.engine` tek native brew engine; phpMyAdmin yalnizca operasyonel engine listeler (mevcut).
+- Gerekce:
+  - `services status mysql` brew kurulu degilken `running healthy` false positive; Laradock-style manifest discoverability; mariadb/mysql brew cakismasi.
+- Etki:
+  - `registry.sh`, `services_manifest.sh`, `native_db_hosts.sh`, `templates/services.yml.example`, docs, smoke.
+
+## 2026-08-05 - D-127 - Native phpMyAdmin multi-server (mariadb|mysql + hosts)
+
+- Durum: accepted
+- Karar:
+  - Aktif engine basina phpMyAdmin server kaydi: `verbose`/`host`=`mariadb|mysql`, port=`PLUME_*_PORT`.
+  - `PLUME_NATIVE_DB_HOSTS_SYNC`: `/etc/hosts` → `127.0.0.1 mariadb mysql` (Laradock hostname parity).
+  - Varsayilan `PLUME_MYSQL_PORT=3307` (mariadb 3306 ile cakismasin).
+  - Login: dropdown veya Server alanina `mariadb`/`mysql` + user/password.
+- Gerekce:
+  - Laradock'ta iki ayri container ve docker network hostname; native'de ayni UX icin farkli port + hosts alias.
+- Etki:
+  - `native_phpmyadmin_config.sh`, `native_db_hosts.sh`, drivers, defaults, smoke, docs.
+
+## 2026-08-05 - D-126 - phpMyAdmin Laradock arbitrary server parity
+
+- Durum: accepted
+- Karar:
+  - `PMA_ARBITRARY=1` (varsayilan) iken native `config.inc.php` sabit `host`/`port` yazmaz; Server login formunda girilir (Laradock gibi).
+  - `PMA_DB_ENGINE` native + arbitrary modda opsiyonel; yalnizca docker-lite `depends_on` ve `PMA_ARBITRARY=0` sabit hedef icin.
+  - Native login Server: `127.0.0.1`; docker-lite: `mariadb` veya `mysql` container hostname.
+- Gerekce:
+  - Laradock login UX: Server + user + password; `PMA_DB_ENGINE` compose dependency, phpMyAdmin config degil.
+- Etki:
+  - `native_phpmyadmin_config.sh`, `registry.sh`, docs, smoke, `.env.example`.
+
+## 2026-08-05 - D-125 - Native phpMyAdmin cookie auth (login formu)
+
+- Durum: accepted
+- Karar:
+  - Native `config.inc.php` varsayilan `PMA_AUTH_TYPE=cookie`; kullanici MariaDB sifresini login formunda girer.
+  - `PMA_AUTH_TYPE=config` opt-in: `PMA_USER`/`PMA_PASSWORD` config'e yazilir (Laradock/docker otomatik giris parity).
+  - `services credentials phpmyadmin` DB ipuclarini vermeye devam eder; sifre config'e gomulmez (cookie modunda).
+- Gerekce:
+  - `auth_type=config` native 8081'de sifre sormadan oturum aciyordu; beklenen yerel dev UX degil.
+- Etki:
+  - `native_phpmyadmin_config.sh`, smoke, `.env.example`, `services-phpmyadmin.md`.
+
+## 2026-08-05 - D-124 - Native phpMyAdmin (brew + PMA config.inc.php)
+
+- Durum: accepted
+- Karar:
+  - macOS: `brew install phpmyadmin`; npm yolu kaldirildi.
+  - `PMA_*` / `PLUME_PHPMYADMIN_*` → `state/native/phpmyadmin/htdocs/config.inc.php`.
+  - `php -S 127.0.0.1:<port>` PID yonetimi; `services restart phpmyadmin` config sync + yeniden baslatma.
+  - Smoke: `phase17_native_phpmyadmin_smoke.sh`; docs: `services-phpmyadmin.md`.
+- Gerekce:
+  - Native 8081 erisilemiyordu: bos docroot + npm yanlis kurulum yolu.
+- Etki:
+  - `native_phpmyadmin_config.sh`, drivers, services credentials, tests, docs.
+
+## 2026-08-05 - D-123 - Native DB/Broker Config Management (MariaDB, Postgres, MongoDB, RabbitMQ)
+
+- Durum: accepted
+- Karar:
+  - Redis modeli genisletildi: `PLUME_*` → plume include/block + `services restart <svc>` otomatik sync.
+  - Servisler: mariadb, mysql, postgres, mongodb, rabbitmq; toggle: `PLUME_NATIVE_*_MANAGE_CONFIG=true` (varsayilan).
+  - Ortak helper: `native_stack_config_common.sh`; driver: `native_db_broker_config.sh`.
+  - Runtime sifre/kullanici: restart sonrasi best-effort SQL/shell (`ALTER USER`, `mongosh`, `rabbitmqctl`).
+  - Smoke: `phase17_native_stack_db_broker_config_smoke.sh`.
+- Gerekce:
+  - Kullanici `.env` degistirir → `services restart <svc>` yeterli; brew config elle duzenleme yok.
+- Etki:
+  - drivers, defaults, stack_service_env, tests, docs.
+
 ## 2026-08-05 - D-122 - Native Redis Config Management
 
 - Durum: accepted

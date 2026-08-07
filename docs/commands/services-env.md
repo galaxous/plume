@@ -17,12 +17,14 @@ plumectl env set PLUME_REDIS_PASSWORD=custom
 ## Parametreler
 
 - `--mode=native` (zorunlu; stack env MVP native-only)
-- `env show <service>`: `redis`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui`
+- `env show <service>`: `redis`, `mariadb`, `mysql`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui`
 - `env set <service> <assignment>`:
   - kisa anahtar: `password=`, `port=`, `username=`, `management_port=`, `uri=`, …
   - veya tam anahtar: `PLUME_REDIS_PASSWORD=...`
 - `--restart`: `env set` sonrasi etkilenen servisleri stop+start
-- `restart <service|@group|all-enabled>`: `.env` degisikliginden sonra npm web UI ve credential senkronu icin
+- `restart <service|@group|all-enabled>`: `.env` degisikliginden sonra config sync + stop + start (native DB/broker)
+
+Native DB/broker servisleri (`mariadb`, `postgres`, `mongodb`, `rabbitmq`, `redis`) icin config dosyasi sync **restart icinde otomatik** calisir (`PLUME_NATIVE_*_MANAGE_CONFIG=true`). Ayri `sync-config` komutu gerekmez.
 
 ## Cikti / exit-code
 

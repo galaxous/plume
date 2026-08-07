@@ -14,15 +14,18 @@ Laradock’taki `docker-compose.yml` benzeri merkezi manifest: native modda hang
 
 ## Birleştirme sırası
 
-1. `lib/config/defaults.sh` (gömülü varsayılanlar)
-2. `services.yml` (yapılandırılmış servis tanımları)
-3. `~/.config/plume/.env` (son söz; `plume_load_env`)
+1. `lib/config/defaults.sh` (gömülü varsayılanlar; dahili `PLUME_*`)
+2. `plume_env_apply_laradock_aliases` (kisa isim ↔ `PLUME_*` senkron)
+3. `services.yml` (yapılandırılmış servis tanımları; `${REDIS_ENABLED}` vb. placeholder’ları bu adımda defaults ortamından çözülür)
+4. `~/.config/plume/.env` (son söz; `plume_load_env` + alias yeniden uygulanır)
+
+`${VAR}` interpolation: Laradock `docker-compose` benzeri — manifest değerlerinde `${PHPMYADMIN_ENABLED}` gibi referanslar, manifest apply sırasında (defaults + alias sonrası) mevcut ortamdan çözülür. Aynı anahtar `.env`’de tanımlıysa **`.env` kazanır** (manifest yalnızca bağlantı/discoverability sağlar). Eski `${PLUME_*_ENABLED}` placeholder’ları geriye uyumlu calisir.
 
 `host.env` makine tespiti içindir; servis toggle’ları için **değildir** (bkz. D-098).
 
 ## Şema (sürüm `version: 1`)
 
-Özel bloklar (`web`, `php`, `database`, `provision`) + registry servisleri (blok veya inline `{ enabled: true, version: "16" }`).
+Özel bloklar (`web`, `php`, `database`, `provision`) + registry servisleri (blok YAML; `${PLUME_*}` değerleri tırnaklı yazılır).
 
 Tam örnek: `templates/services.yml.example`.
 
@@ -39,7 +42,7 @@ Tam örnek: `templates/services.yml.example`.
 | `php` | `default_version` | `PLUME_PHP_DEFAULT_VERSION`, `PLUME_PHP_VERSION` |
 | `php` | `versions[]` | `PLUME_PHP_INSTALLED_VERSIONS` (virgülle) |
 | `php` | `extensions_profile` | `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE` |
-| `database` | `engine` | `PLUME_MARIADB_ENABLED` / `PLUME_MYSQL_ENABLED` |
+| `database` | `engine` | `PLUME_MARIADB_ENABLED` / `PLUME_MYSQL_ENABLED` (tek engine; native brew’de ikisi birden yasak — D-128) |
 | `database` | `version` | `PLUME_MARIADB_VERSION` veya `PLUME_MYSQL_VERSION` |
 | `database` | `auto_start` | Provision sırasında DB start (manifest okuma; env değil) |
 | `provision` | `interactive: false` | `PLUME_NONINTERACTIVE=true` |
@@ -69,7 +72,19 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 | `horizon` | `PLUME_HORIZON_ENABLED` | `PLUME_HORIZON_VERSION` |
 | `php_worker` | `PLUME_PHP_WORKER_ENABLED` | `PLUME_PHP_WORKER_VERSION` |
 
-`database.engine` ile `mariadb`/`mysql` bölümleri birlikte kullanılabilir; son yazılan manifest alanı export sırasına göre env’i günceller (tercihen tek kaynak kullanın).
+`database.engine` ile `mariadb`/`mysql` bölümleri birlikte kullanılabilir; **native Homebrew’de yalnızca bir engine etkin olmalıdır** (`database.engine: mariadb` veya `mysql`). İkisi birden `true` ise manifest load uyarısı, `services start`/`provision` hata verir (D-128). phpMyAdmin yalnızca operasyonel (health geçen) engine’leri listeler.
+
+Registry satırlarında `${REDIS_ENABLED}` placeholder'ları tırnaklı block YAML kullanın (bkz. `templates/services.yml.example`). Eski `${PLUME_REDIS_ENABLED}` geriye uyumludur.
+
+```yaml
+redis:
+  enabled: "${REDIS_ENABLED}"
+phpmyadmin:
+  enabled: "${PHPMYADMIN_ENABLED}"
+postgres:
+  enabled: "${POSTGRES_ENABLED}"
+  version: "16"
+```
 
 ### Native host provision vs yalnızca enable
 
@@ -139,6 +154,8 @@ Manifest dosyası yoksa loader no-op’tur; yalnızca `.env` + defaults davranı
 
 ## İlgili kararlar
 
+- D-130 — Laradock-style env names in config; alias layer `plume_env_apply_laradock_aliases`
+- D-128 — manifest `${VAR}` interpolation, native DB status health probe, brew dual-engine guard
 - D-108 — `provision.on_first_run` otomatik manifest provision
 - D-104 — tam registry manifest eşlemesi
 - D-103 — `services.yml` native manifest MVP

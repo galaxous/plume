@@ -35,6 +35,14 @@ source "${ROOT_DIR}/lib/services/native_host_provision.sh"
 source "${ROOT_DIR}/lib/services/native_web_nginx_config.sh"
 # shellcheck source=services/native_redis_config.sh
 source "${ROOT_DIR}/lib/services/native_redis_config.sh"
+# shellcheck source=services/native_db_broker_config.sh
+source "${ROOT_DIR}/lib/services/native_db_broker_config.sh"
+# shellcheck source=services/native_stack_config_common.sh
+source "${ROOT_DIR}/lib/services/native_stack_config_common.sh"
+# shellcheck source=services/native_phpmyadmin_config.sh
+source "${ROOT_DIR}/lib/services/native_phpmyadmin_config.sh"
+# shellcheck source=services/native_db_hosts.sh
+source "${ROOT_DIR}/lib/services/native_db_hosts.sh"
 # shellcheck source=services/registry.sh
 source "${ROOT_DIR}/lib/services/registry.sh"
 # shellcheck source=commands/help.sh
@@ -77,10 +85,15 @@ source "${ROOT_DIR}/lib/commands/schedule_queue.sh"
 main() {
   plume_parse_global_flags "$@"
   plume_load_defaults
+  plume_env_apply_laradock_aliases_outward
   plume_services_manifest_apply
+  plume_env_apply_laradock_aliases_refresh
   plume_load_env "${PLUME_ENV_FILE}"
+  plume_env_apply_laradock_aliases_inward
   plume_load_mode_context_env
+  plume_env_apply_laradock_aliases_inward
   plume_load_defaults
+  plume_env_apply_laradock_aliases_inward
   plume_host_profile_maybe_autobootstrap
   plume_ensure_state_dirs
   plume_state_db_init

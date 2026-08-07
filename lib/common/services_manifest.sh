@@ -42,6 +42,20 @@ plume_services_manifest_unquote() {
   printf '%s' "${v}"
 }
 
+# Resolve ${VAR} placeholders from current shell env (defaults loaded before manifest apply).
+plume_services_manifest_interpolate() {
+  local value="$1"
+  local result="${value}"
+  local var_name var_val
+
+  while [[ "${result}" =~ \$\{([A-Za-z_][A-Za-z0-9_]*)\} ]]; do
+    var_name="${BASH_REMATCH[1]}"
+    var_val="${!var_name:-}"
+    result="${result//\$\{${var_name}\}/${var_val}}"
+  done
+  printf '%s' "${result}"
+}
+
 # Read scalar `key:` under services.<section> (two-space indent under section).
 plume_services_manifest_yaml_scalar() {
   local file="$1"
@@ -88,6 +102,7 @@ plume_services_manifest_yaml_scalar() {
       local val="${trimmed#${key}:}"
       val="$(plume_services_manifest_trim "${val}")"
       val="$(plume_services_manifest_unquote "${val}")"
+      val="$(plume_services_manifest_interpolate "${val}")"
       [[ -n "${val}" ]] || return 1
       printf '%s' "${val}"
       return 0
@@ -151,6 +166,7 @@ plume_services_manifest_yaml_list() {
         local item="${trimmed#-}"
         item="$(plume_services_manifest_trim "${item}")"
         item="$(plume_services_manifest_unquote "${item}")"
+        item="$(plume_services_manifest_interpolate "${item}")"
         items+=("${item}")
         continue
       fi
@@ -206,6 +222,7 @@ plume_services_manifest_yaml_inline_field() {
       val="${BASH_REMATCH[1]}"
       val="$(plume_services_manifest_trim "${val}")"
       val="$(plume_services_manifest_unquote "${val}")"
+      val="$(plume_services_manifest_interpolate "${val}")"
       [[ -n "${val}" ]] || return 1
       printf '%s' "${val}"
       return 0
@@ -402,6 +419,13 @@ plume_services_manifest_apply() {
 
   plume_services_manifest_apply_registry_services "${file}"
 
+  if declare -F plume_native_db_brew_dual_engine_warn >/dev/null 2>&1; then
+    plume_native_db_brew_dual_engine_warn || true
+  elif [[ "$(plume_bool "${PLUME_MARIADB_ENABLED:-false}")" == "true" ]] \
+    && [[ "$(plume_bool "${PLUME_MYSQL_ENABLED:-false}")" == "true" ]]; then
+    plume_warn "manifest: PLUME_MARIADB_ENABLED and PLUME_MYSQL_ENABLED both true; native brew allows one engine (database.engine)"
+  fi
+
   if v="$(plume_services_manifest_yaml_scalar "${file}" provision interactive 2>/dev/null)"; then
     if [[ "$(plume_bool "${v}")" == "false" ]]; then
       plume_services_manifest_export "PLUME_NONINTERACTIVE" "true"
@@ -521,6 +545,10 @@ plume_services_manifest_provision_services() {
   auto_start="true"
   if v="$(plume_services_manifest_service_field "${file}" database auto_start 2>/dev/null)"; then
     auto_start="$(plume_bool "${v}")"
+  fi
+
+  if declare -F plume_native_db_brew_dual_engine_assert >/dev/null 2>&1; then
+    plume_native_db_brew_dual_engine_assert || return 2
   fi
 
   plume_services_manifest_provision_enabled_native mariadb "${auto_start}" || return 2

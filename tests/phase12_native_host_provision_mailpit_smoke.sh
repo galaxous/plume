@@ -34,6 +34,19 @@ esac
 EOF
 chmod +x "${MOCK_BIN}/brew"
 
+cat > "${MOCK_BIN}/curl" <<'EOF'
+#!/usr/bin/env bash
+# Hermetic mailpit health: native probe curls PLUME_MAILPIT_PORT (8025).
+case "$*" in
+  *127.0.0.1:8025*) exit 0 ;;
+esac
+if [[ -x /usr/bin/curl ]]; then
+  exec /usr/bin/curl "$@"
+fi
+exit 1
+EOF
+chmod +x "${MOCK_BIN}/curl"
+
 cat > "${MANIFEST}" <<'EOF'
 version: 1
 services:
