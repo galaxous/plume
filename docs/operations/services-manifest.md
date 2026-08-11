@@ -56,6 +56,7 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 |------------------------|-------------|-------------|
 | `composer` | `PLUME_COMPOSER_ENABLED` | `PLUME_COMPOSER_VERSION` |
 | `phpmyadmin` | `PLUME_PHPMYADMIN_ENABLED` | `PLUME_PHPMYADMIN_VERSION` |
+| `pgadmin` | `PLUME_PGADMIN_ENABLED` | `PLUME_PGADMIN_VERSION` |
 | `mariadb` | `PLUME_MARIADB_ENABLED` | `PLUME_MARIADB_VERSION` |
 | `mysql` | `PLUME_MYSQL_ENABLED` | `PLUME_MYSQL_VERSION` |
 | `postgres` | `PLUME_POSTGRES_ENABLED` | `PLUME_POSTGRES_VERSION` |
@@ -92,7 +93,7 @@ postgres:
 |--------|-------------------|--------------------------------------|
 | web (nginx/apache2) | Evet | Kurulum + start |
 | mariadb, mysql, redis | Evet | Kurulum + start (`database.auto_start` DB için) |
-| postgres, mongodb, rabbitmq, phpmyadmin, mongo_webui, redis_webui | Evet (Phase 17) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
+| postgres, mongodb, rabbitmq, phpmyadmin, pgadmin, mongo_webui, redis_webui | Evet (Phase 17/18) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
 | mailpit | Evet (env) | macOS Homebrew: kurulum + start; Linux: uyarı (docker-lite / manuel) |
 | php (`versions[]`) | Evet | Best-effort brew/apt PHP kurulumu + matrix kaydı |
 | postgres, memcached, … | Evet (env) | **memcached:** yok — docker-lite / manuel |

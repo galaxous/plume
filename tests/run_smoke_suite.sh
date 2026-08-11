@@ -129,6 +129,7 @@ run_ci_release_suite() {
   run_step "phase17-native-db-broker-config" "phase17_native_stack_db_broker_config_smoke.sh"
   run_step "phase17-native-phpmyadmin" "phase17_native_phpmyadmin_smoke.sh"
   run_step "phase17-native-db-engine" "phase17_native_db_engine_smoke.sh"
+  run_step "phase18-native-pgadmin" "phase18_native_pgadmin_smoke.sh"
 }
 
 run_phase11_full_suite() {

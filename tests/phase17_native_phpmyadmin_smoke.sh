@@ -14,7 +14,25 @@ mkdir -p "${STATE_DIR}" "${MOCK_BIN}" "${SHARE}"
 printf '127.0.0.1 localhost\n' > "${HOSTS_FILE}"
 : > "${ENV_FILE}"
 
-cleanup() { rm -rf "${TMP_ROOT}"; }
+cleanup() {
+  if [[ -f "${STATE_DIR}/native-pids/phpmyadmin.pid" ]]; then
+    kill "$(cat "${STATE_DIR}/native-pids/phpmyadmin.pid" 2>/dev/null || true)" 2>/dev/null || true
+  fi
+  # Reclaim host port if mock http.server leaked (D-141)
+  if command -v lsof >/dev/null 2>&1; then
+    local leak
+    leak="$(lsof -nP -iTCP:8081 -sTCP:LISTEN -t 2>/dev/null || true)"
+    if [[ -n "${leak}" ]]; then
+      # Only kill python http.server leftovers from this smoke pattern
+      for p in ${leak}; do
+        if ps -p "${p}" -o command= 2>/dev/null | grep -q 'http.server.*8081'; then
+          kill "${p}" 2>/dev/null || true
+        fi
+      done
+    fi
+  fi
+  rm -rf "${TMP_ROOT}"
+}
 trap cleanup EXIT
 
 cat > "${SHARE}/index.php" <<'EOF'
@@ -32,14 +50,13 @@ esac
 EOF
 chmod +x "${MOCK_BIN}/brew"
 
+# exec so detach/pid tracks the real listener; bind localhost only (D-141)
 cat > "${MOCK_BIN}/php" <<'EOF'
 #!/usr/bin/env bash
 if [[ "$1" == "-S" ]]; then
   port="${2#127.0.0.1:}"
   docroot="$4"
-  nohup python3 -m http.server "${port}" --directory "${docroot}" >/dev/null 2>&1 &
-  echo $!
-  exit 0
+  exec python3 -m http.server "${port}" --bind 127.0.0.1 --directory "${docroot}"
 fi
 exit 0
 EOF
@@ -78,8 +95,8 @@ grep -q "verbose'] = 'mysql'" "${CFG}" || {
   cat "${CFG}" >&2
   exit 1
 }
-grep -q "host'] = 'mariadb'" "${CFG}" || {
-  echo "[FAIL] mariadb host entry missing" >&2
+grep -q "host'] = '127.0.0.1'" "${CFG}" || {
+  echo "[FAIL] connect host should be 127.0.0.1 (native loopback)" >&2
   cat "${CFG}" >&2
   exit 1
 }

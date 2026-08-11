@@ -23,6 +23,7 @@ Yerel pre-release ve CI ile ayni adimlar:
 8. `phase17_native_stack_db_smoke.sh` (Faz 17 native DB/phpmyadmin)
 9. `phase17_native_stack_broker_smoke.sh` (Faz 17 redis/mongodb/rabbitmq)
 10. `phase17_native_stack_webui_smoke.sh` (Faz 17 web UI + url)
+11. `phase18_native_pgadmin_smoke.sh` (Faz 18 native pgAdmin)
 
 Beklenen sonuc:
 

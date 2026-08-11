@@ -2,6 +2,79 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-08-09 - D-143 - mysqladmin ping without --batch (MariaDB 12 client)
+
+- Durum: accepted
+- Karar:
+  - Native mariadb/mysql health: `mysqladmin ping ... --silent` with stdout+stderr → `/dev/null` (no `--batch`).
+  - MariaDB 12 client: `--batch` unknown; `--silent` still prints `mysqld is alive` → must redirect stdout or status HEALTH column corrupts.
+- Gerekce:
+  - Probe fail / `HEALTH=mysqld is alive` / status parse break.
+- Etki:
+  - `lib/services/native_host_service_drivers.sh`.
+
+## 2026-08-09 - D-142 - Native phpMyAdmin connect host is 127.0.0.1
+
+- Durum: accepted
+- Karar:
+  - `config.inc.php` server `host` = `127.0.0.1`; `verbose` = `mariadb|mysql` (dropdown etiketi).
+  - `/etc/hosts` alias opsiyonel; sudo olmadan yazilamazsa login kirilmaz.
+  - Credentials dosyasi phpmyadmin icin yeniden yazilir (sadece enabled engines).
+- Gerekce:
+  - Hosts sync skip → `getaddrinfo for mariadb failed`; kullanici credentials girse de baglanamiyordu.
+- Etki:
+  - `native_phpmyadmin_config.sh`, drivers credentials, smoke, docs.
+
+## 2026-08-09 - D-141 - phpMyAdmin smoke must not leak host :8081
+
+- Durum: accepted
+- Karar:
+  - Mock `php -S` shim: `exec python3 -m http.server --bind 127.0.0.1` (PID = listener; no orphan nohup).
+  - Smoke cleanup: kill phpmyadmin pid + stray `http.server.*8081` on host.
+- Gerekce:
+  - Eski smoke `nohup python3 -m http.server 8081` host'ta kalip temp docroot silinince Python 404; gercek phpMyAdmin port busy → 8082'ye kayiyordu; kullanici `localhost:8081` acinca 404.
+- Etki:
+  - `tests/phase17_native_phpmyadmin_smoke.sh`, `tests/phase11_native_core_services_parity_smoke.sh`.
+
+## 2026-08-09 - D-140 - Detach native HTTP daemons + stale PID status
+
+- Durum: accepted
+- Karar:
+  - `plume_native_detach_daemon`: double-fork + `setsid` (Python); parent shell/process-group kill daemon'i olduremez.
+  - pgadmin / phpmyadmin / npm webui start bu helper'i kullanir.
+  - `plume_service_health`: managed HTTP serviste probe fail + PID oluyse `running=false` + `stopped` (yanlis "starting" yok).
+  - HTTP probe: 2xx/3xx kabul (`curl -sf` yerine http_code).
+- Gerekce:
+  - Agent/terminal shell teardown `nohup` pgadmin PID'ini olduruyordu; status `running=true` / `starting` + browser ERR_CONNECTION_REFUSED.
+- Etki:
+  - `native_host_service_drivers.sh`, `native_pgadmin.sh`, `native_phpmyadmin_config.sh`, `registry.sh`.
+
+## 2026-08-07 - D-139 - pgAdmin namespace package path + writable DATA_DIR
+
+- Durum: accepted
+- Karar:
+  - `pgadmin4.__file__` namespace pakette `None`; paket yolu `pgadmin4.__path__[0]` (+ site-packages fallback).
+  - `config_local.py`: `DATA_DIR` / `SQLITE_PATH` / `LOG_FILE` → `state/native/pgadmin/data` (`/var/lib/pgadmin` yok).
+  - Start sonrasi HTTP ready wait (ilk boot yavas); mevcut venv'de tekrar pip skip.
+- Gerekce:
+  - Install pip OK iken `package not found`; start `/var/lib/pgadmin` Permission denied → running=false / health=stopped.
+- Etki:
+  - `lib/services/native_pgadmin.sh`.
+
+## 2026-08-07 - D-138 - Native pgAdmin (Laradock pgadmin parity)
+
+- Durum: accepted
+- Karar:
+  - Yeni registry servisi `pgadmin`: PostgreSQL web UI (phpMyAdmin MySQL-family karsiligi).
+  - Kurulum: `state/native/pgadmin/venv` + `pip install pgadmin4` (sistem cask/desktop degil; HTTP PID yonetimi).
+  - Env Laradock isimleri: `PGADMIN_ENABLED`, `PGADMIN_PORT=5050`, `PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`.
+  - Dependency: `postgres` enabled; `@db` grubuna eklendi.
+  - Mock driver: hermetik stub binary (gercek pip yok).
+- Gerekce:
+  - Kullanici Postgres'i phpMyAdmin gibi UI ile yonetmek istiyor; Laradock'ta `pgadmin` var, Plume native'de yoktu.
+- Etki:
+  - `lib/services/native_pgadmin.sh`, drivers/registry/services CLI, docs, `phase18_native_pgadmin_smoke.sh`, phase-18.
+
 ## 2026-08-07 - D-137 - Mock MariaDB include only when MAIN_CONF overridden
 
 - Durum: accepted

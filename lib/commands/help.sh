@@ -61,7 +61,7 @@ COMMANDS:
                              Run php artisan queue:failed (Horizon: see queue.md)
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
-  services url <service>           Native HTTP URL (phpmyadmin, mongo_webui, redis_webui, …)
+  services url <service>           Native HTTP URL (phpmyadmin, pgadmin, mongo_webui, …)
   services credentials <service>     Native DB/broker credentials (postgres, mariadb, redis, …)
   services redis sync-config [--reload|--dry-run]  Apply PLUME_REDIS_* to native redis.conf
   site add --path --domain --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--publish] [--server-config=] [--dry-run]

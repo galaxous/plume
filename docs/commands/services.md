@@ -67,7 +67,7 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 
 ## Parametreler
 
-- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@cache`, `@queue`, `group:web`)
+- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin`, `pgadmin`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@cache`, `@queue`, `group:web`)
   - adapter-contract aliaslari mode'dan bagimsiz kabul edilir:
     - `php-fpm -> php`
     - `workspace -> composer`

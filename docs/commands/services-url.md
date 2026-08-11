@@ -8,6 +8,7 @@ Native modda web UI ve veritabani servisleri icin HTTP URL ve baglanti bilgisi (
 
 ```bash
 plumectl services url phpmyadmin --mode=native
+plumectl services url pgadmin --mode=native
 plumectl services url mongo_webui --mode=native
 plumectl services url redis_webui --mode=native
 plumectl services credentials postgres --mode=native
@@ -17,7 +18,7 @@ plumectl services credentials mariadb --mode=native
 ## Parametreler
 
 - `--mode=native` (zorunlu; Phase 17 MVP native-only)
-- `<service>`: url icin `phpmyadmin`, `mongo_webui`, `redis_webui`, `rabbitmq`, `mailpit`; credentials icin `postgres`, `mariadb`, `mysql`, `mongodb`, `redis`, `rabbitmq`, `mongo_webui`, `redis_webui`
+- `<service>`: url icin `phpmyadmin`, `pgadmin`, `mongo_webui`, `redis_webui`, `rabbitmq`, `mailpit`; credentials icin `postgres`, `mariadb`, `mysql`, `mongodb`, `redis`, `rabbitmq`, `mongo_webui`, `redis_webui`, `phpmyadmin`, `pgadmin`
 
 ## Cikti / exit-code
 

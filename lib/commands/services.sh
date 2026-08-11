@@ -396,7 +396,7 @@ plume_services_group_members_raw() {
       printf '%s\n' nginx apache2 caddy
       ;;
     native:db|docker-lite:db)
-      printf '%s\n' mariadb mysql postgres phpmyadmin
+      printf '%s\n' mariadb mysql postgres phpmyadmin pgadmin
       ;;
     native:cache|docker-lite:cache)
       printf '%s\n' redis mongodb rabbitmq mongo_webui redis_webui memcached
@@ -411,7 +411,7 @@ plume_services_group_members_raw() {
       printf '%s\n' nginx apache2 caddy openresty
       ;;
     laradock-bridge:db)
-      printf '%s\n' mariadb mysql postgres postgres-postgis percona mongo mongodb redis redis-cluster memcached rabbitmq clickhouse rethinkdb neo4j nats ssdb mssql phpmyadmin
+      printf '%s\n' mariadb mysql postgres postgres-postgis percona mongo mongodb redis redis-cluster memcached rabbitmq clickhouse rethinkdb neo4j nats ssdb mssql phpmyadmin pgadmin
       ;;
     laradock-bridge:queue)
       printf '%s\n' php-worker laravel-horizon
@@ -468,7 +468,7 @@ plume_services_laradock_lifecycle_weight() {
   local direction="${2:-up}"
   local category="other"
   case "${service}" in
-    mariadb|mysql|postgres|postgres-postgis|percona|mongo|mongodb|redis|redis-cluster|memcached|rabbitmq|clickhouse|rethinkdb|neo4j|nats|ssdb|mssql|phpmyadmin)
+    mariadb|mysql|postgres|postgres-postgis|percona|mongo|mongodb|redis|redis-cluster|memcached|rabbitmq|clickhouse|rethinkdb|neo4j|nats|ssdb|mssql|phpmyadmin|pgadmin)
       category="db"
       ;;
     workspace|php-fpm|php-fpm-*|php)
@@ -3496,7 +3496,7 @@ cmd_services_url() {
   fi
   service="$(plume_services_first_positional "$@")"
   if [[ -z "${service}" ]]; then
-    plume_err "services url requires <service> (phpmyadmin|mongo_webui|redis_webui|rabbitmq|mailpit)"
+    plume_err "services url requires <service> (phpmyadmin|pgadmin|mongo_webui|redis_webui|rabbitmq|mailpit)"
     return 2
   fi
   service="$(plume_service_contract_normalize "${service}" "${mode}")"
@@ -3523,7 +3523,7 @@ cmd_services_credentials() {
   fi
   service="$(plume_services_first_positional "$@")"
   if [[ -z "${service}" ]]; then
-    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin)"
+    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin|pgadmin)"
     return 2
   fi
   service="$(plume_service_contract_normalize "${service}" "${mode}")"
@@ -3532,7 +3532,7 @@ cmd_services_credentials() {
     return 2
   fi
   case "${service}" in
-    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin) ;;
+    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin|pgadmin) ;;
     *)
       plume_err "credentials not supported for service: ${service}"
       return 2
@@ -3549,6 +3549,8 @@ plume_services_restart_one() {
   local service="$2"
   if [[ "${service}" == "phpmyadmin" ]]; then
     plume_native_phpmyadmin_sync_config "false" || true
+  elif [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_sync_config "false" || true
   else
     plume_native_stack_sync_on_lifecycle "${service}" || true
   fi

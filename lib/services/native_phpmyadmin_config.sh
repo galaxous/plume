@@ -84,7 +84,9 @@ plume_native_phpmyadmin_engine_connect_host() {
     printf '%s' "${PMA_HOST}"
     return 0
   fi
-  printf '%s' "${engine}"
+  # Native TCP always targets loopback. Dropdown label stays mariadb|mysql (verbose).
+  # /etc/hosts aliases are best-effort and often unwritable without sudo (D-142).
+  printf '%s' "127.0.0.1"
 }
 
 plume_native_phpmyadmin_warn_port_conflict() {
@@ -338,9 +340,12 @@ plume_native_phpmyadmin_start_server() {
   }
 
   mkdir -p "$(dirname "${log_file}")"
-  nohup "${php_bin}" -S "127.0.0.1:${port}" -t "${docroot}" >>"${log_file}" 2>&1 &
-  echo $! > "${pid_file}"
-  plume_info "native phpmyadmin: started on http://127.0.0.1:${port} pid=$(cat "${pid_file}")"
+  plume_native_detach_daemon "${pid_file}" "${log_file}" "${php_bin}" -S "127.0.0.1:${port}" -t "${docroot}" \
+    || {
+      plume_err "native phpmyadmin: failed to detach daemon"
+      return 2
+    }
+  plume_info "native phpmyadmin: started on http://127.0.0.1:${port} pid=$(cat "${pid_file}" 2>/dev/null || echo '?')"
 }
 
 plume_native_phpmyadmin_stop_server() {
@@ -354,7 +359,7 @@ plume_native_phpmyadmin_stop_server() {
 
 plume_native_driver_is_managed_http_service() {
   case "${1}" in
-    phpmyadmin|mongo_webui|redis_webui) return 0 ;;
+    phpmyadmin|pgadmin|mongo_webui|redis_webui) return 0 ;;
     *) return 1 ;;
   esac
 }

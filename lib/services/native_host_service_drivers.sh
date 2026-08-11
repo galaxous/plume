@@ -49,6 +49,79 @@ plume_native_pid_file() {
   printf '%s/native-pids/%s.pid' "$(plume_state_dir)" "${service}"
 }
 
+# Double-fork + setsid so the daemon survives parent shell/process-group teardown (D-140).
+# Usage: plume_native_detach_daemon <pid_file> <log_file> <command> [args...]
+plume_native_detach_daemon() {
+  local pid_file="$1"
+  local log_file="$2"
+  shift 2
+  local py
+  mkdir -p "$(dirname "${pid_file}")" "$(dirname "${log_file}")"
+
+  if declare -F plume_native_driver_is_mock >/dev/null 2>&1 \
+    && plume_native_driver_is_mock 2>/dev/null; then
+    nohup "$@" >>"${log_file}" 2>&1 </dev/null &
+    echo $! > "${pid_file}"
+    return 0
+  fi
+
+  py="$(command -v python3 || true)"
+  if [[ -z "${py}" ]]; then
+    nohup "$@" >>"${log_file}" 2>&1 </dev/null &
+    echo $! > "${pid_file}"
+    disown $! 2>/dev/null || true
+    return 0
+  fi
+
+  "${py}" - "${pid_file}" "${log_file}" "$@" <<'PY'
+import os
+import sys
+
+pid_file, log_file = sys.argv[1], sys.argv[2]
+cmd = sys.argv[3:]
+r, w = os.pipe()
+pid = os.fork()
+if pid > 0:
+    os.close(w)
+    data = b""
+    while True:
+        chunk = os.read(r, 64)
+        if not chunk:
+            break
+        data += chunk
+    os.close(r)
+    os.waitpid(pid, 0)
+    child = data.decode().strip()
+    if not child:
+        sys.exit(2)
+    with open(pid_file, "w", encoding="utf-8") as fh:
+        fh.write(child)
+    sys.exit(0)
+
+os.close(r)
+os.setsid()
+pid2 = os.fork()
+if pid2 > 0:
+    os.close(w)
+    os._exit(0)
+
+os.chdir("/")
+flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
+fd = os.open(log_file, flags, 0o644)
+os.dup2(fd, 1)
+os.dup2(fd, 2)
+if fd > 2:
+    os.close(fd)
+dn = os.open(os.devnull, os.O_RDONLY)
+os.dup2(dn, 0)
+if dn > 2:
+    os.close(dn)
+os.write(w, str(os.getpid()).encode())
+os.close(w)
+os.execvp(cmd[0], cmd)
+PY
+}
+
 plume_native_driver_supported_services() {
   cat <<'SVC'
 web
@@ -62,6 +135,7 @@ mongodb
 rabbitmq
 mailpit
 phpmyadmin
+pgadmin
 mongo_webui
 redis_webui
 SVC
@@ -163,6 +237,7 @@ plume_native_driver_default_port() {
   local service="$1"
   case "${service}" in
     phpmyadmin) echo "${PMA_PORT:-${PLUME_PHPMYADMIN_PORT:-8081}}" ;;
+    pgadmin) echo "${PGADMIN_PORT:-${PLUME_PGADMIN_PORT:-5050}}" ;;
     mongo_webui) echo "${PLUME_MONGO_WEBUI_PORT:-8082}" ;;
     redis_webui) echo "${PLUME_REDIS_WEBUI_PORT:-8083}" ;;
     rabbitmq) echo "${PLUME_RABBITMQ_MANAGEMENT_PORT:-15672}" ;;
@@ -225,16 +300,22 @@ plume_native_driver_post_install() {
       plume_native_credentials_set mongo_webui port "$(plume_native_driver_default_port mongo_webui)"
       ;;
     phpmyadmin)
-      local engine
+      local engine cred_file
+      cred_file="$(plume_native_credentials_file phpmyadmin)"
+      : > "${cred_file}"
       plume_native_credentials_set phpmyadmin http_port "$(plume_native_driver_default_port phpmyadmin)"
       while IFS= read -r engine; do
         [[ -n "${engine}" ]] || continue
+        case "${engine}" in
+          mariadb|mysql) ;;
+          *) continue ;;
+        esac
         plume_native_credentials_set phpmyadmin "${engine}_server" "${engine}"
         plume_native_credentials_set phpmyadmin "${engine}_host" "$(plume_native_phpmyadmin_engine_connect_host "${engine}")"
         plume_native_credentials_set phpmyadmin "${engine}_port" "$(plume_native_phpmyadmin_engine_port "${engine}")"
         plume_native_credentials_set phpmyadmin "${engine}_user" "$(plume_native_phpmyadmin_db_user_for_engine "${engine}")"
         plume_native_credentials_set phpmyadmin "${engine}_password" "$(plume_native_phpmyadmin_db_password_for_engine "${engine}")"
-      done < <(plume_native_phpmyadmin_list_operational_db_engines)
+      done < <(plume_native_phpmyadmin_list_enabled_db_engines)
       ;;
     redis_webui)
       plume_native_credentials_set redis_webui username "${PLUME_REDIS_WEBUI_USERNAME:-laradock}"
@@ -242,6 +323,16 @@ plume_native_driver_post_install() {
       plume_native_credentials_set redis_webui host "${PLUME_REDIS_WEBUI_HOST:-127.0.0.1}"
       plume_native_credentials_set redis_webui redis_port "${PLUME_REDIS_WEBUI_REDIS_PORT:-${PLUME_REDIS_PORT:-6379}}"
       plume_native_credentials_set redis_webui port "$(plume_native_driver_default_port redis_webui)"
+      ;;
+    pgadmin)
+      plume_native_credentials_set pgadmin email "$(plume_native_pgadmin_email)"
+      plume_native_credentials_set pgadmin password "$(plume_native_pgadmin_password)"
+      plume_native_credentials_set pgadmin http_port "$(plume_native_driver_default_port pgadmin)"
+      plume_native_credentials_set pgadmin db_host "127.0.0.1"
+      plume_native_credentials_set pgadmin db_port "${PLUME_POSTGRES_PORT:-5432}"
+      plume_native_credentials_set pgadmin db_user "${PLUME_POSTGRES_USER:-postgres}"
+      plume_native_credentials_set pgadmin db_password "$(plume_native_postgres_effective_password 2>/dev/null || printf '%s' "${PLUME_POSTGRES_PASSWORD:-postgres}")"
+      plume_native_credentials_set pgadmin db_name "${PLUME_POSTGRES_DB:-postgres}"
       ;;
     *) return 0 ;;
   esac
@@ -256,9 +347,17 @@ plume_native_driver_install_packages() {
     plume_native_driver_post_install "${service}" || true
     if [[ "${service}" == "phpmyadmin" ]]; then
       plume_native_phpmyadmin_sync_config "false" || true
+    elif [[ "${service}" == "pgadmin" ]]; then
+      plume_native_pgadmin_install || true
     else
       plume_native_stack_sync_on_lifecycle "${service}" || true
     fi
+    return 0
+  fi
+
+  if [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_install || return 2
+    plume_native_driver_post_install "${service}" || true
     return 0
   fi
 
@@ -320,6 +419,8 @@ plume_native_driver_install_packages() {
   plume_native_driver_post_install "${service}" || true
   if [[ "${service}" == "phpmyadmin" ]]; then
     plume_native_phpmyadmin_sync_config "false" || true
+  elif [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_sync_config "false" || true
   else
     plume_native_stack_sync_on_lifecycle "${service}" || true
     case "${service}" in
@@ -356,10 +457,12 @@ plume_native_driver_start_npm_service() {
         ME_CONFIG_MONGODB_URL="${mongo_uri}" \
           ME_CONFIG_BASICAUTH_USERNAME="${basic_user}" \
           ME_CONFIG_BASICAUTH_PASSWORD="${basic_pass}" \
-          nohup "$(command -v mongo-express || echo mongo-express)" -p "${port}" >>"${log_file}" 2>&1 &
+          plume_native_detach_daemon "${pid_file}" "${log_file}" \
+            "$(command -v mongo-express || echo mongo-express)" -p "${port}" || return 2
       else
         ME_CONFIG_MONGODB_URL="${mongo_uri}" \
-          nohup "$(command -v mongo-express || echo mongo-express)" -p "${port}" >>"${log_file}" 2>&1 &
+          plume_native_detach_daemon "${pid_file}" "${log_file}" \
+            "$(command -v mongo-express || echo mongo-express)" -p "${port}" || return 2
       fi
       ;;
     redis_webui)
@@ -369,16 +472,17 @@ plume_native_driver_start_npm_service() {
       http_pass="${PLUME_REDIS_WEBUI_PASSWORD:-}"
       if [[ -n "${http_user}" && -n "${http_pass}" ]]; then
         HTTP_USER="${http_user}" HTTP_PASSWORD="${http_pass}" REDIS_HOSTS="${redis_hosts}" \
-          nohup "$(command -v redis-commander || echo redis-commander)" --port "${port}" >>"${log_file}" 2>&1 &
+          plume_native_detach_daemon "${pid_file}" "${log_file}" \
+            "$(command -v redis-commander || echo redis-commander)" --port "${port}" || return 2
       else
         REDIS_HOSTS="${redis_hosts}" \
-          nohup "$(command -v redis-commander || echo redis-commander)" --port "${port}" >>"${log_file}" 2>&1 &
+          plume_native_detach_daemon "${pid_file}" "${log_file}" \
+            "$(command -v redis-commander || echo redis-commander)" --port "${port}" || return 2
       fi
       ;;
     *) return 2 ;;
   esac
-  echo $! > "${pid_file}"
-  plume_info "native driver: started ${service} on port ${port} pid=$(cat "${pid_file}")"
+  plume_info "native driver: started ${service} on port ${port} pid=$(cat "${pid_file}" 2>/dev/null || echo '?')"
 }
 
 plume_native_driver_stop_npm_service() {
@@ -398,6 +502,8 @@ plume_native_driver_start_service() {
   plume_native_driver_post_install "${service}" || true
   if [[ "${service}" == "phpmyadmin" ]]; then
     plume_native_phpmyadmin_sync_config "false" || true
+  elif [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_sync_config "false" || true
   else
     plume_native_stack_sync_on_lifecycle "${service}" || true
     case "${service}" in
@@ -407,6 +513,11 @@ plume_native_driver_start_service() {
 
   if [[ "${service}" == "phpmyadmin" ]]; then
     plume_native_phpmyadmin_start_server
+    return $?
+  fi
+
+  if [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_start_server
     return $?
   fi
 
@@ -452,6 +563,10 @@ plume_native_driver_stop_service() {
     plume_native_phpmyadmin_stop_server
     return 0
   fi
+  if [[ "${service}" == "pgadmin" ]]; then
+    plume_native_pgadmin_stop_server
+    return 0
+  fi
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
     plume_native_driver_stop_npm_service "${service}"
     return 0
@@ -484,10 +599,15 @@ plume_native_driver_health_probe() {
   local port host
 
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1 \
-    || [[ "${service}" == "phpmyadmin" ]]; then
+    || [[ "${service}" == "phpmyadmin" ]] \
+    || [[ "${service}" == "pgadmin" ]]; then
     port="$(plume_native_driver_default_port "${service}")"
-    if command -v curl >/dev/null 2>&1 && curl -sf "http://127.0.0.1:${port}/" >/dev/null 2>&1; then
-      return 0
+    if command -v curl >/dev/null 2>&1; then
+      local code
+      code="$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 "http://127.0.0.1:${port}/" 2>/dev/null || true)"
+      case "${code}" in
+        2??|3??) return 0 ;;
+      esac
     fi
     local pid_file pid
     pid_file="$(plume_native_pid_file "${service}")"
@@ -523,12 +643,13 @@ plume_native_driver_health_probe() {
       mport="$(plume_native_mariadb_effective_port "${service}")"
       mpass="$(plume_native_mariadb_effective_root_password "${service}")"
       command -v mysqladmin >/dev/null 2>&1 || return 1
+      # MariaDB 12 client: --silent still prints "mysqld is alive"; swallow stdout (D-143).
       if [[ -n "${mpass}" ]]; then
-        mysqladmin ping -h127.0.0.1 -P"${mport}" -uroot -p"${mpass}" --silent --batch </dev/null 2>/dev/null
+        mysqladmin ping -h127.0.0.1 -P"${mport}" -uroot -p"${mpass}" --silent </dev/null >/dev/null 2>&1
       else
         sock="$(plume_native_mariadb_socket_path 2>/dev/null || true)"
         [[ -n "${sock}" ]] || return 1
-        mysqladmin ping --socket="${sock}" -uroot --silent --batch </dev/null 2>/dev/null
+        mysqladmin ping --socket="${sock}" -uroot --silent </dev/null >/dev/null 2>&1
       fi
       ;;
     rabbitmq)
@@ -569,7 +690,7 @@ plume_native_driver_service_url() {
   local service="$1"
   local port scheme="http"
   case "${service}" in
-    phpmyadmin|mongo_webui|redis_webui|mailpit)
+    phpmyadmin|pgadmin|mongo_webui|redis_webui|mailpit)
       port="$(plume_native_driver_default_port "${service}" 2>/dev/null || plume_service_default_port "${service}")"
       printf '%s://127.0.0.1:%s' "${scheme}" "${port}"
       ;;

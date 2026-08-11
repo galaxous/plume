@@ -17,6 +17,18 @@ mkdir -p "${HOME_DIR}/.config/plume"
 printf '<?php echo "pma";\n' > "${PMA_SHARE}/index.php"
 
 cleanup() {
+  if [[ -f "${STATE_DIR}/native-pids/phpmyadmin.pid" ]]; then
+    kill "$(cat "${STATE_DIR}/native-pids/phpmyadmin.pid" 2>/dev/null || true)" 2>/dev/null || true
+  fi
+  if command -v lsof >/dev/null 2>&1; then
+    local leak p
+    leak="$(lsof -nP -iTCP:8081 -sTCP:LISTEN -t 2>/dev/null || true)"
+    for p in ${leak}; do
+      if ps -p "${p}" -o command= 2>/dev/null | grep -q 'http.server.*8081'; then
+        kill "${p}" 2>/dev/null || true
+      fi
+    done
+  fi
   rm -rf "${TMP_ROOT}"
 }
 trap cleanup EXIT
@@ -120,9 +132,7 @@ cat > "${MOCK_BIN}/php" <<'EOF'
 if [[ "$1" == "-S" ]]; then
   port="${2#127.0.0.1:}"
   docroot="$4"
-  nohup python3 -m http.server "${port}" --directory "${docroot}" >/dev/null 2>&1 &
-  echo $!
-  exit 0
+  exec python3 -m http.server "${port}" --bind 127.0.0.1 --directory "${docroot}"
 fi
 exit 0
 EOF

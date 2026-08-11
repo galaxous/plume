@@ -41,6 +41,8 @@ services:
   postgres:
     enabled: "${POSTGRES_ENABLED}"
     version: "16"
+  pgadmin:
+    enabled: "${PGADMIN_ENABLED}"   # native: pip pgadmin4 in state venv; Laradock pgadmin parity
   memcached:
     enabled: "${MEMCACHED_ENABLED}"
   rabbitmq:

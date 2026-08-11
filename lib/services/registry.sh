@@ -109,6 +109,7 @@ plume_service_default_port() {
   case "${service}" in
     web) echo "${PLUME_WEB_PORT:-80}" ;;
     phpmyadmin) echo "${PMA_PORT:-${PLUME_PHPMYADMIN_PORT:-8081}}" ;;
+    pgadmin) echo "${PGADMIN_PORT:-${PLUME_PGADMIN_PORT:-5050}}" ;;
     mariadb) echo "${PLUME_MARIADB_PORT:-3306}" ;;
     mysql) echo "${PLUME_MYSQL_PORT:-3306}" ;;
     postgres) echo "${PLUME_POSTGRES_PORT:-5432}" ;;
@@ -268,6 +269,7 @@ plume_docker_lite_port_env_key() {
     mariadb) echo "PLUME_MARIADB_PORT" ;;
     mysql) echo "PLUME_MYSQL_PORT" ;;
     phpmyadmin) echo "PMA_PORT" ;;
+    pgadmin) echo "PGADMIN_PORT" ;;
     postgres) echo "PLUME_POSTGRES_PORT" ;;
     redis) echo "PLUME_REDIS_PORT" ;;
     memcached) echo "PLUME_MEMCACHED_PORT" ;;
@@ -660,6 +662,7 @@ web
 php
 composer
 phpmyadmin
+pgadmin
 mariadb
 mysql
 postgres
@@ -686,6 +689,7 @@ plume_service_names_for_mode() {
 web
 php
 phpmyadmin
+pgadmin
 mariadb
 mysql
 postgres
@@ -709,6 +713,7 @@ SERVICES
 web
 php
 phpmyadmin
+pgadmin
 mariadb
 mysql
 postgres
@@ -742,6 +747,7 @@ plume_service_env_key() {
     php) echo "PLUME_PHP_ENABLED" ;;
     composer) echo "PLUME_COMPOSER_ENABLED" ;;
     phpmyadmin) echo "PLUME_PHPMYADMIN_ENABLED" ;;
+    pgadmin) echo "PLUME_PGADMIN_ENABLED" ;;
     mariadb) echo "PLUME_MARIADB_ENABLED" ;;
     mysql) echo "PLUME_MYSQL_ENABLED" ;;
     postgres) echo "PLUME_POSTGRES_ENABLED" ;;
@@ -770,6 +776,7 @@ plume_service_version_env_key() {
     php) echo "PLUME_PHP_VERSION" ;;
     composer) echo "PLUME_COMPOSER_VERSION" ;;
     phpmyadmin) echo "PLUME_PHPMYADMIN_VERSION" ;;
+    pgadmin) echo "PLUME_PGADMIN_VERSION" ;;
     mariadb) echo "PLUME_MARIADB_VERSION" ;;
     mysql) echo "PLUME_MYSQL_VERSION" ;;
     postgres) echo "PLUME_POSTGRES_VERSION" ;;
@@ -930,6 +937,12 @@ plume_service_require_dependencies() {
       esac
       if [[ "$(plume_service_enabled_for_mode "${engine}" "${mode}")" != "true" ]]; then
         plume_err "phpmyadmin requires ${engine} to be enabled"
+        return 2
+      fi
+    fi
+    if [[ "${service}" == "pgadmin" ]]; then
+      if [[ "$(plume_service_enabled_for_mode postgres "${mode}")" != "true" ]]; then
+        plume_err "pgadmin requires postgres to be enabled"
         return 2
       fi
     fi
@@ -2135,6 +2148,20 @@ plume_service_health() {
       if plume_native_driver_is_mock 2>/dev/null; then
         printf '%s' "healthy"
         return 0
+      fi
+      # Stale runtime: PID dead / port down — clear running so status is stopped not "starting"
+      if declare -F plume_native_pid_file >/dev/null 2>&1 \
+        && declare -F plume_native_driver_is_managed_http_service >/dev/null 2>&1 \
+        && plume_native_driver_is_managed_http_service "${service}"; then
+        local pid_file pid
+        pid_file="$(plume_native_pid_file "${service}")"
+        pid="$(cat "${pid_file}" 2>/dev/null || true)"
+        if [[ -z "${pid}" ]] || ! kill -0 "${pid}" 2>/dev/null; then
+          plume_services_runtime_set "${service}" "running" "false" native
+          rm -f "${pid_file}" 2>/dev/null || true
+          printf '%s' "stopped"
+          return 0
+        fi
       fi
       printf '%s' "starting"
       return 0

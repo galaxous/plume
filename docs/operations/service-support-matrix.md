@@ -24,6 +24,7 @@ plumectl services supported --mode=docker-lite
 | mariadb     | yes    | yes         | yes             | database |
 | phpmyadmin  | yes    | yes         | yes             | PMA_DB_ENGINE ile mysql/mariadb secimi |
 | postgres    | yes    | yes         | opt             | laradock compose'ta varsa |
+| pgadmin     | yes    | opt         | opt             | Laradock pgadmin parity; postgres gerektirir |
 | redis       | yes    | yes         | yes             | cache/queue |
 | memcached   | yes    | no          | opt             | laradock compose'ta varsa |
 | rabbitmq    | yes    | no          | opt             | laradock compose'ta varsa |
