@@ -134,10 +134,13 @@ redis
 mongodb
 rabbitmq
 mailpit
+memcached
 phpmyadmin
 pgadmin
 mongo_webui
 redis_webui
+supervisor
+horizon
 SVC
 }
 
@@ -158,7 +161,9 @@ plume_native_driver_brew_formula() {
     mongodb) echo "mongodb-community" ;;
     rabbitmq) echo "rabbitmq" ;;
     mailpit) echo "mailpit" ;;
+    memcached) echo "memcached" ;;
     phpmyadmin) echo "phpmyadmin" ;;
+    supervisor) echo "supervisor" ;;
     *) return 1 ;;
   esac
 }
@@ -174,6 +179,8 @@ plume_native_driver_apt_packages() {
     redis) echo "redis-server" ;;
     rabbitmq) echo "rabbitmq-server" ;;
     phpmyadmin) echo "phpmyadmin" ;;
+    memcached) echo "memcached" ;;
+    supervisor) echo "supervisor" ;;
     *) return 1 ;;
   esac
 }
@@ -189,6 +196,8 @@ plume_native_driver_dnf_packages() {
     redis) echo "redis" ;;
     rabbitmq) echo "rabbitmq-server" ;;
     phpmyadmin) echo "phpmyadmin" ;;
+    memcached) echo "memcached" ;;
+    supervisor) echo "supervisor" ;;
     *) return 1 ;;
   esac
 }
@@ -205,6 +214,7 @@ plume_native_driver_brew_service_name() {
     mongodb) echo "mongodb-community" ;;
     rabbitmq) echo "rabbitmq" ;;
     mailpit) echo "mailpit" ;;
+    memcached) echo "memcached" ;;
     *) return 1 ;;
   esac
 }
@@ -220,6 +230,7 @@ plume_native_driver_systemd_unit() {
     redis) echo "redis" ;;
     rabbitmq) echo "rabbitmq" ;;
     mongodb) echo "mongod" ;;
+    memcached) echo "memcached" ;;
     *) return 1 ;;
   esac
 }
@@ -246,6 +257,7 @@ plume_native_driver_default_port() {
     redis) echo "${PLUME_REDIS_PORT:-6379}" ;;
     mongodb) echo "${PLUME_MONGODB_PORT:-27017}" ;;
     mailpit) echo "${PLUME_MAILPIT_PORT:-8025}" ;;
+    memcached) echo "${PLUME_MEMCACHED_PORT:-11211}" ;;
     *) return 1 ;;
   esac
 }
@@ -324,6 +336,16 @@ plume_native_driver_post_install() {
       plume_native_credentials_set redis_webui redis_port "${PLUME_REDIS_WEBUI_REDIS_PORT:-${PLUME_REDIS_PORT:-6379}}"
       plume_native_credentials_set redis_webui port "$(plume_native_driver_default_port redis_webui)"
       ;;
+    mailpit)
+      plume_native_credentials_set mailpit host "127.0.0.1"
+      plume_native_credentials_set mailpit http_port "$(plume_native_driver_default_port mailpit)"
+      plume_native_credentials_set mailpit smtp_port "${PLUME_MAILPIT_SMTP_PORT:-1025}"
+      plume_native_credentials_set mailpit url "http://127.0.0.1:$(plume_native_driver_default_port mailpit)"
+      ;;
+    memcached)
+      plume_native_credentials_set memcached host "127.0.0.1"
+      plume_native_credentials_set memcached port "$(plume_native_driver_default_port memcached)"
+      ;;
     pgadmin)
       plume_native_credentials_set pgadmin email "$(plume_native_pgadmin_email)"
       plume_native_credentials_set pgadmin password "$(plume_native_pgadmin_password)"
@@ -349,9 +371,18 @@ plume_native_driver_install_packages() {
       plume_native_phpmyadmin_sync_config "false" || true
     elif [[ "${service}" == "pgadmin" ]]; then
       plume_native_pgadmin_install || true
+    elif [[ "${service}" == "supervisor" || "${service}" == "horizon" ]]; then
+      plume_native_supervisor_write_conf || true
     else
       plume_native_stack_sync_on_lifecycle "${service}" || true
     fi
+    return 0
+  fi
+
+  if [[ "${service}" == "horizon" ]]; then
+    plume_native_driver_install_packages supervisor || return 2
+    plume_native_supervisor_write_conf || true
+    plume_native_horizon_write_program || true
     return 0
   fi
 
@@ -421,6 +452,8 @@ plume_native_driver_install_packages() {
     plume_native_phpmyadmin_sync_config "false" || true
   elif [[ "${service}" == "pgadmin" ]]; then
     plume_native_pgadmin_sync_config "false" || true
+  elif [[ "${service}" == "supervisor" ]]; then
+    plume_native_supervisor_write_conf || true
   else
     plume_native_stack_sync_on_lifecycle "${service}" || true
     case "${service}" in
@@ -521,6 +554,16 @@ plume_native_driver_start_service() {
     return $?
   fi
 
+  if [[ "${service}" == "supervisor" ]]; then
+    plume_native_supervisor_start
+    return $?
+  fi
+
+  if [[ "${service}" == "horizon" ]]; then
+    plume_native_horizon_start
+    return $?
+  fi
+
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
     plume_native_driver_start_npm_service "${service}"
     return $?
@@ -565,6 +608,14 @@ plume_native_driver_stop_service() {
   fi
   if [[ "${service}" == "pgadmin" ]]; then
     plume_native_pgadmin_stop_server
+    return 0
+  fi
+  if [[ "${service}" == "horizon" ]]; then
+    plume_native_horizon_stop
+    return 0
+  fi
+  if [[ "${service}" == "supervisor" ]]; then
+    plume_native_supervisor_stop
     return 0
   fi
   if plume_native_driver_npm_package "${service}" >/dev/null 2>&1; then
@@ -671,14 +722,42 @@ plume_native_driver_health_probe() {
       fi
       [[ -n "${port}" ]] || port="$(plume_native_driver_default_port mailpit 2>/dev/null || true)"
       [[ -n "${port}" ]] || port="${PLUME_MAILPIT_PORT:-8025}"
-      if command -v curl >/dev/null 2>&1 && curl -sf "http://127.0.0.1:${port}/" >/dev/null 2>&1; then
-        return 0
+      if command -v curl >/dev/null 2>&1; then
+        local mail_code
+        mail_code="$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 "http://127.0.0.1:${port}/" 2>/dev/null || true)"
+        case "${mail_code}" in
+          2??|3??) return 0 ;;
+        esac
       fi
       return 1
       ;;
-    nginx|apache2)
+    memcached)
       plume_native_driver_is_mock && return 0
+      port="$(plume_native_driver_default_port memcached 2>/dev/null || true)"
+      [[ -n "${port}" ]] || port="${PLUME_MEMCACHED_PORT:-11211}"
+      if declare -F plume_service_port_in_use >/dev/null 2>&1; then
+        plume_service_port_in_use "${port}"
+        return $?
+      fi
       return 1
+      ;;
+    nginx|apache2|caddy)
+      plume_native_driver_is_mock && return 0
+      if declare -F plume_service_effective_port >/dev/null 2>&1; then
+        port="$(plume_service_effective_port "${service}" native 2>/dev/null || true)"
+      fi
+      [[ -n "${port}" ]] || port="${PLUME_WEB_PORT:-80}"
+      if declare -F plume_service_port_in_use >/dev/null 2>&1; then
+        plume_service_port_in_use "${port}"
+        return $?
+      fi
+      return 1
+      ;;
+    supervisor)
+      plume_native_supervisor_health
+      ;;
+    horizon)
+      plume_native_horizon_health
       ;;
     *)
       return 1

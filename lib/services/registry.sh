@@ -152,6 +152,30 @@ plume_service_port_in_use() {
   return 1
 }
 
+plume_service_port_listen_cmd() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP:"${port}" -sTCP:LISTEN -F c 2>/dev/null | awk '/^c/{print substr($0,2); exit}'
+    return 0
+  fi
+  printf ''
+}
+
+# True when the listener on $port is already this Plume service (don't hop +1).
+plume_service_port_owned_by_self() {
+  local service="$1"
+  local port="$2"
+  local cmd
+  cmd="$(plume_service_port_listen_cmd "${port}")"
+  [[ -n "${cmd}" ]] || return 1
+  case "${service}" in
+    redis)
+      [[ "${cmd}" == "redis-server" || "${cmd}" == "redis" ]]
+      ;;
+    *) return 1 ;;
+  esac
+}
+
 plume_service_allocate_explicit_port() {
   local label="$1"
   local preferred="$2"
@@ -160,6 +184,11 @@ plume_service_allocate_explicit_port() {
   [[ -n "${preferred}" ]] || return 0
 
   if ! plume_service_port_in_use "${preferred}"; then
+    printf '%s' "${preferred}"
+    return 0
+  fi
+
+  if plume_service_port_owned_by_self "${label}" "${preferred}"; then
     printf '%s' "${preferred}"
     return 0
   fi
@@ -1590,6 +1619,17 @@ plume_service_start_native() {
   if ! plume_service_require_dependencies "${service}" native; then
     return 2
   fi
+  if declare -F plume_native_host_registry_only_service >/dev/null 2>&1 \
+    && plume_native_host_registry_only_service "${service}"; then
+    case "${service}" in
+      meilisearch|minio)
+        plume_warn "native ${service}: toggle-only (no host daemon); use docker-lite/laradock-bridge or wait for native driver (D-146)"
+        ;;
+      *)
+        plume_warn "native ${service}: registry-only (no host daemon); health=registry. Use docker-lite or laradock-bridge for a real worker (D-146)"
+        ;;
+    esac
+  fi
   if [[ "${service}" == "mariadb" || "${service}" == "mysql" ]]; then
     plume_native_db_brew_dual_engine_assert || return 2
   fi
@@ -2145,25 +2185,29 @@ plume_service_health() {
         printf '%s' "healthy"
         return 0
       fi
-      if plume_native_driver_is_mock 2>/dev/null; then
-        printf '%s' "healthy"
-        return 0
-      fi
-      # Stale runtime: PID dead / port down — clear running so status is stopped not "starting"
+      # HTTP: live PID = starting; dead PID = stopped (even under mock driver)
       if declare -F plume_native_pid_file >/dev/null 2>&1 \
         && declare -F plume_native_driver_is_managed_http_service >/dev/null 2>&1 \
         && plume_native_driver_is_managed_http_service "${service}"; then
         local pid_file pid
         pid_file="$(plume_native_pid_file "${service}")"
         pid="$(cat "${pid_file}" 2>/dev/null || true)"
-        if [[ -z "${pid}" ]] || ! kill -0 "${pid}" 2>/dev/null; then
-          plume_services_runtime_set "${service}" "running" "false" native
-          rm -f "${pid_file}" 2>/dev/null || true
-          printf '%s' "stopped"
+        if [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null; then
+          printf '%s' "starting"
           return 0
         fi
+        plume_services_runtime_set "${service}" "running" "false" native
+        rm -f "${pid_file}" 2>/dev/null || true
+        printf '%s' "stopped"
+        return 0
       fi
-      printf '%s' "starting"
+      if plume_native_driver_is_mock 2>/dev/null; then
+        printf '%s' "healthy"
+        return 0
+      fi
+      # Stale brew/runtime: probe failed and no live PID — do not report starting (D-144)
+      plume_services_runtime_set "${service}" "running" "false" native
+      printf '%s' "stopped"
       return 0
     fi
     printf '%s' "healthy"

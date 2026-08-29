@@ -33,6 +33,10 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 | 16 | Project plume.yml v2 (MVP) | done | @team | 2026-07-28 | TBD | 2026-07-29 | [phase-16](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-16.md) |
 | 17 | Native Stack Host Parity | done | @team | 2026-08-04 | TBD | 2026-08-04 | [phase-17](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-17.md) |
 | 18 | Native pgAdmin (PostgreSQL UI) | done | @team | 2026-08-07 | 2026-08-07 | 2026-08-07 | [phase-18](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-18.md) |
+| 19 | Native service contract (Laradock-container UX) | done | @team | 2026-08-12 | 2026-08-12 | 2026-08-12 | [phase-19](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-19.md) |
+| 20 | Native cache/broker (memcached + webuis) | done | @team | 2026-08-12 | 2026-08-12 | 2026-08-12 | [phase-20](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-20.md) |
+| 21 | Queue honesty + ecosystem backlog | done | @team | 2026-08-12 | 2026-08-12 | 2026-08-12 | [phase-21](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-21.md) |
+| 22 | Native supervisor + Horizon worker | done | @team | 2026-08-18 | 2026-08-18 | 2026-08-18 | [phase-22](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-22.md) |
 
 ## Update Rules
 

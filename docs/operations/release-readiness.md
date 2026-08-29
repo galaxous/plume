@@ -24,6 +24,10 @@ Yerel pre-release ve CI ile ayni adimlar:
 9. `phase17_native_stack_broker_smoke.sh` (Faz 17 redis/mongodb/rabbitmq)
 10. `phase17_native_stack_webui_smoke.sh` (Faz 17 web UI + url)
 11. `phase18_native_pgadmin_smoke.sh` (Faz 18 native pgAdmin)
+12. `phase19_native_service_contract_smoke.sh` (Faz 19 `@core` / `services use` / status truth)
+13. `phase20_native_cache_broker_smoke.sh` (Faz 20 memcached + webuis)
+14. `phase21_queue_honesty_smoke.sh` (Faz 21 meilisearch/minio toggle-only)
+15. `phase22_native_horizon_smoke.sh` (Faz 22 native Horizon)
 
 Beklenen sonuc:
 

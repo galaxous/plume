@@ -2,7 +2,7 @@
 
 Plume, Laravel projeleri icin Linux/macOS uzerinde calisacak 3 modlu (`native`, `docker-lite`, `laradock-bridge`) bir operasyon util'idir.
 
-**Guncel durum:** Faz 1–17 tamamlandi; sonraki aday **Docker-lite unfreeze** (Phase 18, bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)). Faz 7 (`docker-lite`) **beta-frozen**.
+**Guncel durum:** Faz 1–22 tamamlandi; native Horizon worker (D-147). Sonraki aday **Docker-lite unfreeze** (bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)). Faz 7 (`docker-lite`) **beta-frozen**.
 
 Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker.md)
 
@@ -19,7 +19,7 @@ Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker
 - Modular CLI (`bin/plumectl`, `lib/*`), global flag'ler (`--json`, `--yes`, `--quiet`, `--env-file`)
 - Modlar: `mode current`, `mode use`, `mode path` (laradock-bridge context)
 - Site registry ve lifecycle: `site add|list|check|update|publish|remove|modes`, nginx/apache2/caddy, TLS, hosts sync, strict publish
-- Servisler: `services supported|status|install|up|down|update|health|logs`, native laradock-benzeri alias contract (`php-fpm`, `workspace`, `@core/@web/@db/@queue`)
+- Servisler: `services supported|status|install|up|down|update|health|logs|use|url|credentials`, native laradock-benzeri alias contract (`php-fpm`, `workspace`, `@core/@web/@db/@cache/@queue`)
 - Native PHP: `php list|install|use|alias`, `php ext sync|resolve|doctor`, `php shim`, `init shell`, `env where|init`
 - Laradock-bridge: bootstrap, sync, runtime parity test paketi
 - Ops: `doctor`, `backup`, `deploy plan|apply|rollback|failback`, `security`, `monitor`, `project init`
@@ -62,6 +62,7 @@ Release oncesi smoke: [docs/operations/release-readiness.md](docs/operations/rel
 
 ```bash
 ./plume.sh site add --path=/path/to/laravel/public --domain=myapp.test --server=nginx --publish
+./plume.sh services use mariadb --mode=native
 ./plume.sh services up @core --mode=native
 ./plume.sh php use 8.3
 ./plume.sh doctor check --mode=native --deep

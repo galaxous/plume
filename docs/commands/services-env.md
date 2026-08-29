@@ -17,7 +17,7 @@ plumectl env set PLUME_REDIS_PASSWORD=custom
 ## Parametreler
 
 - `--mode=native` (zorunlu; stack env MVP native-only)
-- `env show <service>`: `redis`, `mariadb`, `mysql`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui`
+- `env show <service>`: `redis`, `mariadb`, `mysql`, `postgres`, `mongodb`, `rabbitmq`, `memcached`, `mongo_webui`, `redis_webui`, `mailpit`
 - `env set <service> <assignment>`:
   - kisa anahtar: `password=`, `port=`, `username=`, `management_port=`, `uri=`, …
   - veya tam anahtar: `PLUME_REDIS_PASSWORD=...`

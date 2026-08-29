@@ -230,3 +230,18 @@ port=5432
 ```
 
 Bkz. [docs/commands/services-url.md](../commands/services-url.md).
+
+## services use (text)
+
+Native-only key=value stdout; `--json` desteklenmez.
+
+```text
+engine=mariadb
+enabled_mariadb=true
+enabled_mysql=false
+enabled_postgres=false
+enabled_phpmyadmin=true
+enabled_pgadmin=false
+```
+
+Bkz. [docs/commands/services-use.md](../commands/services-use.md).

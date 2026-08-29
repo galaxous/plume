@@ -93,11 +93,11 @@ postgres:
 |--------|-------------------|--------------------------------------|
 | web (nginx/apache2) | Evet | Kurulum + start |
 | mariadb, mysql, redis | Evet | Kurulum + start (`database.auto_start` DB için) |
-| postgres, mongodb, rabbitmq, phpmyadmin, pgadmin, mongo_webui, redis_webui | Evet (Phase 17/18) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
+| postgres, mongodb, rabbitmq, memcached, phpmyadmin, pgadmin, mongo_webui, redis_webui | Evet (Phase 17–20) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
 | mailpit | Evet (env) | macOS Homebrew: kurulum + start; Linux: uyarı (docker-lite / manuel) |
 | php (`versions[]`) | Evet | Best-effort brew/apt PHP kurulumu + matrix kaydı |
-| postgres, memcached, … | Evet (env) | **memcached:** yok — docker-lite / manuel |
-| phpmyadmin, composer, horizon, … | Evet (env) | **composer/horizon:** container veya manuel |
+| meilisearch, minio | Evet (env) | Native toggle-only (`health=registry`, D-146); driver backlog |
+| phpmyadmin, composer, horizon, … | Evet (env) | **horizon/supervisor:** native host worker (D-147); php_worker registry-only |
 
 Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yorum olarak dokümante edilir; native loader bu satırları okumaz.
 
@@ -105,15 +105,15 @@ Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yo
 
 | Servis | `services.yml` | Native host provision | Calistirma |
 |--------|----------------|----------------------|------------|
-| `horizon` | `enabled` → `PLUME_HORIZON_ENABLED` | **Yok** — paket kurulumu yok | `services up horizon` — **supervisor** bagimliligi (native); runtime state / compose reconcile |
+| `horizon` | `enabled` → `PLUME_HORIZON_ENABLED` | brew/apt `supervisor` + program | `services up horizon` — supervisor gate; native `php artisan horizon` (D-147) |
 | `php_worker` | `enabled` → `PLUME_PHP_WORKER_ENABLED` | **Yok** | Genelde docker-lite / laradock **php-worker** container veya manuel `queue:work` |
-| `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | **Yok** | Horizon on kosulu; native’de OS supervisor kurulumu Plume disi |
+| `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | brew/apt `supervisor` | Plume-owned supervisord (state dir); Horizon on kosulu |
 
 **Docker-lite:** Compose alias `laravel-horizon` ↔ Plume servis adi `horizon` (ve `supervisor` ayni container’a map edilebilir). Bkz. [services.md](../commands/services.md).
 
 **Laradock-bridge:** `laravel-horizon`, `php-worker` compose servisleri; manifest yalnizca env toggle yukler, compose’u degistirmez.
 
-**Operasyonel CLI:** `plume queue status`, `plume queue list`; Horizon acikken `services status horizon`. Manifest’te `horizon: { enabled: true }` yalnizca env hazirlar — otomatik Horizon kurulumu beklenmez.
+**Operasyonel CLI:** `plume queue status`, `plume queue list`; Horizon acikken `services status horizon`. `PLUME_HORIZON_PATH` veya kayitli site artisan yolu gerekir.
 
 ## Komutlar
 

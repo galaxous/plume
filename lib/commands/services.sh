@@ -405,7 +405,8 @@ plume_services_group_members_raw() {
       printf '%s\n' php_worker horizon supervisor
       ;;
     native:core|docker-lite:core)
-      printf '%s\n' php composer nginx apache2 caddy mariadb mysql redis phpmyadmin php_worker horizon supervisor
+      # Queue is @queue only (D-144). Enabled filter applies on up.
+      printf '%s\n' php composer nginx apache2 caddy mariadb mysql postgres redis phpmyadmin pgadmin mailpit
       ;;
     laradock-bridge:web)
       printf '%s\n' nginx apache2 caddy openresty
@@ -431,6 +432,10 @@ plume_services_group_members() {
   local service out=""
   while IFS= read -r service; do
     [[ -z "${service}" ]] && continue
+    # Native/docker-lite registry name is `web`; nginx/apache2/caddy are display variants.
+    if [[ "${mode}" != "laradock-bridge" ]] && plume_services_is_web_variant "${service}"; then
+      service="web"
+    fi
     if ! plume_service_exists "${service}" "${mode}"; then
       continue
     fi
@@ -450,7 +455,7 @@ plume_services_group_members() {
 plume_services_group_names_for_mode() {
   local mode="${1:-$(plume_mode_current)}"
   local group out=""
-  for group in core web db queue; do
+  for group in core web db cache queue; do
     if plume_services_group_members "${group}" "${mode}" >/dev/null 2>&1; then
       if [[ -n "${out}" ]]; then
         out="${out}"$'\n'"${group}"
@@ -3489,6 +3494,96 @@ cmd_services_provision() {
   plume_services_manifest_provision_services "${dry_run}"
 }
 
+plume_services_use_write_toggle() {
+  local short_key="$1"
+  local plume_key="$2"
+  local value="$3"
+  local env_file
+  env_file="$(plume_global_env_file)"
+  mkdir -p "$(dirname "${env_file}")"
+  plume_global_env_set_kv "${env_file}" "${short_key}" "${value}"
+  plume_global_env_set_kv "${env_file}" "${plume_key}" "${value}"
+  export "${short_key}=${value}"
+  export "${plume_key}=${value}"
+}
+
+plume_services_manifest_set_database_engine() {
+  local engine="$1"
+  local file tmp
+  file="$(plume_services_manifest_file)"
+  [[ -f "${file}" ]] || return 0
+  case "${engine}" in
+    mariadb|mysql) ;;
+    *) return 0 ;;
+  esac
+  tmp="$(mktemp)"
+  awk -v eng="${engine}" '
+    BEGIN { in_db = 0 }
+    /^[[:space:]]*database:[[:space:]]*$/ { in_db = 1; print; next }
+    in_db && /^[[:space:]]*engine:/ {
+      match($0, /^[[:space:]]*/)
+      print substr($0, 1, RLENGTH) "engine: " eng
+      in_db = 0
+      next
+    }
+    /^[a-zA-Z]/ { in_db = 0 }
+    { print }
+  ' "${file}" > "${tmp}" && mv "${tmp}" "${file}"
+}
+
+cmd_services_use() {
+  local mode engine
+  if ! mode="$(plume_services_parse_mode "$@")"; then
+    return 2
+  fi
+  engine="$(plume_services_first_positional "$@")"
+  engine="$(printf '%s' "${engine}" | tr '[:upper:]' '[:lower:]')"
+  case "${engine}" in
+    mariadb|mysql|postgres) ;;
+    *)
+      plume_err "services use requires <engine> (mariadb|mysql|postgres)"
+      return 2
+      ;;
+  esac
+  if [[ "${mode}" != "native" ]]; then
+    plume_err "services use is native-only"
+    return 2
+  fi
+
+  case "${engine}" in
+    mariadb)
+      plume_services_use_write_toggle MARIADB_ENABLED PLUME_MARIADB_ENABLED true
+      plume_services_use_write_toggle MYSQL_ENABLED PLUME_MYSQL_ENABLED false
+      plume_services_use_write_toggle POSTGRES_ENABLED PLUME_POSTGRES_ENABLED false
+      plume_services_use_write_toggle PHPMYADMIN_ENABLED PLUME_PHPMYADMIN_ENABLED true
+      plume_services_use_write_toggle PGADMIN_ENABLED PLUME_PGADMIN_ENABLED false
+      plume_services_manifest_set_database_engine mariadb
+      ;;
+    mysql)
+      plume_services_use_write_toggle MARIADB_ENABLED PLUME_MARIADB_ENABLED false
+      plume_services_use_write_toggle MYSQL_ENABLED PLUME_MYSQL_ENABLED true
+      plume_services_use_write_toggle POSTGRES_ENABLED PLUME_POSTGRES_ENABLED false
+      plume_services_use_write_toggle PHPMYADMIN_ENABLED PLUME_PHPMYADMIN_ENABLED true
+      plume_services_use_write_toggle PGADMIN_ENABLED PLUME_PGADMIN_ENABLED false
+      plume_services_manifest_set_database_engine mysql
+      ;;
+    postgres)
+      plume_services_use_write_toggle MARIADB_ENABLED PLUME_MARIADB_ENABLED false
+      plume_services_use_write_toggle MYSQL_ENABLED PLUME_MYSQL_ENABLED false
+      plume_services_use_write_toggle POSTGRES_ENABLED PLUME_POSTGRES_ENABLED true
+      plume_services_use_write_toggle PHPMYADMIN_ENABLED PLUME_PHPMYADMIN_ENABLED false
+      plume_services_use_write_toggle PGADMIN_ENABLED PLUME_PGADMIN_ENABLED true
+      ;;
+  esac
+
+  printf 'engine=%s\n' "${engine}"
+  printf 'enabled_mariadb=%s\n' "${PLUME_MARIADB_ENABLED}"
+  printf 'enabled_mysql=%s\n' "${PLUME_MYSQL_ENABLED}"
+  printf 'enabled_postgres=%s\n' "${PLUME_POSTGRES_ENABLED}"
+  printf 'enabled_phpmyadmin=%s\n' "${PLUME_PHPMYADMIN_ENABLED:-false}"
+  printf 'enabled_pgadmin=%s\n' "${PLUME_PGADMIN_ENABLED:-false}"
+}
+
 cmd_services_url() {
   local mode service url
   if ! mode="$(plume_services_parse_mode "$@")"; then
@@ -3523,7 +3618,7 @@ cmd_services_credentials() {
   fi
   service="$(plume_services_first_positional "$@")"
   if [[ -z "${service}" ]]; then
-    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin|pgadmin)"
+    plume_err "services credentials requires <service> (postgres|mariadb|mysql|mongodb|redis|rabbitmq|memcached|mongo_webui|redis_webui|phpmyadmin|pgadmin|mailpit)"
     return 2
   fi
   service="$(plume_service_contract_normalize "${service}" "${mode}")"
@@ -3532,7 +3627,7 @@ cmd_services_credentials() {
     return 2
   fi
   case "${service}" in
-    postgres|mariadb|mysql|mongodb|redis|rabbitmq|mongo_webui|redis_webui|phpmyadmin|pgadmin) ;;
+    postgres|mariadb|mysql|mongodb|redis|rabbitmq|memcached|mongo_webui|redis_webui|phpmyadmin|pgadmin|mailpit) ;;
     *)
       plume_err "credentials not supported for service: ${service}"
       return 2
@@ -3591,7 +3686,7 @@ cmd_services_env_show() {
   fi
   service="$(plume_services_first_positional "$@")"
   if [[ -z "${service}" ]]; then
-    plume_err "services env show requires <service> (redis|mongodb|rabbitmq|mongo_webui|redis_webui)"
+    plume_err "services env show requires <service> (redis|mariadb|mysql|postgres|mongodb|rabbitmq|memcached|mongo_webui|redis_webui|mailpit)"
     return 2
   fi
   service="$(plume_service_contract_normalize "${service}" "${mode}")"
@@ -3763,6 +3858,9 @@ cmd_services() {
       ;;
     provision)
       cmd_services_provision "$@"
+      ;;
+    use)
+      cmd_services_use "$@"
       ;;
     url)
       cmd_services_url "$@"

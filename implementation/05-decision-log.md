@@ -2,6 +2,66 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-08-18 - D-148 - Native Redis keeps configured port if already listening
+
+- Durum: accepted
+- Karar:
+  - `services up redis` preferred port (`6379`) baska bir process ise +1 arar; listener zaten `redis-server` ise portu degistirmez.
+- Gerekce:
+  - `sync-config --reload` veya mevcut brew Redis 6379 tutarken `up` 6380'e kayiyordu; Laravel `REDIS_PORT=6379` kiriliyordu.
+- Etki:
+  - `plume_service_allocate_explicit_port`, [services-redis.md](../docs/commands/services-redis.md).
+
+## 2026-08-18 - D-147 - Native supervisor + Horizon host worker
+
+- Durum: accepted
+- Karar:
+  - `supervisor` / `horizon` native driver: brew/apt `supervisor` binary; Plume-owned `supervisord` (state dir + detach, D-140). Homebrew `brew services supervisor` kullanilmaz.
+  - Horizon program: `php artisan horizon` (`PLUME_HORIZON_PATH` veya ilk site artisan).
+  - `health=healthy` yalnizca supervisorctl RUNNING/STARTING; `php_worker` registry-only kalir.
+  - Mock/smoke: `PLUME_NATIVE_HOST_INSTALL_DRIVER=mock` — brew install yok.
+- Gerekce:
+  - D-146 honesty sonrasi kullanici gercek worker istiyor; Laravel `QUEUE_CONNECTION=redis` native stack ile tamamlansin.
+- Etki:
+  - `lib/services/native_horizon.sh`, drivers, `phase-22.md`, `docs/commands/services-horizon.md`.
+
+## 2026-08-12 - D-146 - Native queue/search honesty (registry-only)
+
+- Durum: accepted
+- Karar:
+  - `horizon` / `supervisor` / `php_worker`: native `up` exit 0 + WARN; `health=registry` (host daemon yok). Fail-fast yok — mevcut phase6/11 smoke’lar supervisor ile `up` basarisini bekler.
+  - `meilisearch` / `minio`: ayni registry-only; WARN `toggle-only`; native driver backlog (Herd parity).
+  - Gercek brew supervisor / meilisearch/minio host driver sonraki faz.
+- Gerekce:
+  - `up @core` (eski) horizon’u running gosteriyordu; yari-yalan UX. Docker-lite/laradock gercek worker icin dogru yol.
+- Etki:
+  - `native_host_provision.sh`, `registry.sh` start warn, `phase-21.md`, `phase21_queue_honesty_smoke.sh`.
+
+## 2026-08-12 - D-145 - Native memcached + cache/broker contract
+
+- Durum: accepted
+- Karar:
+  - memcached: brew/apt/dnf driver, port 11211, credentials `127.0.0.1`, `@cache` uyesi.
+  - mongodb / rabbitmq / mongo_webui / redis_webui ayni native-service-contract (D-144) ile dogrulanir.
+- Gerekce:
+  - Laravel cache/session/queue broker opsiyonelleri Laradock container UX’i istiyor; memcached Phase 17’de yalnizca toggle idi.
+- Etki:
+  - `native_host_service_drivers.sh`, `phase-20.md`, `docs/commands/services-memcached.md`.
+
+## 2026-08-12 - D-144 - Native service contract (Laradock-container UX)
+
+- Durum: accepted
+- Karar:
+  - Her native servis: enable → `services up` → live health → credentials/url; TCP host `127.0.0.1`.
+  - `@core`: php, composer, web, DB engines, redis, phpmyadmin, pgadmin, mailpit — **queue yok**.
+  - Status: live probe; stale PID / olu brew → `stopped` (yalan `starting` yok). HTTP canli PID → `starting`.
+  - `services use mariadb|mysql|postgres`: XOR + phpmyadmin/pgadmin esleme + `database.engine` (mysql-family).
+  - Docker-lite unfreeze bu native P0’in **arkasina** alinir.
+- Gerekce:
+  - D-138..D-143 dersleri (detach, leak, loopback, stdout) tum kritik servislere yayilmali.
+- Etki:
+  - [native-service-contract.md](../docs/operations/native-service-contract.md), `phase-19.md`, `cmd_services_use`.
+
 ## 2026-08-09 - D-143 - mysqladmin ping without --batch (MariaDB 12 client)
 
 - Durum: accepted

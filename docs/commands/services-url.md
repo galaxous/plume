@@ -13,12 +13,14 @@ plumectl services url mongo_webui --mode=native
 plumectl services url redis_webui --mode=native
 plumectl services credentials postgres --mode=native
 plumectl services credentials mariadb --mode=native
+plumectl services credentials mailpit --mode=native
+plumectl services credentials memcached --mode=native
 ```
 
 ## Parametreler
 
 - `--mode=native` (zorunlu; Phase 17 MVP native-only)
-- `<service>`: url icin `phpmyadmin`, `pgadmin`, `mongo_webui`, `redis_webui`, `rabbitmq`, `mailpit`; credentials icin `postgres`, `mariadb`, `mysql`, `mongodb`, `redis`, `rabbitmq`, `mongo_webui`, `redis_webui`, `phpmyadmin`, `pgadmin`
+- `<service>`: url icin `phpmyadmin`, `pgadmin`, `mongo_webui`, `redis_webui`, `rabbitmq`, `mailpit`; credentials icin `postgres`, `mariadb`, `mysql`, `mongodb`, `redis`, `rabbitmq`, `memcached`, `mongo_webui`, `redis_webui`, `phpmyadmin`, `pgadmin`, `mailpit`
 
 ## Cikti / exit-code
 

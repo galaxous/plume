@@ -20,7 +20,7 @@ Plume uzerinde calisiyoruz. GitHub: galaxous/plume (yerel klasor adi farkli olab
 Wrapper: ./plume.sh; resmi binary adi plumectl. Gercek kullanici state: ~/.config/plume (testlerde ASLA buna guvenme). Config: services.yml + .env + host.env (AGENTS.md §6–7).
 
 Zorunlu: AGENTS.md §1–8 + docs/commands/ (yeni komut) + docs/contracts/ + implementation/05-decision-log.md (onemli karar).
-Faz 1–15 tamamlandi (Faz 7 beta-frozen); yeni is = yeni implementation/phases/phase-NN.md + phase-tracker. Faz-gate: test + dokuman + karar kaydi.
+Faz 1–22 tamamlandi (Faz 7 beta-frozen); yeni is = yeni implementation/phases/phase-NN.md + phase-tracker. Faz-gate: test + dokuman + karar kaydi.
 Baslangic okuma: implementation/phase-tracker.md, en guncel implementation/11-status-*.md.
 
 Smoke (PR oncesi varsayilan): ./tests/run_smoke_suite.sh --release  (CI ile ayni: --ci)
@@ -28,6 +28,7 @@ Hermetic testler: gecici HOME + PLUME_STATE_DIR; mock brew PATH = MOCK_BIN:/usr/
 pipefail: ./plume.sh ... | grep -q KULLANMA — once OUT="$(...)" sonra grep.
 Nginx reload testleri: PLUME_SITE_NGINX_STRICT=false ve PLUME_SITE_NGINX_STRICT_ON_RELOAD=false (izole reload-validate).
 Phase6 tarzi servis smoke: PLUME_PHP_EXTENSIONS_AUTO_SYNC=false.
+Redis smoke: PLUME_NATIVE_REDIS_MAIN_CONF=temp dosya — host `/opt/homebrew/etc/redis.conf` asla patch edilmez.
 macOS: Desktop/Documents/Downloads TCC; FDA nginx + php-fpm binary'leri (plume.sh degil); init permissions --interactive.
 
 Detay: docs/operations/ai-assisted-development.md — oku ve kurallara uy.

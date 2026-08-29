@@ -19,6 +19,8 @@
 - `first-run-onboarding.md`: host profili, TCC, nginx port ve ilk kurulum sirasi
 - `local-dev-macos.md`: gunluk macOS gelistirme (.env onerileri, TCC yollari, site tasima)
 - `macos-permissions.md`: macOS TCC/FDA otomasyon sinirlari ve etkilesimli akis
+- `native-service-contract.md`: native servis = Laradock container UX (D-144)
+- `native-stack-os-matrix.md`: brew/apt/dnf native servis matrisi
 
 Gelecek dokumanlar:
 

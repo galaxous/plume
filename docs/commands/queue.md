@@ -2,7 +2,7 @@
 
 ## Amac
 
-Laravel kuyruk operasyonlari: calisan/Horizon durumu (`status`) ve basarisiz is listesi (`list` → `queue:failed`). MVP native modda tam supervisor kurulumu yok; `status` satirlari ve `services up horizon` yonlendirmesi verilir.
+Laravel kuyruk operasyonlari: calisan/Horizon durumu (`status`) ve basarisiz is listesi (`list` → `queue:failed`). Native’de Horizon gercek worker (D-147): `services up horizon --mode=native` supervisor + `php artisan horizon`. `php_worker` hâlâ registry-only.
 
 ## Kullanim
 

@@ -143,11 +143,12 @@ plume_native_host_health_probe() {
   plume_native_driver_health_probe "${resolved}"
 }
 
-# Phase 17 registry-only: horizon/supervisor/php_worker have no native brew/npm driver.
+# Registry-only: no native brew/npm driver. health=registry (D-113, D-146).
+# Horizon/supervisor are real host drivers as of D-147 (php_worker stays toggle-only).
 plume_native_host_registry_only_service() {
   local service="$1"
   case "${service}" in
-    horizon|supervisor|php_worker) return 0 ;;
+    php_worker|meilisearch|minio) return 0 ;;
   esac
   return 1
 }

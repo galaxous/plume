@@ -43,6 +43,8 @@ source "${ROOT_DIR}/lib/services/native_stack_config_common.sh"
 source "${ROOT_DIR}/lib/services/native_phpmyadmin_config.sh"
 # shellcheck source=services/native_pgadmin.sh
 source "${ROOT_DIR}/lib/services/native_pgadmin.sh"
+# shellcheck source=services/native_horizon.sh
+source "${ROOT_DIR}/lib/services/native_horizon.sh"
 # shellcheck source=services/native_db_hosts.sh
 source "${ROOT_DIR}/lib/services/native_db_hosts.sh"
 # shellcheck source=services/registry.sh

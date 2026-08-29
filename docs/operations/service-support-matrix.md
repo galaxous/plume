@@ -26,16 +26,16 @@ plumectl services supported --mode=docker-lite
 | postgres    | yes    | yes         | opt             | laradock compose'ta varsa |
 | pgadmin     | yes    | opt         | opt             | Laradock pgadmin parity; postgres gerektirir |
 | redis       | yes    | yes         | yes             | cache/queue |
-| memcached   | yes    | no          | opt             | laradock compose'ta varsa |
+| memcached   | yes    | no          | opt             | native brew/apt (D-145); laradock compose'ta varsa |
 | rabbitmq    | yes    | no          | opt             | laradock compose'ta varsa |
 | mongodb     | yes    | opt         | opt             | laradock compose'ta varsa |
 | mongo-webui | yes    | opt         | opt             | laradock compose'ta varsa |
-| mailpit     | yes    | yes         | opt             | laradock compose'ta varsa |
-| meilisearch | opt    | opt         | opt              | search service optional |
-| minio       | opt    | yes         | opt             | laradock compose'ta varsa |
-| supervisor  | yes    | opt         | yes             | horizon process manager |
-| horizon     | yes    | yes         | yes             | requires supervisor |
-| php-worker  | yes    | yes         | yes             | queue worker |
+| mailpit     | yes    | yes         | opt             | native: macOS brew; Linux docker-lite |
+| meilisearch | opt    | opt         | opt              | native toggle-only (D-146); driver backlog |
+| minio       | opt    | yes         | opt             | native toggle-only (D-146); laradock compose'ta varsa |
+| supervisor  | yes    | opt         | yes             | native Plume supervisord (D-147); compose'ta gercek |
+| horizon     | yes    | yes         | yes             | native: `php artisan horizon` + supervisor gate |
+| php-worker  | yes    | yes         | yes             | native: registry-only; queue worker |
 
 Laradock-bridge note:
 

@@ -22,6 +22,7 @@ BASE_ENV=(
   "PLUME_HORIZON_REQUIRE_SUPERVISOR=false"
   "PLUME_SKIP_ON_FIRST_RUN_PROVISION=true"
   "PLUME_PHP_FPM_VERIFY_AFTER_START=false"
+  "PLUME_NATIVE_HOST_INSTALL_DRIVER=mock"
 )
 
 env "${BASE_ENV[@]}" ./plume.sh mode use native --force --yes >/dev/null

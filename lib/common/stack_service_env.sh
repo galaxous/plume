@@ -50,6 +50,9 @@ REDIS_WEBUI_USERNAME|PLUME_REDIS_WEBUI_USERNAME
 REDIS_WEBUI_PASSWORD|PLUME_REDIS_WEBUI_PASSWORD
 REDIS_WEBUI_CONNECT_HOST|PLUME_REDIS_WEBUI_HOST
 REDIS_WEBUI_CONNECT_PORT|PLUME_REDIS_WEBUI_REDIS_PORT
+MAILPIT_PORT|PLUME_MAILPIT_PORT
+MAILPIT_SMTP_PORT|PLUME_MAILPIT_SMTP_PORT
+MEMCACHED_PORT|PLUME_MEMCACHED_PORT
 EOF
 }
 
@@ -188,6 +191,9 @@ plume_stack_service_env_short_to_key() {
     redis_webui:host) echo "PLUME_REDIS_WEBUI_HOST" ;;
     redis_webui:port) echo "PLUME_REDIS_WEBUI_PORT" ;;
     redis_webui:redis_port|redis_webui:connect_port) echo "PLUME_REDIS_WEBUI_REDIS_PORT" ;;
+    mailpit:port|mailpit:http_port) echo "PLUME_MAILPIT_PORT" ;;
+    mailpit:smtp_port) echo "PLUME_MAILPIT_SMTP_PORT" ;;
+    memcached:port) echo "PLUME_MEMCACHED_PORT" ;;
     *)
       return 1
       ;;
@@ -242,6 +248,12 @@ plume_stack_service_env_keys_for_service() {
         PLUME_REDIS_WEBUI_HOST \
         PLUME_REDIS_WEBUI_REDIS_PORT
       ;;
+    mailpit)
+      printf '%s\n' PLUME_MAILPIT_PORT PLUME_MAILPIT_SMTP_PORT
+      ;;
+    memcached)
+      printf '%s\n' PLUME_MEMCACHED_PORT
+      ;;
     *)
       return 1
       ;;
@@ -277,6 +289,12 @@ plume_stack_service_env_affected_services() {
       ;;
     PLUME_REDIS_WEBUI_*)
       printf '%s\n' redis_webui
+      ;;
+    PLUME_MAILPIT_*)
+      printf '%s\n' mailpit
+      ;;
+    PLUME_MEMCACHED_*)
+      printf '%s\n' memcached
       ;;
     *)
       return 1

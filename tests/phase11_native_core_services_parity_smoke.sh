@@ -170,7 +170,7 @@ assert_fail_code 2 "laravel-horizon blocked without supervisor" \
   env "${BASE_ENV[@]}" PLUME_SUPERVISOR_ENABLED=false ./plume.sh services up laravel-horizon --mode=native
 
 assert_ok "laravel-horizon starts with supervisor enabled" \
-  env "${BASE_ENV[@]}" PLUME_SUPERVISOR_ENABLED=true PLUME_HORIZON_ENABLED=true ./plume.sh services up laravel-horizon --mode=native
+  env "${BASE_ENV[@]}" PLUME_NATIVE_HOST_INSTALL_DRIVER=mock PLUME_SUPERVISOR_ENABLED=true PLUME_HORIZON_ENABLED=true ./plume.sh services up laravel-horizon --mode=native
 
 # 6) redis parity
 assert_ok "redis start native" \

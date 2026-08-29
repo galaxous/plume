@@ -25,7 +25,7 @@ PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true ./plume.sh doctor web fix-ports --rel
 Port 80 sonrasi site vhost'larini guncellemek:
 
 ```bash
-./plume.sh site publish --reload <site-id>
+./plume.sh site publish <site-id> --reload
 ```
 
 ## Parametreler
@@ -57,7 +57,7 @@ PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true
 PLUME_NATIVE_NGINX_HTTP_PORT=80
 
 plumectl services web sync-config --reload
-plumectl site publish --reload myapp
+plumectl site publish myapp --reload
 # http://myapp.test (portsuz)
 ```
 

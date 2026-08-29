@@ -41,12 +41,12 @@ BASE_ENV=(
 )
 touch "${TMP_ROOT}/empty.env"
 
-# Stale running=true without health probe must not report healthy.
+# Stale running=true without live probe must report stopped (D-144), never healthy.
 RUNTIME="${STATE_DIR}/services_runtime_native.env"
 printf '%s\n' 'mysql.running=true' > "${RUNTIME}"
 OUT="$(env "${BASE_ENV[@]}" PLUME_MYSQL_ENABLED=true ./plume.sh services status mysql --mode=native 2>/dev/null | grep '^mysql' || true)"
-echo "${OUT}" | grep -q 'starting' || {
-  echo "[FAIL] stale running must not show healthy (expected starting)" >&2
+echo "${OUT}" | grep -q 'stopped' || {
+  echo "[FAIL] stale running must show stopped" >&2
   printf '%s\n' "${OUT}" >&2
   exit 1
 }

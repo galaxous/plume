@@ -80,7 +80,7 @@ assert_ok "services up php with alias" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RU
 assert_fail_code 2 "invalid php version alias" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native ./plume.sh services up php --mode=native --version=php99"
 
 assert_fail_code 2 "horizon requires supervisor" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=false ./plume.sh services up horizon --mode=native"
-assert_ok "horizon starts when supervisor enabled" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true ./plume.sh services up horizon --mode=native"
+assert_ok "horizon starts when supervisor enabled" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native PLUME_NATIVE_HOST_INSTALL_DRIVER=mock PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true ./plume.sh services up horizon --mode=native"
 assert_ok "services logs works for native" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native ./plume.sh services logs php --mode=native --tail=5 >/tmp/plume-phase6-output.txt && test -s /tmp/plume-phase6-output.txt"
 
 if [[ "$(id -u)" -eq 0 ]]; then

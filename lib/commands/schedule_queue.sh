@@ -275,7 +275,7 @@ plume_laravel_queue_hints() {
     if [[ "${horizon_enabled}" == "true" && "${horizon_running}" != "true" ]]; then
       plume_info "start Horizon: ./plume.sh services up horizon --mode=native"
     elif [[ "${horizon_enabled}" != "true" && "${supervisor_enabled}" == "true" && "${supervisor_running}" != "true" ]]; then
-      plume_info "native supervisor is enabled but not running; full install is backlog — try: ./plume.sh services up supervisor --mode=native"
+      plume_info "start supervisor: ./plume.sh services up supervisor --mode=native"
     elif [[ "${horizon_enabled}" != "true" && "${supervisor_enabled}" != "true" ]]; then
       plume_info "enable queue workers: set PLUME_HORIZON_ENABLED=true (and PLUME_SUPERVISOR_ENABLED=true) then ./plume.sh services up horizon --mode=native"
     fi

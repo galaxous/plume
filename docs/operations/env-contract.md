@@ -139,6 +139,11 @@ Yalnizca `PLUME_*` (eski stil) hâlâ calisir; deprecated.
 | `REDIS_WEBUI_PORT` | `PLUME_REDIS_WEBUI_PORT` | `8083` (Plume; Laradock often `9987`) |
 | `REDIS_WEBUI_USERNAME` / `PASSWORD` | `PLUME_REDIS_WEBUI_USERNAME` / `PASSWORD` | `laradock` / `laradock` |
 | `REDIS_WEBUI_CONNECT_HOST` / `REDIS_WEBUI_CONNECT_PORT` | `PLUME_REDIS_WEBUI_HOST` / `REDIS_PORT` | `127.0.0.1` / `6379` |
+| `MEMCACHED_ENABLED` / `MEMCACHED_PORT` | `PLUME_MEMCACHED_*` | `false` / `11211` |
+| `MAILPIT_ENABLED` / `MAILPIT_PORT` / `MAILPIT_SMTP_PORT` | `PLUME_MAILPIT_*` | `false` / `8025` / `1025` |
+| `SUPERVISOR_ENABLED` / `HORIZON_ENABLED` | `PLUME_SUPERVISOR_ENABLED` / `PLUME_HORIZON_ENABLED` | `false` |
+| `PLUME_HORIZON_PATH` | Laravel kök (`artisan`) | boş → ilk kayıtlı site / cwd |
+| `PLUME_HORIZON_REQUIRE_SUPERVISOR` | `up horizon` supervisor ister | `true` |
 
 Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Redis icin ayrica `services redis sync-config --reload`. Bkz. [services-env.md](../commands/services-env.md), [services-redis.md](../commands/services-redis.md).
 

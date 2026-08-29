@@ -1,13 +1,14 @@
 # Future Roadmap (tek sayfa todo ozeti)
 
-**Guncelleme:** 2026-08-04. Faz 1–17 kapandi (Faz 7 `beta-frozen`). Detayli faz kurallari: [AGENTS.md](../AGENTS.md) §8.
+**Guncelleme:** 2026-08-18. Faz 1–22 kapandi (Faz 7 `beta-frozen`). Native Horizon: D-147.
 
 | Kaynak | Rol |
 |--------|-----|
 | [phase-tracker.md](./phase-tracker.md) | Resmi faz durumu (master board) |
-| [11-status-2026-08-04.md](./11-status-2026-08-04.md) | Son kapanis + handoff |
+| [11-status-2026-08-18.md](./11-status-2026-08-18.md) | Son kapanis (Faz 22) |
 | [10-herd-parity-and-beyond.md](./10-herd-parity-and-beyond.md) | Parity checkbox’lari |
 | [phase-15-backlog-plume-yml-dockerlite.md](./phases/phase-15-backlog-plume-yml-dockerlite.md) | D-089 urun backlog |
+| [native-service-contract.md](../docs/operations/native-service-contract.md) | Native “container” sozlesmesi |
 
 ---
 
@@ -15,7 +16,8 @@
 
 | Oncelik | Tema | Not |
 |---------|------|-----|
-| **P1** | **Docker-lite unfreeze** | D-089; Phase 18 adayi |
+| **P1** | **Docker-lite unfreeze** | D-089 |
+| P2 | **meilisearch / minio native driver** | Toggle-only (D-146); Herd parity |
 | P3 | **Release / dagitim** | Packagist/Homebrew, pinned release, opsiyonel auto-update |
 | P4 | **Composer + Node workspace** | Herd parity; laradock/docker-lite agirlikli |
 | — | **plume.yml stretch** | Registry sync, `services.enabled[]` (phase-16 stretch / 16b) |
@@ -36,7 +38,7 @@ Kaynak: [10-herd-parity-and-beyond.md](./10-herd-parity-and-beyond.md) (`[ ]` sa
 - [ ] Cache / session / store driver uyum dogrulamasi
 - [ ] `about` ve diger genisletilmis artisan health probes
 
-**Kismen acik:** Queue/scheduler — Faz 15 baseline tamam; tam native worker/supervisor host kurulumu manifest sinirlari (D-113).
+**Kismen acik:** Queue/scheduler — Faz 15 baseline + Faz 21 honesty (D-146); tam native worker/supervisor host kurulumu backlog.
 
 ---
 

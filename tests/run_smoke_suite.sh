@@ -130,6 +130,10 @@ run_ci_release_suite() {
   run_step "phase17-native-phpmyadmin" "phase17_native_phpmyadmin_smoke.sh"
   run_step "phase17-native-db-engine" "phase17_native_db_engine_smoke.sh"
   run_step "phase18-native-pgadmin" "phase18_native_pgadmin_smoke.sh"
+  run_step "phase19-native-service-contract" "phase19_native_service_contract_smoke.sh"
+  run_step "phase20-native-cache-broker" "phase20_native_cache_broker_smoke.sh"
+  run_step "phase21-queue-honesty" "phase21_queue_honesty_smoke.sh"
+  run_step "phase22-native-horizon" "phase22_native_horizon_smoke.sh"
 }
 
 run_phase11_full_suite() {

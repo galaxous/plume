@@ -61,6 +61,7 @@ COMMANDS:
                              Run php artisan queue:failed (Horizon: see queue.md)
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
+  services use <engine>              Native DB XOR (mariadb|mysql|postgres) + UI mapping
   services url <service>           Native HTTP URL (phpmyadmin, pgadmin, mongo_webui, …)
   services credentials <service>     Native DB/broker credentials (postgres, mariadb, redis, …)
   services redis sync-config [--reload|--dry-run]  Apply PLUME_REDIS_* to native redis.conf

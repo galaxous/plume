@@ -6,14 +6,26 @@ cd "${ROOT_DIR}"
 
 TMP_ROOT="$(mktemp -d)"
 HERMETIC_HOME="${TMP_ROOT}/home"
+MOCK_BIN="${TMP_ROOT}/bin"
+MAIN_CONF="${TMP_ROOT}/redis.conf"
 export HOME="${HERMETIC_HOME}"
 export PLUME_STATE_DIR="${TMP_ROOT}/state"
 export PLUME_LOG_DIR="${TMP_ROOT}/logs"
 export PLUME_MODE="native"
 export PLUME_SKIP_ON_FIRST_RUN_PROVISION=true
-mkdir -p "${HERMETIC_HOME}" "${PLUME_STATE_DIR}" "${PLUME_LOG_DIR}"
-mkdir -p "${HERMETIC_HOME}/.config/plume"
+export PLUME_NATIVE_HOST_INSTALL_DRIVER=mock
+export PLUME_NATIVE_REDIS_MAIN_CONF="${MAIN_CONF}"
+export PLUME_PHP_EXTENSIONS_AUTO_SYNC=false
+export PATH="${MOCK_BIN}:/usr/bin:/bin"
+mkdir -p "${HERMETIC_HOME}/.config/plume" "${PLUME_STATE_DIR}" "${PLUME_LOG_DIR}" "${MOCK_BIN}"
 : > "${HERMETIC_HOME}/.config/plume/.env"
+printf '%s\n' 'port 6379' 'bind 127.0.0.1' > "${MAIN_CONF}"
+
+cat > "${MOCK_BIN}/brew" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "${MOCK_BIN}/brew"
 
 cleanup() {
   rm -rf "${TMP_ROOT}"

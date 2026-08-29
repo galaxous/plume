@@ -29,6 +29,8 @@ plumectl services redis sync-config --dry-run
 | `PLUME_NATIVE_REDIS_MANAGE_CONFIG` | Config yonetimini ac/kapat | `true` |
 | `PLUME_NATIVE_REDIS_MAIN_CONF` | Ana redis.conf yolu override | brew/apt otomatik |
 
+`services up redis` sirasinda preferred port (`REDIS_PORT`, varsayilan 6379) doluysa Plume +1 dener; listener zaten `redis-server` ise portu korur (D-148). Laravel `.env` ile ayni portu tutmak icin `REDIS_PORT=6379` birakip `down` + `up` yeter.
+
 Uretilen dosya: `$(plume_state_dir)/native/redis/plume-redis.conf` — ana config'e `include` ile eklenir.
 
 ## Cikti / exit-code

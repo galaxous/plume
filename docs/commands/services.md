@@ -26,6 +26,8 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 ./plume.sh services health php82
 ./plume.sh services up all
 ./plume.sh services up @queue
+./plume.sh services use mariadb --mode=native
+./plume.sh services up @core --mode=native
 ./plume.sh services down php
 ./plume.sh services down all
 ./plume.sh services down group:web
@@ -67,7 +69,12 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 
 ## Parametreler
 
-- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin`, `pgadmin`, `postgres`, `mongodb`, `rabbitmq`, `mongo_webui`, `redis_webui` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@cache`, `@queue`, `group:web`)
+- hedef servis: `all`, servis adi (`php`, `redis`, `mariadb`, `mysql`, `phpmyadmin`, `pgadmin`, `postgres`, `mongodb`, `rabbitmq`, `memcached`, `mongo_webui`, `redis_webui`, `mailpit` vb.) veya servis grubu (`@core`, `@web`, `@db`, `@cache`, `@queue`, `group:web`)
+  - native `@core`: php, composer, `web`, DB engines, redis, phpmyadmin, pgadmin, mailpit (**queue yok**; D-144)
+  - native `@web`: registry `web` (aktif `PLUME_WEB_SERVER_DRIVER`; `nginx`/`apache2`/`caddy` display variant)
+  - native `@queue`: supervisor + horizon (host worker, D-147); php_worker registry-only
+  - `services use mariadb|mysql|postgres`: native DB XOR + UI esleme — [services-use.md](./services-use.md)
+  - sozlesme: [native-service-contract.md](../operations/native-service-contract.md)
   - adapter-contract aliaslari mode'dan bagimsiz kabul edilir:
     - `php-fpm -> php`
     - `workspace -> composer`
@@ -91,6 +98,7 @@ Native veya container modunda servisleri kurmak ve yonetmek.
   - laradock-bridge text output'unda aktif `MODE` ve `CONTEXT` basliklari da yazdirilir
   - laradock-bridge modunda `PORT` sutunu tek port yerine tum published host portlarini (`80,443`, `2222,3000`) gosterebilir
 - `health`:
+  - native: `healthy` (live probe), `stopped` (olu PID/port), `starting` (HTTP PID canli), `registry` (horizon/supervisor/meilisearch/minio — host daemon yok)
   - hedef servis verilmezse tum servisleri listeler
   - `--running` / `--running-only` / `--active`: yalnizca `running=true` servisleri listeler
   - `--watch[=N]`: text ciktisini her `N` saniyede (varsayilan `2`) yeniler
@@ -303,3 +311,5 @@ PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
 - Istenen versiyon desteklenmiyor
 - Horizon baslatilamadi (supervisor eksik/aktif degil)
 - `services update` reconcile adiminda kurulum/baslatma hatasi
+
+Horizon/supervisor native: [services-horizon.md](./services-horizon.md). Redis: [services-redis.md](./services-redis.md).
