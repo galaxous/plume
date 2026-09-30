@@ -107,7 +107,7 @@ Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yo
 |--------|----------------|----------------------|------------|
 | `horizon` | `enabled` → `PLUME_HORIZON_ENABLED` | brew/apt `supervisor` + program | `services up horizon` — supervisor gate; native `php artisan horizon` (D-147) |
 | `php_worker` | `enabled` → `PLUME_PHP_WORKER_ENABLED` | **Yok** | Genelde docker-lite / laradock **php-worker** container veya manuel `queue:work` |
-| `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | brew/apt `supervisor` | Plume-owned supervisord (state dir); Horizon on kosulu |
+| `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | brew/apt `supervisor` + system unit | Plume program registry + OS conf.d (D-149) |
 
 **Docker-lite:** Compose alias `laravel-horizon` ↔ Plume servis adi `horizon` (ve `supervisor` ayni container’a map edilebilir). Bkz. [services.md](../commands/services.md).
 

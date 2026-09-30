@@ -1,0 +1,12 @@
+# Plume supervisor program template: generic
+# placeholders: name, command, directory, autostart, autorestart, stdout_logfile, redirect_stderr, stopasgroup, killasgroup, environment
+[program:{{name}}]
+command={{command}}
+directory={{directory}}
+autostart={{autostart}}
+autorestart={{autorestart}}
+stopasgroup={{stopasgroup}}
+killasgroup={{killasgroup}}
+stdout_logfile={{stdout_logfile}}
+redirect_stderr={{redirect_stderr}}
+environment={{environment}}

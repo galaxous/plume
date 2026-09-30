@@ -59,13 +59,18 @@ COMMANDS:
                              Queue/Horizon/supervisor status from env + services runtime
   queue list [--mode=...] [--path=...]
                              Run php artisan queue:failed (Horizon: see queue.md)
+  composer [args...]         Run Composer in project (site PHP on PATH; --path=|--site=)
+  npm [args...]              Run npm in project root (--path=|--site=)
+  node [args...]             Run node in project root (--path=|--site=)
   services manifest show       Print effective native stack from services.yml + env
   services provision --from-manifest [--dry-run]
   services use <engine>              Native DB XOR (mariadb|mysql|postgres) + UI mapping
   services url <service>           Native HTTP URL (phpmyadmin, pgadmin, mongo_webui, …)
   services credentials <service>     Native DB/broker credentials (postgres, mariadb, redis, …)
   services redis sync-config [--reload|--dry-run]  Apply PLUME_REDIS_* to native redis.conf
-  site add --path --domain --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--publish] [--server-config=] [--dry-run]
+  services supervisor upgrade|program   Native supervisor upgrade (--force --yes) and program add
+  site add --path --domain --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--horizon] [--publish] [--server-config=] [--dry-run]
+  site update <site-id> [--horizon|--no-horizon] [--publish] [--reload]
                              Register and onboard site for local serving
   site update <site-id> --server=[nginx|apache2|caddy] [--php=8.1|8.2|8.3|8.4|default] [--port=80] [--publish] [--server-config=] [--dry-run]
                              Update an existing site registration
@@ -129,6 +134,10 @@ COMMANDS:
                              Check configured php extensions per version matrix
   doctor web [--mode=...] [--strict]
                              Native web server diagnostics (driver, listeners, strict includes)
+  doctor supervisor [--strict]
+                             Native supervisor / Horizon program diagnostics
+  doctor workspace [--strict]
+                             Composer/npm/node host readiness (D-154)
   doctor host [--force]      Idempotent host profile detection (same as init host)
   doctor onboarding [--fix] [--open-settings]  First-run checklist (alias to init onboarding)
 
@@ -144,5 +153,17 @@ EOF
 }
 
 cmd_version() {
-  echo "plumectl 0.2.0-phase2"
+  local ver_file="${ROOT_DIR}/VERSION"
+  local ver="0.0.0-dev"
+  if [[ -f "${ver_file}" ]]; then
+    ver="$(tr -d '[:space:]' < "${ver_file}" || true)"
+  fi
+  if [[ -z "${ver}" ]]; then
+    ver="0.0.0-dev"
+  fi
+  if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    printf '{"ok":true,"command":"version","data":{"name":"plumectl","version":"%s"}}\n' "${ver}"
+    return 0
+  fi
+  printf 'plumectl %s\n' "${ver}"
 }

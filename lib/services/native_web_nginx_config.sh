@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Homebrew nginx formula patches conf/nginx.conf at build time: listen 80 -> 8080
-# so nginx can run without root (see homebrew-core Formula/n/nginx.rb, caveats).
+# Native nginx HTTP listen: Plume guarantees PLUME_NATIVE_NGINX_HTTP_PORT (default 80)
+# on macOS (Homebrew) and Linux (apt/dnf). Privileged ports use elevated restart (D-151).
 
 plume_native_nginx_main_conf_path() {
   if [[ -n "${PLUME_NATIVE_NGINX_MAIN_CONF:-}" ]]; then
@@ -15,6 +15,10 @@ plume_native_nginx_main_conf_path() {
   fi
   if [[ -f "/usr/local/etc/nginx/nginx.conf" ]]; then
     printf '%s' "/usr/local/etc/nginx/nginx.conf"
+    return 0
+  fi
+  if [[ -f "/etc/nginx/nginx.conf" ]]; then
+    printf '%s' "/etc/nginx/nginx.conf"
     return 0
   fi
   if command -v brew >/dev/null 2>&1; then
@@ -49,7 +53,28 @@ plume_native_nginx_main_listen_port() {
 }
 
 plume_native_nginx_manage_main_config_enabled() {
-  [[ "$(plume_bool "${PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG:-false}")" == "true" ]]
+  [[ "$(plume_bool "${PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG:-true}")" == "true" ]]
+}
+
+plume_native_nginx_desired_http_port() {
+  printf '%s' "${PLUME_NATIVE_NGINX_HTTP_PORT:-80}"
+}
+
+plume_native_nginx_port_needs_elevation() {
+  local port="${1:-}"
+  [[ "${port}" =~ ^[0-9]+$ ]] || return 1
+  (( port < 1024 ))
+}
+
+plume_native_nginx_config_test() {
+  if declare -F plume_sites_nginx_config_test >/dev/null 2>&1; then
+    plume_sites_nginx_config_test
+    return $?
+  fi
+  local nginx_bin=""
+  nginx_bin="$(plume_sites_native_nginx_bin 2>/dev/null || true)"
+  [[ -n "${nginx_bin}" ]] || return 0
+  "${nginx_bin}" -t >/dev/null 2>&1
 }
 
 plume_native_nginx_sync_main_config() {
@@ -58,7 +83,7 @@ plume_native_nginx_sync_main_config() {
   local do_reload="${3:-false}"
 
   if [[ -z "${target_port}" ]]; then
-    target_port="${PLUME_NATIVE_NGINX_HTTP_PORT:-80}"
+    target_port="$(plume_native_nginx_desired_http_port)"
   fi
   if ! [[ "${target_port}" =~ ^[0-9]+$ ]]; then
     plume_err "invalid HTTP port: ${target_port}"
@@ -66,7 +91,7 @@ plume_native_nginx_sync_main_config() {
   fi
 
   if ! plume_native_nginx_manage_main_config_enabled; then
-    plume_err "Set PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true to patch the Homebrew nginx main config (see docs/commands/services-web.md)"
+    plume_err "nginx main-config management is off. Set PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true (default) or run: plumectl services web ensure"
     return 2
   fi
 
@@ -81,7 +106,7 @@ plume_native_nginx_sync_main_config() {
   local conf=""
   conf="$(plume_native_nginx_main_conf_path)"
   if [[ -z "${conf}" || ! -f "${conf}" ]]; then
-    plume_err "nginx main config not found (install nginx, e.g. brew install nginx)"
+    plume_err "nginx main config not found (install nginx via Plume: plumectl services install web)"
     return 2
   fi
 
@@ -109,9 +134,22 @@ plume_native_nginx_sync_main_config() {
     return 0
   fi
 
+  # Linux /etc/nginx often root-owned — write via temp + elevated copy when needed.
   local backup=""
   backup="${conf}.plume-backup-$(date +%Y%m%d%H%M%S)"
-  cp "${conf}" "${backup}"
+  if ! cp "${conf}" "${backup}" 2>/dev/null; then
+    if declare -F plume_sites_nginx_run_elevated >/dev/null 2>&1; then
+      plume_sites_nginx_run_elevated \
+        "Backing up nginx main config requires admin." \
+        cp "${conf}" "${backup}" || {
+        plume_err "cannot backup nginx main config: ${conf}"
+        return 2
+      }
+    else
+      plume_err "cannot backup nginx main config: ${conf}"
+      return 2
+    fi
+  fi
   plume_info "backup: ${backup}"
 
   local tmp=""
@@ -120,16 +158,26 @@ plume_native_nginx_sync_main_config() {
     -e "s/listen[[:space:]]+${current};/listen ${target_port};/g" \
     -e "s/listen[[:space:]]+\\[::\\]:${current};/listen [::]:${target_port};/g" \
     "${conf}" > "${tmp}"
-  mv "${tmp}" "${conf}"
 
-  local nginx_bin=""
-  nginx_bin="$(plume_sites_native_nginx_bin 2>/dev/null || true)"
-  if [[ -n "${nginx_bin}" ]]; then
-    if ! "${nginx_bin}" -t 2>&1; then
-      plume_err "nginx -t failed; restoring ${backup}"
-      cp "${backup}" "${conf}"
+  if ! cp "${tmp}" "${conf}" 2>/dev/null; then
+    if declare -F plume_sites_nginx_run_elevated >/dev/null 2>&1 \
+      && plume_sites_nginx_run_elevated \
+        "Updating nginx main listen port requires admin." \
+        cp "${tmp}" "${conf}"; then
+      :
+    else
+      rm -f "${tmp}"
+      plume_err "cannot write nginx main config: ${conf}"
       return 2
     fi
+  fi
+  rm -f "${tmp}"
+
+  if ! plume_native_nginx_config_test; then
+    plume_err "nginx -t failed; restoring ${backup}"
+    cp "${backup}" "${conf}" 2>/dev/null \
+      || plume_sites_nginx_run_elevated "Restore nginx backup" cp "${backup}" "${conf}" || true
+    return 2
   fi
 
   plume_info "updated main config listen ${current} -> ${target_port} (${conf})"
@@ -137,37 +185,55 @@ plume_native_nginx_sync_main_config() {
   if [[ "${do_reload}" == "true" ]]; then
     plume_native_nginx_reload_for_http_port "${target_port}" || return 2
   else
-    plume_info "Restart nginx to apply (port ${target_port} on macOS often needs root): sudo brew services restart nginx"
+    plume_info "Apply with: plumectl services web ensure"
   fi
-
-  plume_info "Re-publish sites so vhosts match port ${target_port}: ./plume.sh site publish --reload <site-id>"
   return 0
 }
 
 plume_native_nginx_reload_for_http_port() {
   local http_port="${1:-80}"
+  local os=""
+  os="$(plume_detect_os 2>/dev/null || echo unknown)"
 
-  if [[ "${http_port}" == "80" && "$(plume_detect_os 2>/dev/null || echo unknown)" == "macos" ]]; then
-    if command -v brew >/dev/null 2>&1; then
-      if command -v sudo >/dev/null 2>&1; then
-        if sudo -n true 2>/dev/null; then
-          if sudo HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1; then
-            plume_info "nginx restarted via sudo brew services (port 80)"
-            return 0
-          fi
-        elif declare -F plume_macos_permissions_confirm_sudo >/dev/null 2>&1 \
-          && plume_macos_permissions_confirm_sudo "sudo brew services restart nginx" \
-            "Port 80 requires root on macOS so nginx can bind to privileged ports."; then
-          if sudo HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1; then
-            plume_info "nginx restarted via sudo brew services (port 80)"
-            return 0
-          fi
+  if declare -F plume_native_driver_is_mock >/dev/null 2>&1 && plume_native_driver_is_mock; then
+    plume_info "native driver mock reload: nginx (port ${http_port})"
+    return 0
+  fi
+
+  if plume_native_nginx_port_needs_elevation "${http_port}"; then
+    if declare -F plume_sites_nginx_reload_or_restart >/dev/null 2>&1; then
+      if plume_sites_nginx_reload_or_restart; then
+        plume_info "nginx reloaded via Plume (privileged port ${http_port})"
+        return 0
+      fi
+    fi
+
+    if [[ "${os}" == "macos" ]] && command -v brew >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
+      if declare -F plume_sites_nginx_run_elevated >/dev/null 2>&1; then
+        if plume_sites_nginx_run_elevated \
+          "Port ${http_port} requires administrator privileges so nginx can bind." \
+          env HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx; then
+          plume_info "nginx restarted (elevated) for port ${http_port}"
+          return 0
         fi
       fi
-      plume_err "Binding port 80 on macOS requires root. Run: sudo brew services restart nginx"
-      plume_err "Alternative: keep Homebrew default 8080 and use PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080 (browser :8080)."
-      return 2
     fi
+
+    if [[ "${os}" == "linux" ]] && command -v systemctl >/dev/null 2>&1; then
+      if declare -F plume_sites_nginx_run_elevated >/dev/null 2>&1; then
+        if plume_sites_nginx_run_elevated \
+          "Port ${http_port} requires administrator privileges so nginx can bind." \
+          systemctl restart nginx; then
+          plume_info "nginx restarted via systemctl (elevated) for port ${http_port}"
+          return 0
+        fi
+      elif command -v sudo >/dev/null 2>&1; then
+        sudo systemctl restart nginx >/dev/null 2>&1 && return 0
+      fi
+    fi
+
+    plume_err "Binding port ${http_port} requires admin. Run: plumectl services web ensure"
+    return 2
   fi
 
   if declare -F plume_sites_reload_native >/dev/null 2>&1; then
@@ -176,19 +242,70 @@ plume_native_nginx_reload_for_http_port() {
     fi
   fi
 
-  if command -v brew >/dev/null 2>&1; then
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew services list 2>/dev/null | awk '{print $1" "$2}' | grep -q '^nginx started'; then
-      if HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1; then
-        plume_info "nginx restarted via brew services"
-        return 0
-      fi
-    fi
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1; then
-      plume_info "nginx restarted via brew services"
+  if declare -F plume_sites_nginx_reload_or_restart >/dev/null 2>&1; then
+    if plume_sites_nginx_reload_or_restart; then
       return 0
     fi
   fi
 
-  plume_err "nginx reload failed; run: brew services restart nginx"
+  plume_err "nginx reload failed; run: plumectl services restart web"
   return 2
+}
+
+# Ensure main nginx listen + optional republish of all native nginx sites (D-151).
+plume_native_nginx_ensure_http_port() {
+  local target_port="${1:-}"
+  local republish_sites="${2:-true}"
+  local dry_run="${3:-false}"
+
+  if [[ -z "${target_port}" ]]; then
+    target_port="$(plume_native_nginx_desired_http_port)"
+  fi
+
+  if [[ "${PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS:-false}" == "true" ]]; then
+    return 0
+  fi
+  export PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS=true
+
+  if ! plume_native_nginx_manage_main_config_enabled; then
+    plume_warn "PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=false — skipping port ensure (sites may stay on 8080)"
+    unset PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS
+    return 0
+  fi
+
+  if [[ "${dry_run}" == "true" ]]; then
+    plume_native_nginx_sync_main_config "${target_port}" "true" "false"
+    local rc=$?
+    unset PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS
+    return "${rc}"
+  fi
+
+  plume_info "ensuring nginx HTTP listen port=${target_port} (macOS/Linux)"
+  if ! plume_native_nginx_sync_main_config "${target_port}" "false" "true"; then
+    unset PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS
+    return 2
+  fi
+
+  if [[ "${republish_sites}" == "true" ]] && declare -F plume_sites_index_ids >/dev/null 2>&1; then
+    local id file server mode
+    while IFS= read -r id; do
+      [[ -z "${id}" ]] && continue
+      file="$(plume_sites_file "${id}" 2>/dev/null || true)"
+      [[ -f "${file}" ]] || continue
+      server="$(plume_sites_record_value "${file}" server 2>/dev/null || true)"
+      [[ "${server}" == "nginx" ]] || continue
+      mode="$(plume_sites_record_value "${file}" mode 2>/dev/null || true)"
+      [[ -z "${mode}" || "${mode}" == "native" ]] || continue
+      plume_info "re-publish site ${id} for listen ${target_port}"
+      PLUME_SITE_RELOAD="false" plume_sites_publish_native "${id}" "native" "publish" || {
+        plume_warn "re-publish failed for ${id}"
+      }
+    done < <(plume_sites_index_ids)
+    # One reload after all snippets updated
+    plume_native_nginx_reload_for_http_port "${target_port}" || true
+  fi
+
+  unset PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS
+  plume_info "nginx HTTP port ensure complete (target=${target_port})"
+  return 0
 }

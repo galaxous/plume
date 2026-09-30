@@ -2,81 +2,82 @@
 
 ## Amac
 
-Native modda Homebrew (veya benzeri) nginx **ana** `nginx.conf` dosyasindaki varsayilan HTTP dinleme portunu yonetmek ve site snippet portlari ile hizalamak.
-
-Homebrew nginx formulü kurulum sirasinda `listen 80` satirini **`listen 8080`** yapar; boylece nginx root/sudo olmadan calisabilir (`homebrew-core` `Formula/n/nginx.rb`, `def install` icindeki `inreplace` ve `caveats`). macOS'ta 1024 alti portlar non-privileged kullaniciya kapali oldugu icin bu bilincli bir varsayilandir.
+Native nginx HTTP dinleme portunu **garanti etmek** (varsayilan **80**): macOS Homebrew ve Linux apt/dnf. Plume ana `nginx.conf` listen degerini yonetir, privileged port icin admin onayi alır, site vhost snippet'lerini hizalar. Kullaniciya `brew` / `systemctl` yazdirmaz (D-151).
 
 ## Kullanim
 
 ```bash
-# Ana nginx.conf icindeki varsayilan listen portunu 80 yap (opt-in)
-PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true ./plume.sh services web sync-config --reload
+# Tek komut: main conf -> 80, elevated restart, tum native nginx sitelerini republish
+plumectl services web ensure
 
-# Kisa yol: hedef port arguman
-PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true ./plume.sh services web port 80 --reload
+# Onizleme
+plumectl services web ensure --dry-run
 
-# Degisiklik onizlemesi
-PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true ./plume.sh services web sync-config --port=80 --dry-run
+# Sadece main conf (site republish yok)
+plumectl services web ensure --no-republish
 
-# Doctor uzerinden ayni islem
-PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true ./plume.sh doctor web fix-ports --reload
+# Dusuk seviye (ensure tercih edilir)
+plumectl services web sync-config --reload
+plumectl services web port 80 --reload
 ```
 
-Port 80 sonrasi site vhost'larini guncellemek:
-
-```bash
-./plume.sh site publish <site-id> --reload
-```
+Site publish ve `services up|restart web` de otomatik ensure eder (`PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH` / `ENSURE_ON_WEB_UP`, default true).
 
 ## Parametreler
 
-- `sync-config`
-  - `--port=<n>`: hedef HTTP port (varsayilan: `PLUME_NATIVE_NGINX_HTTP_PORT`, default `80`)
-  - `--dry-run`: yalnizca mevcut/hedef port ozeti
-  - `--reload`: `nginx -t` sonrasi `plume_sites_reload_native nginx` (brew restart veya `nginx -s reload`); basarisizsa `brew services restart nginx` fallback
-- `port <n>`: `sync-config --port=<n>` ile ayni; `--dry-run`, `--reload` desteklenir
+### `ensure`
+
+- `--port=<n>`: hedef HTTP port (varsayilan `PLUME_NATIVE_NGINX_HTTP_PORT`, default `80`)
+- `--dry-run`: plan
+- `--no-republish`: site conf'lari yeniden yazma
+
+### `sync-config` / `port`
+
+- `--port=<n>` / positional port
+- `--dry-run`, `--reload`
 
 ## Ortam degiskenleri
 
-- `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true|false`: ana `nginx.conf` patch izni (varsayilan `false`)
-- `PLUME_NATIVE_NGINX_HTTP_PORT`: hedef HTTP port (varsayilan `80`)
-- `PLUME_NATIVE_NGINX_MAIN_CONF`: ana config yolu override (test/dis path icin)
-- `PLUME_NATIVE_HOMEBREW_HTTP_PORT`: site render icin zorunlu effective port override (legacy; `8080` tutmak icin)
-- `plume_sites_effective_http_port`: once env override, sonra ana config'ten okunan listen, sonra `PLUME_NATIVE_NGINX_HTTP_PORT`
+| Degisken | Default | Anlam |
+|----------|---------|--------|
+| `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG` | `true` | Ana conf listen yonetimi |
+| `PLUME_NATIVE_NGINX_HTTP_PORT` | `80` | Hedef portsuz `http://site.test` |
+| `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH` | `true` | `site publish` oncesi ensure |
+| `PLUME_NATIVE_NGINX_ENSURE_ON_WEB_UP` | `true` | `services up/restart web` oncesi ensure |
+| `PLUME_NATIVE_NGINX_MAIN_CONF` | auto | Override path |
+| `PLUME_NATIVE_HOMEBREW_HTTP_PORT` | unset | Legacy: zorla 8080 snippet (ensure'i by-pass etmez; manage acikken desired port kazanir — 8080 icin manage=false veya HTTP_PORT=8080) |
 
 ## Cikti / Exit code
 
-- `0`: basarili veya zaten hedef portta
-- `2`: izin/env eksik, config bulunamadi, `nginx -t` basarisiz, port 80 icin sudo gerekli
+- `0`: hedef portta veya ensure tamam
+- `2`: conf yok, `nginx -t` fail, admin reddi / bind fail
 
 ## Ornekler
 
 ```bash
-# ~/.config/plume/.env
+# ~/.config/plume/.env (veya defaults)
 PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true
 PLUME_NATIVE_NGINX_HTTP_PORT=80
 
-plumectl services web sync-config --reload
-plumectl site publish myapp --reload
-# http://myapp.test (portsuz)
+plumectl services web ensure
+# -> http://myapp.test  (portsuz)
 ```
 
-8080'de kalmak (Homebrew varsayilani):
+8080'de kalmak:
 
 ```bash
-PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080
-# site check url_http -> http://myapp.test:8080
+PLUME_NATIVE_NGINX_HTTP_PORT=8080
+plumectl services web ensure --port=8080
 ```
 
 ## Hata senaryolari
 
-- `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG` kapali: komut fail-fast; once env acin.
-- macOS port **80**: `brew services` kullanicisi root olmadan bind edemez; `--reload` sudo yoksa acik hata + `sudo brew services restart nginx` onerisi.
-- `--reload` basarisiz (nginx servisi kapali veya reload reddedildi): `brew services restart nginx` (port 80 icin gerekirse `sudo brew services restart nginx`).
-- Ana config patch sonrasi site snippet hala `listen 8080;`: `site publish --reload` gerekir (aksi halde default server ile catism riski azalir ama vhost portu eslesmez).
-- `nginx -t` basarisiz: yedek `.plume-backup-*` dosyasindan geri yuklenir.
+- Port **80/443**: Plume sudo ister; reddedilirse ensure fail — tekrar `plumectl services web ensure`.
+- Root-owned conf/pid: elevated `nginx -t` / restart.
+- Orphan duplicate `server_name` WARN: publish'i bozmaz; conf temizligi ayri.
 
-## Ilgili komutlar
+## Ilgili
 
-- `doctor web`: `listener-80` vs `listener-effective` teshisi; registry port 80 + Homebrew 8080 iken WARN satirinda `services web sync-config --reload` ve `site check` ipuclari (D-109)
-- `site check`: `effective_http_port`, `url_http`, `access_hint`
+- `doctor web` / `doctor web fix-ports`
+- `site publish <id> --reload`
+- D-151, D-109

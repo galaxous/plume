@@ -4,7 +4,7 @@ Bu runbook, Plume'u ilk kez kuran gelistiriciler icin onerilen sirayi ve host pr
 
 ## Onerilen sira
 
-1. **CLI hazirligi** — Repoyu klonlayin veya `plumectl` PATH'e ekleyin.
+1. **CLI hazirligi** — [install.md](./install.md): Homebrew (macOS), `install.sh` / Composer / `make install` (Linux).
 2. **Global env** — `./plume.sh env init` (veya `--from=templates/native-local.env.example`).
 3. **Servis manifest (opsiyonel, önerilir)** — `./plume.sh init host` eksikse `~/.config/plume/services.yml` oluşturur (Laradock benzeri stack tanımı). Greenfield: `./plume.sh init host --apply` veya `./plume.sh services provision --from-manifest`. Ayrıntı: [services-manifest.md](./services-manifest.md).
 4. **Host profili** — Adım 3 ile birlikte `./plume.sh init host` yeterli; profil yoksa otomatik bootstrap (`PLUME_AUTO_HOST_BOOTSTRAP=true`).
@@ -61,7 +61,7 @@ Homebrew nginx varsayilan olarak **8080** dinler (root gerektirmeyen kurulum). H
 Secenekler:
 
 - **8080'de kal** — `PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080`, URL'ler `:8080` ile
-- **80'e gec** — `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true` ve `services web sync-config --reload` (bkz. [services-web.md](../commands/services-web.md))
+- **80'e gec** — `plumectl services web ensure` (bkz. [services-web.md](../commands/services-web.md))
 
 ### Homebrew servisler
 

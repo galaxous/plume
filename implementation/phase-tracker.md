@@ -37,6 +37,9 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 | 20 | Native cache/broker (memcached + webuis) | done | @team | 2026-08-12 | 2026-08-12 | 2026-08-12 | [phase-20](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-20.md) |
 | 21 | Queue honesty + ecosystem backlog | done | @team | 2026-08-12 | 2026-08-12 | 2026-08-12 | [phase-21](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-21.md) |
 | 22 | Native supervisor + Horizon worker | done | @team | 2026-08-18 | 2026-08-18 | 2026-08-18 | [phase-22](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-22.md) |
+| 23 | Supervisor doctor + upgrade --force + program conf | done | @team | 2026-08-30 | 2026-08-30 | 2026-08-30 | [phase-23](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-23.md) |
+| 27 | Composer + Node workspace CLI (Herd P4) | done | @team | 2026-09-27 | 2026-09-29 | 2026-09-29 | [phase-27](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-27.md) |
+| 28 | Release packaging (Herd P3) | done | @team | 2026-09-29 | 2026-09-29 | 2026-09-29 | [phase-28](/Users/oguzhan/Desktop/Projects.nosync/larasite/implementation/phases/phase-28.md) |
 
 ## Update Rules
 

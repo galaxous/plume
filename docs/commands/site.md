@@ -37,6 +37,8 @@ plumectl site remove <site-id>
 - `--clear-cert` (yalnızca `site update`: site kaydından `cert_id`/`https_port` kaldırır; snippet HTTP-only olur, HTTP→HTTPS redirect yazılmaz; sertifika dosyaları state'te kalır)
 - `--tls=false` (`--clear-cert` ile aynı; yalnızca `site update`)
 - `--document-root=<dir>` (varsayılan: `public`)
+- `--horizon` (native: site icin Horizon supervisor programi etkinlestirir; `horizon: true` yazar)
+- `--no-horizon` (yalnizca `site update`: Horizon'u site kaydindan kapatir)
 - `--publish` (web server snippet yazılır)
 - `--server-config=<abs_path>` (opsiyonel; path'in mevcut ve okunabilir olması gerekir)
 - `--reload` (`site publish` ile birlikte: `nginx|apache2|caddy` serverini yeniden yükler)
@@ -54,7 +56,7 @@ Not:
 - `PLUME_SITE_AUTO_PROVISION_WEB=false` ise web sunucusunu elle kurmanız gerekir: `PLUME_NATIVE_HOST_PROVISION=true plumectl services install web && services up web`.
 - `PLUME_SITE_NGINX_STRICT_ON_RELOAD=true` (varsayılan): native `site publish --reload` snippet'i Homebrew `/opt/homebrew/etc/nginx/servers/` (veya `PLUME_NGINX_INCLUDE_DIR`) altına yazar; aksi halde config yalnızca `~/.config/plume/sites/nginx/` cache'inde kalır ve nginx görmez.
 - macOS Homebrew nginx çoğu kurulumda **8080** dinler (formül bilinçli olarak 80→8080 yapar; root gerektirmez). Site kaydı `port: 80` olsa bile render sırasında ana config’teki listen okunur; 8080 ise snippet de 8080 olur (`PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080` ile zorlanabilir).
-- Port **80** (portsuz `http://myapp.test`) için: `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true` + `services web sync-config --reload` (macOS’ta genelde `sudo brew services restart nginx`), ardından `site publish --reload`. Ayrıntı: [services-web.md](services-web.md).
+- Port **80** (portsuz `http://myapp.test`): `plumectl services web ensure` (veya `site publish <id> --reload` otomatik ensure). Ayrıntı: [services-web.md](services-web.md).
 - `PLUME_SITE_RELOAD_VALIDATE=true` (default) ise native modda reload öncesi config test zorunludur:
   - nginx: `nginx -t`
   - apache2: `apachectl -t` veya `httpd -t`

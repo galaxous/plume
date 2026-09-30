@@ -21,6 +21,8 @@ source "${ROOT_DIR}/lib/common/sites.sh"
 source "${ROOT_DIR}/lib/common/env.sh"
 # shellcheck source=common/stack_service_env.sh
 source "${ROOT_DIR}/lib/common/stack_service_env.sh"
+# shellcheck source=common/interactive.sh
+source "${ROOT_DIR}/lib/common/interactive.sh"
 # shellcheck source=common/macos_permissions.sh
 source "${ROOT_DIR}/lib/common/macos_permissions.sh"
 # shellcheck source=config/defaults.sh
@@ -43,6 +45,8 @@ source "${ROOT_DIR}/lib/services/native_stack_config_common.sh"
 source "${ROOT_DIR}/lib/services/native_phpmyadmin_config.sh"
 # shellcheck source=services/native_pgadmin.sh
 source "${ROOT_DIR}/lib/services/native_pgadmin.sh"
+# shellcheck source=services/native_supervisor.sh
+source "${ROOT_DIR}/lib/services/native_supervisor.sh"
 # shellcheck source=services/native_horizon.sh
 source "${ROOT_DIR}/lib/services/native_horizon.sh"
 # shellcheck source=services/native_db_hosts.sh
@@ -85,6 +89,8 @@ source "${ROOT_DIR}/lib/commands/doctor.sh"
 source "${ROOT_DIR}/lib/commands/security.sh"
 # shellcheck source=commands/schedule_queue.sh
 source "${ROOT_DIR}/lib/commands/schedule_queue.sh"
+# shellcheck source=commands/workspace.sh
+source "${ROOT_DIR}/lib/commands/workspace.sh"
 
 main() {
   plume_parse_global_flags "$@"
@@ -105,7 +111,7 @@ main() {
 
   local bootstrap_cmd="${PLUME_PARSED_ARGS[0]:-help}"
   case "${bootstrap_cmd}" in
-    help|-h|--help|version|--version|-v|init) ;;
+    help|-h|--help|version|--version|-v|init|composer|npm|node) ;;
     *)
       plume_services_manifest_maybe_on_first_run_provision || return $?
       ;;
@@ -155,6 +161,9 @@ main() {
     security) cmd_security "$@" ;;
     schedule) cmd_schedule "$@" ;;
     queue) cmd_queue "$@" ;;
+    composer) cmd_composer "$@" ;;
+    npm) cmd_npm "$@" ;;
+    node) cmd_node "$@" ;;
     *)
       plume_err "Unknown command: ${cmd}"
       cmd_help

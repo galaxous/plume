@@ -18,7 +18,7 @@ macOS native modda nginx/php-fpm ve proje dosyalarina erisim icin kullanicinin h
 
 - `--open`: Once nginx/php-fpm yollarini basar, uyari verir, sonra Full Disk Access gizlilik bolumunu acmayi dener (`open x-apple.systempreferences:...`)
 - `--reveal`: Finder'da nginx binary dizinini acar (Homebrew `.../opt/nginx/bin` veya `command -v nginx` dizini)
-- `--interactive`: TCC riski varsa (kayitli siteler Desktop/Documents/Downloads altinda) tty uzerinden menu: FDA ac, ~/Sites tasima onerisi, devam et, iptal
+- `--interactive`: TCC riski varsa (kayitli siteler Desktop/Documents/Downloads altinda) tty uzerinden menu: FDA ac, ~/Sites tasima onerisi, devam et, iptal. Bu bayrak `PLUME_INTERACTIVE=true` zorlar (IDE terminalinde `-t` algisi basarisiz olsa bile).
 
 ## Cikti / Exit code
 

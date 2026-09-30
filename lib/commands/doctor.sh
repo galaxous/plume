@@ -149,7 +149,7 @@ plume_doctor_web_port_detail() {
 
 plume_doctor_web_homebrew_port80_hint() {
   local effective_port="$1"
-  printf 'PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true plumectl services web sync-config --reload (or browse :%s); plumectl site check <site-id> for url_http' "${effective_port}"
+  printf 'plumectl services web ensure (or browse :%s); plumectl site check <site-id> for url_http' "${effective_port}"
 }
 
 plume_doctor_web_strict_include_checks() {
@@ -550,6 +550,276 @@ cmd_doctor_web_fix_ports() {
   plume_native_nginx_sync_main_config "${PLUME_NATIVE_NGINX_HTTP_PORT:-80}" "${dry_run}" "${do_reload}"
 }
 
+plume_doctor_supervisor_print_line() {
+  local name="$1"
+  local result="$2"
+  local critical="$3"
+  local detail="$4"
+  if [[ "${result}" == "FAIL" && "${critical}" == "true" ]]; then
+    PLUME_DOCTOR_SUPERVISOR_CRITICAL_FAIL=1
+  fi
+  if [[ "${result}" == "WARN" ]]; then
+    PLUME_DOCTOR_SUPERVISOR_NEEDS_UPGRADE=1
+  fi
+  printf '%-22s %-6s %-8s %s\n' "${name}" "${result}" "${critical}" "${detail}"
+}
+
+cmd_doctor_supervisor() {
+  local mode strict needs_upgrade="false"
+  mode="$(plume_doctor_parse_mode "$@")" || return 2
+  strict="false"
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --strict) strict="true" ;;
+      --mode=*) ;;
+      *)
+        plume_err "unknown doctor supervisor option: ${arg}"
+        return 2
+        ;;
+    esac
+  done
+
+  PLUME_DOCTOR_SUPERVISOR_CRITICAL_FAIL=0
+  PLUME_DOCTOR_SUPERVISOR_NEEDS_UPGRADE=0
+
+  if declare -F plume_host_profile_supervisor_persist >/dev/null 2>&1; then
+    plume_host_profile_supervisor_persist || true
+  fi
+
+  printf 'MODE              %s\n' "${mode}"
+  printf 'STRICT            %s\n' "${strict}"
+  echo "CHECK                 RESULT CRITICAL DETAIL"
+  echo "---------------------- ------ -------- ----------------------------------------"
+
+  if [[ "${mode}" != "native" ]]; then
+    plume_doctor_supervisor_print_line "native-only" "SKIP" "false" "supervisor doctor is native-focused"
+    echo "OVERALL               OK"
+    return 0
+  fi
+
+  local cached_pm cached_runtime schema binary version unit_state legacy
+  cached_pm="$(plume_host_profile_read_value package_manager 2>/dev/null || true)"
+  cached_runtime="$(plume_host_profile_read_value supervisor_runtime 2>/dev/null || true)"
+  if [[ -n "${cached_pm}" ]]; then
+    plume_doctor_supervisor_print_line "host-cache" "PASS" "false" "package_manager=${cached_pm} runtime=${cached_runtime:-unknown}"
+  else
+    plume_doctor_supervisor_print_line "host-cache" "WARN" "false" "host.env cache incomplete — run: init host --force"
+  fi
+
+  binary="$(plume_native_supervisor_binary 2>/dev/null || true)"
+  if [[ -n "${binary}" ]] && [[ -x "${binary}" ]]; then
+    plume_doctor_supervisor_print_line "binary" "PASS" "true" "supervisord: ${binary}"
+  else
+    plume_doctor_supervisor_print_line "binary" "FAIL" "true" "supervisord not found (brew install supervisor / apt install supervisor)"
+  fi
+
+  if [[ -n "${binary}" ]]; then
+    version="$(plume_native_supervisor_version_detect 2>/dev/null || true)"
+    if [[ -n "${version}" ]]; then
+      plume_doctor_supervisor_print_line "version" "PASS" "false" "${version}"
+    else
+      plume_doctor_supervisor_print_line "version" "WARN" "false" "could not parse supervisord version"
+    fi
+  fi
+
+  if command -v supervisorctl >/dev/null 2>&1; then
+    plume_doctor_supervisor_print_line "supervisorctl" "PASS" "false" "$(command -v supervisorctl)"
+  else
+    plume_doctor_supervisor_print_line "supervisorctl" "FAIL" "true" "supervisorctl not in PATH"
+  fi
+
+  unit_state="$(plume_native_supervisor_system_unit_state 2>/dev/null || true)"
+  case "${unit_state}" in
+    started|active)
+      plume_doctor_supervisor_print_line "system-unit" "PASS" "true" "supervisor ${unit_state}"
+      ;;
+    stopped|inactive)
+      plume_doctor_supervisor_print_line "system-unit" "WARN" "true" "supervisor ${unit_state} — run: services up supervisor"
+      ;;
+    *)
+      plume_doctor_supervisor_print_line "system-unit" "WARN" "false" "state ${unit_state}"
+      ;;
+  esac
+
+  legacy="false"
+  if plume_native_supervisor_legacy_running; then
+    legacy="true"
+    plume_doctor_supervisor_print_line "legacy-daemon" "WARN" "false" "Plume-owned supervisord still running — migrate: services supervisor upgrade --force --yes"
+  else
+    plume_doctor_supervisor_print_line "legacy-daemon" "PASS" "false" "no legacy Plume supervisord"
+  fi
+
+  if plume_native_supervisor_package_upgrade_available; then
+    plume_doctor_supervisor_print_line "package-upgrade" "WARN" "false" "supervisor package upgrade available"
+  else
+    plume_doctor_supervisor_print_line "package-upgrade" "PASS" "false" "package up to date (or not installed via pm)"
+  fi
+
+  schema="$(plume_host_profile_read_value supervisor_config_schema 2>/dev/null || true)"
+  if [[ "${schema}" == "${PLUME_SUPERVISOR_CONFIG_SCHEMA:-1}" && "${legacy}" != "true" ]]; then
+    plume_doctor_supervisor_print_line "config-schema" "PASS" "false" "schema=${schema}"
+  else
+    plume_doctor_supervisor_print_line "config-schema" "WARN" "false" "schema=${schema:-missing} or legacy runtime — run upgrade --force"
+  fi
+
+  local reg_line reg_name reg_path missing="0" total="0"
+  while IFS= read -r reg_line; do
+    [[ -z "${reg_line}" ]] && continue
+    total=$((total + 1))
+    reg_name="${reg_line%%|*}"
+    reg_path="${reg_line#*|}"; reg_path="${reg_path%%|*}"
+    if [[ ! -f "${reg_path}" ]]; then
+      missing=$((missing + 1))
+    fi
+  done < <(plume_native_supervisor_registry_list 2>/dev/null || true)
+  if [[ "${total}" -eq 0 ]]; then
+    plume_doctor_supervisor_print_line "programs-registry" "SKIP" "false" "no Plume-managed programs registered"
+  elif [[ "${missing}" -gt 0 ]]; then
+    plume_doctor_supervisor_print_line "programs-registry" "WARN" "false" "${missing}/${total} registry conf missing on disk"
+  else
+    plume_doctor_supervisor_print_line "programs-registry" "PASS" "false" "${total} program(s) registered"
+  fi
+
+  if [[ "$(plume_service_enabled_for_mode horizon native 2>/dev/null || echo false)" == "true" ]]; then
+    local site_id prog_name hst total=0 running=0 fail="false"
+    while IFS= read -r site_id; do
+      [[ -z "${site_id}" ]] && continue
+      total=$((total + 1))
+      prog_name="$(plume_native_horizon_program_name_for_site "${site_id}")"
+      hst="$(plume_native_supervisor_program_status "${prog_name}" 2>/dev/null || true)"
+      if printf '%s' "${hst}" | grep -Eq 'RUNNING|STARTING'; then
+        running=$((running + 1))
+        plume_doctor_supervisor_print_line "horizon-program:${site_id}" "PASS" "false" "${prog_name} RUNNING"
+      elif [[ "${unit_state}" == "started" || "${unit_state}" == "active" ]]; then
+        plume_doctor_supervisor_print_line "horizon-program:${site_id}" "WARN" "false" "${prog_name} not RUNNING — plumectl services logs horizon --site=${site_id}; restart: plumectl services restart horizon --site=${site_id}"
+      else
+        fail="true"
+        plume_doctor_supervisor_print_line "horizon-program:${site_id}" "FAIL" "true" "supervisor down; ${prog_name} enabled — plumectl services up supervisor && plumectl services up horizon --site=${site_id}"
+      fi
+    done < <(plume_native_horizon_resolve_targets 2>/dev/null || true)
+
+    if [[ "${total}" -eq 0 ]]; then
+      hst="$(plume_native_supervisor_program_status plume-horizon 2>/dev/null || true)"
+      if printf '%s' "${hst}" | grep -Eq 'RUNNING|STARTING'; then
+        plume_doctor_supervisor_print_line "horizon-program" "PASS" "false" "plume-horizon RUNNING (legacy)"
+      elif [[ "${unit_state}" == "started" || "${unit_state}" == "active" ]]; then
+        plume_doctor_supervisor_print_line "horizon-program" "WARN" "false" "plume-horizon not RUNNING — plumectl services logs horizon; plumectl services restart horizon"
+      else
+        plume_doctor_supervisor_print_line "horizon-program" "FAIL" "true" "supervisor down; horizon enabled — plumectl services up supervisor && plumectl services up horizon"
+      fi
+    elif [[ "${fail}" == "true" ]]; then
+      :
+    elif [[ "${running}" -lt "${total}" ]]; then
+      :
+    fi
+  else
+    plume_doctor_supervisor_print_line "horizon-program" "SKIP" "false" "horizon not enabled"
+  fi
+
+  if plume_native_supervisor_doctor_needs_upgrade; then
+    needs_upgrade="true"
+    echo "REMEDIATION           run: plumectl services supervisor upgrade --force --yes"
+  fi
+
+  if [[ "${PLUME_DOCTOR_SUPERVISOR_CRITICAL_FAIL}" -ne 0 ]]; then
+    echo "OVERALL               FAIL"
+    if [[ "${strict}" == "true" ]]; then
+      return 2
+    fi
+    return 0
+  fi
+  echo "OVERALL               OK"
+  if [[ "${needs_upgrade}" == "true" && "${strict}" == "true" ]]; then
+    return 2
+  fi
+}
+
+plume_doctor_workspace_print_line() {
+  local name="$1"
+  local result="$2"
+  local critical="$3"
+  local detail="$4"
+  if [[ "${result}" == "FAIL" && "${critical}" == "true" ]]; then
+    PLUME_DOCTOR_WORKSPACE_CRITICAL_FAIL=1
+  fi
+  printf '%-18s %-6s %-8s %s\n' "${name}" "${result}" "${critical}" "${detail}"
+}
+
+cmd_doctor_workspace() {
+  local mode strict="false"
+  local arg bin path
+  mode="$(plume_doctor_parse_mode "$@")" || return 2
+  for arg in "$@"; do
+    case "${arg}" in
+      --strict) strict="true" ;;
+      --mode=*) ;;
+      *)
+        plume_err "unknown doctor workspace option: ${arg}"
+        return 2
+        ;;
+    esac
+  done
+
+  PLUME_DOCTOR_WORKSPACE_CRITICAL_FAIL=0
+
+  printf 'MODE              %s\n' "${mode}"
+  printf 'STRICT            %s\n' "${strict}"
+  echo "CHECK              RESULT CRITICAL DETAIL"
+  echo "------------------ ------ -------- ----------------------------------------"
+
+  case "${mode}" in
+    native)
+      bin="$(plume_workspace_composer_bin 2>/dev/null || echo composer)"
+      if command -v "${bin}" >/dev/null 2>&1 || [[ -x "${bin}" ]]; then
+        plume_doctor_workspace_print_line "composer" "PASS" "false" "${bin}"
+      else
+        plume_doctor_workspace_print_line "composer" "WARN" "false" "not in PATH — install Composer or set PLUME_COMPOSER_BIN"
+      fi
+
+      bin="$(plume_workspace_npm_bin 2>/dev/null || echo npm)"
+      if command -v "${bin}" >/dev/null 2>&1 || [[ -x "${bin}" ]]; then
+        plume_doctor_workspace_print_line "npm" "PASS" "false" "${bin}"
+      else
+        plume_doctor_workspace_print_line "npm" "WARN" "false" "not in PATH — install Node.js or set PLUME_NPM_BIN"
+      fi
+
+      bin="$(plume_workspace_node_bin 2>/dev/null || echo node)"
+      if command -v "${bin}" >/dev/null 2>&1 || [[ -x "${bin}" ]]; then
+        plume_doctor_workspace_print_line "node" "PASS" "false" "${bin}"
+      else
+        plume_doctor_workspace_print_line "node" "WARN" "false" "not in PATH — install Node.js or set PLUME_NODE_BIN"
+      fi
+
+      if declare -F plume_laravel_resolve_php_bin >/dev/null 2>&1 \
+        && path="$(plume_laravel_resolve_php_bin 2>/dev/null || true)" \
+        && [[ -n "${path}" ]] \
+        && { command -v "${path}" >/dev/null 2>&1 || [[ -x "${path}" ]]; }; then
+        plume_doctor_workspace_print_line "php-for-composer" "PASS" "false" "${path}"
+      else
+        plume_doctor_workspace_print_line "php-for-composer" "WARN" "false" "php missing — composer may fail (php list|install)"
+      fi
+
+      plume_doctor_workspace_print_line "cli" "PASS" "false" "plumectl composer|npm|node (D-154)"
+      ;;
+    docker-lite|laradock-bridge)
+      plume_doctor_workspace_print_line "workspace" "PASS" "false" "use plumectl composer|npm|node --mode=${mode} (workspace container)"
+      ;;
+    *)
+      plume_doctor_workspace_print_line "mode" "FAIL" "true" "unsupported mode ${mode}"
+      ;;
+  esac
+
+  if [[ "${PLUME_DOCTOR_WORKSPACE_CRITICAL_FAIL}" -ne 0 ]]; then
+    echo "OVERALL            FAIL"
+    if [[ "${strict}" == "true" ]]; then
+      return 2
+    fi
+    return 0
+  fi
+  echo "OVERALL            OK"
+}
+
 cmd_doctor() {
   local sub="${1:-check}"
   shift || true
@@ -567,10 +837,12 @@ cmd_doctor() {
         cmd_doctor_web "$@"
       fi
       ;;
+    supervisor) cmd_doctor_supervisor "$@" ;;
+    workspace) cmd_doctor_workspace "$@" ;;
     host) cmd_doctor_host "$@" ;;
     onboarding) cmd_doctor_onboarding "$@" ;;
     *)
-      plume_err "unknown doctor subcommand: ${sub} (use check|services|ports|php|php-ext|web|web fix-ports|host|onboarding)"
+      plume_err "unknown doctor subcommand: ${sub} (use check|services|ports|php|php-ext|web|web fix-ports|supervisor|workspace|host|onboarding)"
       return 2
       ;;
   esac

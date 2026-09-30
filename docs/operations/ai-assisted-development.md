@@ -20,8 +20,8 @@ Plume uzerinde calisiyoruz. GitHub: galaxous/plume (yerel klasor adi farkli olab
 Wrapper: ./plume.sh; resmi binary adi plumectl. Gercek kullanici state: ~/.config/plume (testlerde ASLA buna guvenme). Config: services.yml + .env + host.env (AGENTS.md §6–7).
 
 Zorunlu: AGENTS.md §1–8 + docs/commands/ (yeni komut) + docs/contracts/ + implementation/05-decision-log.md (onemli karar).
-Faz 1–22 tamamlandi (Faz 7 beta-frozen); yeni is = yeni implementation/phases/phase-NN.md + phase-tracker. Faz-gate: test + dokuman + karar kaydi.
-Baslangic okuma: implementation/phase-tracker.md, en guncel implementation/11-status-*.md.
+Faz 1–23 tamamlandi (Faz 7 beta-frozen); aktif Faz 27 Composer/Node (D-154). Yeni is = yeni phase-NN.md + phase-tracker. Faz-gate: test + dokuman + karar kaydi.
+Baslangic okuma: implementation/phase-tracker.md, implementation/future-roadmap.md (P4→P3→P2; P1 erteli).
 
 Smoke (PR oncesi varsayilan): ./tests/run_smoke_suite.sh --release  (CI ile ayni: --ci)
 Hermetic testler: gecici HOME + PLUME_STATE_DIR; mock brew PATH = MOCK_BIN:/usr/bin:/bin only (Homebrew PATH'e ekleme).

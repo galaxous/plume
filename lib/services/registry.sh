@@ -1682,6 +1682,10 @@ plume_service_start_native() {
       if ! plume_native_driver_is_mock 2>/dev/null; then
         plume_services_runtime_set "${service}" "running" "false" native
         plume_warn "native ${service}: start completed but health probe failed"
+        if [[ "${service}" == "horizon" ]] \
+          && declare -F plume_native_horizon_diagnose_failure >/dev/null 2>&1; then
+          plume_native_horizon_diagnose_failure || true
+        fi
         return 2
       fi
     fi
@@ -2213,6 +2217,24 @@ plume_service_health() {
     printf '%s' "healthy"
     return 0
   fi
+  # Live re-probe: brew/runtime can say stopped while nginx/process is up (root plist drift).
+  if declare -F plume_native_host_health_probe >/dev/null 2>&1 \
+    && declare -F plume_native_host_runtime_managed >/dev/null 2>&1 \
+    && plume_native_host_runtime_managed "${service}" 2>/dev/null \
+    && plume_native_host_health_probe "${service}" 2>/dev/null; then
+    plume_services_runtime_set "${service}" "running" "true" native
+    printf '%s' "healthy"
+    return 0
+  fi
+  # Live re-probe: brew/runtime can say stopped while nginx/process is up (root plist drift).
+  if declare -F plume_native_host_health_probe >/dev/null 2>&1 \
+    && declare -F plume_native_host_runtime_managed >/dev/null 2>&1 \
+    && plume_native_host_runtime_managed "${service}" 2>/dev/null \
+    && plume_native_host_health_probe "${service}" 2>/dev/null; then
+    plume_services_runtime_set "${service}" "running" "true" native
+    printf '%s' "healthy"
+    return 0
+  fi
   printf '%s' "stopped"
 }
 
@@ -2245,6 +2267,11 @@ plume_service_logs() {
       fi
       return 0
     fi
+  fi
+  if [[ "${mode}" == "native" && "${service}" == "horizon" ]] \
+    && declare -F plume_native_horizon_print_logs >/dev/null 2>&1; then
+    plume_native_horizon_print_logs "${tail_count}" "${follow}"
+    return 0
   fi
   local file
   file="$(plume_service_log_file "${service}" "${mode}")"

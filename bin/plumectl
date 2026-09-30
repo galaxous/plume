@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve symlinks so `make install` (/usr/local/bin/plumectl -> repo/bin/plumectl) finds lib/.
+plume_resolve_script_path() {
+  local source="${BASH_SOURCE[0]}"
+  local dir=""
+  while [[ -L "${source}" ]]; do
+    dir="$(cd "$(dirname "${source}")" && pwd)"
+    source="$(readlink "${source}")"
+    [[ "${source}" != /* ]] && source="${dir}/${source}"
+  done
+  printf '%s' "${source}"
+}
+
+SCRIPT_PATH="$(plume_resolve_script_path)"
+SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # shellcheck source=../lib/bootstrap.sh

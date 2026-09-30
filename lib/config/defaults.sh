@@ -120,6 +120,9 @@ plume_load_defaults() {
   : "${PLUME_PHP_WORKER_ENABLED:=false}"
   : "${PLUME_HORIZON_REQUIRE_SUPERVISOR:=true}"
   : "${PLUME_HORIZON_PATH:=}"
+  : "${PLUME_NATIVE_SUPERVISOR_MAIN_CONF:=}"
+  : "${PLUME_NATIVE_SUPERVISOR_PROGRAMS_DIR:=}"
+  : "${PLUME_NATIVE_SUPERVISOR_BREW_PREFIX:=}"
   : "${PLUME_PHP_DEFAULT_ALIAS:=php}"
   : "${PLUME_PHP_DEFAULT_VERSION:=8.3}"
   : "${PLUME_PHP_INSTALLED_VERSIONS:=8.1,8.2,8.3}"
@@ -140,8 +143,10 @@ plume_load_defaults() {
 
   : "${PLUME_SITE_NGINX_STRICT_ON_RELOAD:=true}"
 
-  : "${PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG:=false}"
+  : "${PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG:=true}"
   : "${PLUME_NATIVE_NGINX_HTTP_PORT:=80}"
+  : "${PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH:=true}"
+  : "${PLUME_NATIVE_NGINX_ENSURE_ON_WEB_UP:=true}"
 
   # Optional service version defaults for non-core services (default strategy = pinned or latest).
   : "${PLUME_HORIZON_VERSION:=latest}"

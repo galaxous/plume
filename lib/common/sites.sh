@@ -235,6 +235,17 @@ plume_sites_php_version_normalize() {
   return 1
 }
 
+plume_sites_record_horizon_enabled() {
+  local file="$1"
+  local value
+  value="$(plume_sites_record_value "${file}" horizon)"
+  if [[ "$(plume_bool "${value:-false}")" == "true" ]]; then
+    printf '%s' "true"
+  else
+    printf '%s' "false"
+  fi
+}
+
 plume_sites_record_php_version() {
   local file="$1"
   local value
@@ -424,8 +435,19 @@ plume_sites_effective_http_port() {
     printf '%s' "${port}"
     return 0
   fi
+  # Explicit override (legacy keep-8080)
   if [[ -n "${PLUME_NATIVE_HOMEBREW_HTTP_PORT:-}" ]]; then
     printf '%s' "${PLUME_NATIVE_HOMEBREW_HTTP_PORT}"
+    return 0
+  fi
+  # When Plume manages main nginx config, site snippets use the *desired* port (D-151).
+  if declare -F plume_native_nginx_manage_main_config_enabled >/dev/null 2>&1 \
+    && plume_native_nginx_manage_main_config_enabled; then
+    if declare -F plume_native_nginx_desired_http_port >/dev/null 2>&1; then
+      printf '%s' "$(plume_native_nginx_desired_http_port)"
+      return 0
+    fi
+    printf '%s' "${PLUME_NATIVE_NGINX_HTTP_PORT:-80}"
     return 0
   fi
   if declare -F plume_native_nginx_main_listen_port >/dev/null 2>&1; then
@@ -655,7 +677,8 @@ plume_sites_write_record() {
   local cert_id="${10:-}"
   local https_port="${11:-${PLUME_WEB_HTTPS_PORT:-443}}"
   local php_upstream="${12:-}"
-  shift 12
+  local horizon="${13:-}"
+  shift 13
   local domains=("$@")
 
   local file
@@ -682,6 +705,13 @@ plume_sites_write_record() {
     if [[ -n "${cert_id}" ]]; then
       printf 'cert_id: %s\n' "${cert_id}"
       printf 'https_port: %s\n' "${https_port}"
+    fi
+    if [[ -n "${horizon}" ]]; then
+      if [[ "$(plume_bool "${horizon}")" == "true" ]]; then
+        printf 'horizon: true\n'
+      else
+        printf 'horizon: false\n'
+      fi
     fi
     printf 'status: %s\n' "${status}"
     printf 'created_at: %s\n' "$(date +%s)"
@@ -950,6 +980,17 @@ plume_sites_publish_native() {
   PLUME_SITE_LAST_PUBLISH_RELOADED="false"
   record_file="$(plume_sites_file "${id}")"
   server="$(plume_sites_record_value "${record_file}" server)"
+
+  # Guarantee desired HTTP port (default 80) on main nginx before rendering site snippet (D-151).
+  if [[ "${mode}" == "native" && "${server}" == "nginx" \
+    && "${action_message}" != "remove" \
+    && "$(plume_bool "${PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH:-true}")" == "true" \
+    && "${PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS:-false}" != "true" ]] \
+    && declare -F plume_native_nginx_ensure_http_port >/dev/null 2>&1; then
+    plume_native_nginx_ensure_http_port "" "false" "false" || {
+      plume_warn "nginx HTTP port ensure failed; site snippet may not match live listen — run: plumectl services web ensure"
+    }
+  fi
 
   conf_file="$(plume_sites_cache_dir_for_mode "${id}" "${server}" "${mode}")/${id}.conf"
   mkdir -p "$(dirname "${conf_file}")"
@@ -1346,6 +1387,122 @@ plume_sites_native_nginx_bin() {
   printf '%s' "${nginx_bin}"
 }
 
+# True when nginx master/pid is root-owned (port-80 brew/sudo path).
+plume_sites_nginx_needs_elevated() {
+  local pid_file="" prefix=""
+  if command -v brew >/dev/null 2>&1; then
+    prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 brew --prefix 2>/dev/null || true)"
+  fi
+  [[ -n "${prefix}" ]] || prefix="/opt/homebrew"
+  pid_file="${prefix}/var/run/nginx.pid"
+  if [[ -f "${pid_file}" ]]; then
+    # shellcheck disable=SC2012
+    if [[ "$(ls -l "${pid_file}" 2>/dev/null | awk '{print $3}')" == "root" ]]; then
+      return 0
+    fi
+  fi
+  if pgrep -u root -f 'nginx: master process' >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
+# Run nginx (or brew services) with sudo when root-owned daemon requires it.
+# Keeps brew out of user-facing remediation — Plume prompts once.
+plume_sites_nginx_run_elevated() {
+  local reason="${1:-nginx is managed as root (often port 80); Plume needs administrator privileges.}"
+  shift || true
+  if ! command -v sudo >/dev/null 2>&1; then
+    return 1
+  fi
+  if sudo -n true 2>/dev/null; then
+    sudo "$@" >/dev/null
+    return $?
+  fi
+  if declare -F plume_macos_permissions_confirm_sudo >/dev/null 2>&1; then
+    if ! plume_macos_permissions_confirm_sudo "sudo $*" "${reason}"; then
+      return 1
+    fi
+  elif [[ ! -t 0 ]]; then
+    return 1
+  fi
+  sudo "$@" >/dev/null
+}
+
+plume_sites_nginx_config_test() {
+  local nginx_bin err rc=0
+  nginx_bin="$(plume_sites_native_nginx_bin)"
+  [[ -n "${nginx_bin}" ]] || return 0
+
+  set +e
+  err="$("${nginx_bin}" -t 2>&1)"
+  rc=$?
+  set -e
+  if [[ "${rc}" -eq 0 ]]; then
+    return 0
+  fi
+
+  if printf '%s' "${err}" | grep -qi 'Permission denied' \
+    || plume_sites_nginx_needs_elevated; then
+    if plume_sites_nginx_run_elevated \
+      "nginx config test needs admin because nginx is running as root." \
+      "${nginx_bin}" -t; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+plume_sites_nginx_reload_or_restart() {
+  local nginx_bin
+  nginx_bin="$(plume_sites_native_nginx_bin)"
+
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl list-units --type=service --state=running --no-legend 2>/dev/null | grep -q 'nginx.service'; then
+      if command -v sudo >/dev/null 2>&1; then
+        sudo systemctl reload nginx && return 0
+      else
+        systemctl reload nginx && return 0
+      fi
+    fi
+  fi
+
+  if plume_sites_nginx_needs_elevated; then
+    if [[ -n "${nginx_bin}" ]] \
+      && plume_sites_nginx_run_elevated \
+        "nginx reload needs admin because nginx is running as root." \
+        "${nginx_bin}" -s reload; then
+      return 0
+    fi
+    if command -v brew >/dev/null 2>&1 \
+      && plume_sites_nginx_run_elevated \
+        "nginx restart needs admin (root brew service / port 80)." \
+        env HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx; then
+      return 0
+    fi
+    return 1
+  fi
+
+  if command -v brew >/dev/null 2>&1; then
+    if HOMEBREW_NO_AUTO_UPDATE=1 brew services list 2>/dev/null | awk '{print $1" "$2}' | grep -q '^nginx started'; then
+      HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1 && return 0
+    fi
+    # Process up but brew label not "started" (stale plist) — signal reload.
+    if pgrep -f 'nginx: master process' >/dev/null 2>&1 && [[ -n "${nginx_bin}" ]]; then
+      "${nginx_bin}" -s reload >/dev/null 2>&1 && return 0
+    fi
+    HOMEBREW_NO_AUTO_UPDATE=1 brew services start nginx >/dev/null 2>&1 \
+      || HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1
+    return $?
+  fi
+
+  if [[ -n "${nginx_bin}" ]]; then
+    "${nginx_bin}" -s reload >/dev/null 2>&1
+    return $?
+  fi
+  return 1
+}
+
 plume_sites_native_should_auto_provision_web() {
   [[ "$(plume_bool "${PLUME_SITE_AUTO_PROVISION_WEB:-true}")" == "true" ]] \
     || [[ "$(plume_bool "${PLUME_NATIVE_HOST_PROVISION:-false}")" == "true" ]]
@@ -1475,33 +1632,13 @@ plume_sites_reload_native() {
       ;;
   esac
 
-  local nginx_bin
-  nginx_bin="$(plume_sites_native_nginx_bin)"
-
-  if command -v systemctl >/dev/null 2>&1; then
-    if systemctl list-units --type=service --state=running --no-legend 2>/dev/null | grep -q 'nginx.service'; then
-      if command -v sudo >/dev/null 2>&1; then
-        sudo systemctl reload nginx
-      else
-        systemctl reload nginx
-      fi
+  if [[ "${server}" == "nginx" || "${server}" == "" ]]; then
+    if plume_sites_nginx_reload_or_restart; then
       return 0
     fi
   fi
 
-  if command -v brew >/dev/null 2>&1; then
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew services list 2>/dev/null | awk '{print $1" "$2}' | grep -q '^nginx started'; then
-      HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx >/dev/null 2>&1
-      return 0
-    fi
-  fi
-
-  if [[ -n "${nginx_bin}" ]]; then
-    "${nginx_bin}" -s reload 2>/dev/null
-    return 0
-  fi
-
-  echo "warn: cannot detect nginx reload method"
+  echo "warn: cannot detect nginx reload method — try: plumectl services restart web"
   return 1
 }
 
@@ -1527,13 +1664,8 @@ plume_sites_validate_native() {
       return 0
       ;;
     nginx|*)
-      local nginx_bin
-      nginx_bin="$(plume_sites_native_nginx_bin)"
-      if [[ -n "${nginx_bin}" ]]; then
-        "${nginx_bin}" -t >/dev/null 2>&1
-        return $?
-      fi
-      return 0
+      plume_sites_nginx_config_test
+      return $?
       ;;
   esac
 }

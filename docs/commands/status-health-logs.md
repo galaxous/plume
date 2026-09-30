@@ -15,6 +15,7 @@ plumectl doctor check --deep
 plumectl doctor web --mode=native
 plumectl doctor web --mode=native --strict
 plumectl doctor web fix-ports --reload
+plumectl doctor supervisor [--strict]
 plumectl doctor host
 plumectl doctor onboarding [--fix] [--open-settings]
 plumectl doctor services

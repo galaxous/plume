@@ -10,7 +10,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - [x] TLS local cert otomasyonu (`security cert`, `site --cert-id`)
 - [x] Hizli site ekleme/kaldirma
 - [x] Nginx/Apache2/Caddy destegi
-- [ ] Composer + Node dev workflow entegrasyonu (workspace laradock/docker-lite agirlikli)
+- [x] Composer + Node dev workflow entegrasyonu (Faz 27 / D-154 MVP; stretch: node_version/nvm)
 
 ## Beyond (Plume Targets)
 
@@ -22,7 +22,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 - [x] Production deploy orchestration + rollback (`deploy apply` Faz 13, D-087; `deploy rollback|failback`; bkz. [deploy.md](../docs/commands/deploy.md))
 - [x] Secrets policy + firewall/os security checks (phase 9 baseline)
 - [x] Optional backup (config + db scope)
-- [ ] Pinned release + optional auto-update (manual release workflow; auto-update backlog)
+- [x] Pinned release + optional auto-update (Faz 28 / D-155: VERSION + Homebrew/Packagist; upgrade via brew/composer)
 - [x] Critical commands icin JSON contract (baseline; golden snapshots faz 14)
 
 ## Laravel Ecosystem (Optional but Planned)
@@ -69,7 +69,7 @@ Amac: Plume'in local ve production'da Laravel Herd'unkine denk (ve ustu) deneyim
 ## Phase 15 Impact Note
 
 - 2026-07-28: scheduler/queue MVP kapandi; Mailpit native brew yolu (D-109) parity checklist'te mail sandbox olarak isaretlendi.
-- Acik kalan parity: Composer/Node workspace entegrasyonu, `about` probe, Meilisearch/MinIO/Reverb, pinned auto-update.
+- 2026-09-29: Composer/Node MVP (D-154) kapandi; acik kalan: Meilisearch/MinIO/Reverb, pinned auto-update stretch, `about` probe.
 
 ## Phase 1 Impact Note
 

@@ -28,7 +28,7 @@ Kaynak karar: D-119. Agent kurallari: [AGENTS.md](../../AGENTS.md) §9.
 | pgadmin | pip `pgadmin4` in state venv + HTTP | pip / docker | benzer | HTTP |
 | mongo_webui | npm `mongo-express` | npm | npm | HTTP |
 | redis_webui | npm `redis-commander` | npm | npm | HTTP |
-| horizon/supervisor | brew `supervisor` + Plume supervisord | apt `supervisor` | dnf `supervisor` | supervisorctl RUNNING (D-147) |
+| horizon/supervisor | brew `supervisor` + system unit | apt `supervisor` + systemd | dnf `supervisor` + systemd | supervisorctl RUNNING (D-149) |
 | php_worker | registry-only | registry-only | registry-only | `health=registry` |
 | meilisearch/minio | toggle | toggle | toggle | `health=registry` (backlog) |
 

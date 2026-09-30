@@ -90,6 +90,25 @@ plume_host_profile_read_value() {
   awk -F= -v k="${key}" '$1==k {print substr($0, index($0, "=")+1); exit}' "${file}" 2>/dev/null || true
 }
 
+plume_host_profile_set_value() {
+  local key="$1"
+  local value="$2"
+  local file tmp
+  file="$(plume_host_profile_file)"
+  mkdir -p "$(dirname "${file}")"
+  touch "${file}"
+  if grep -q "^${key}=" "${file}" 2>/dev/null; then
+    tmp="$(mktemp)"
+    awk -F= -v k="${key}" -v v="${value}" '
+      $1==k { print k "=" v; next }
+      { print }
+    ' "${file}" > "${tmp}"
+    mv "${tmp}" "${file}"
+  else
+    printf '%s=%s\n' "${key}" "${value}" >> "${file}"
+  fi
+}
+
 plume_host_profile_detect_and_persist() {
   local force="${1:-false}"
   local file

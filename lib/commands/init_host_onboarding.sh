@@ -217,7 +217,7 @@ plume_onboarding_run() {
       fi
       plume_onboarding_print_item "INFO" "Recommended project paths" "~/Sites/your-app or ~/Code/your-app (not Desktop/Documents)."
       if [[ "${homebrew_nginx}" == "true" && "${nginx_port}" == "8080" ]]; then
-        plume_onboarding_print_item "WARN" "Nginx HTTP port" "Homebrew nginx listens on 8080 by default. Use http://site.test:8080 OR set PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true and run: plumectl services web sync-config --reload (see docs/commands/services-web.md)."
+        plume_onboarding_print_item "WARN" "Nginx HTTP port" "Homebrew default is 8080; Plume ensures port 80 via: plumectl services web ensure (see docs/commands/services-web.md)."
       elif [[ "${nginx_port}" == "80" ]]; then
         plume_onboarding_print_item "OK" "Nginx HTTP port" "Main config listen port is 80 (portsuz URLs)."
       else
@@ -397,6 +397,9 @@ cmd_init_permissions() {
   fi
 
   if [[ "${do_interactive}" == "true" ]]; then
+    # Explicit --interactive must force the TTY menu even when stdin/stdout
+    # are not detected as terminals (e.g. some IDE integrated shells).
+    export PLUME_INTERACTIVE=true
     plume_macos_permissions_maybe_prompt_registry "init-permissions" || return 2
   fi
 }

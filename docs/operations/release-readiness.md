@@ -28,6 +28,8 @@ Yerel pre-release ve CI ile ayni adimlar:
 13. `phase20_native_cache_broker_smoke.sh` (Faz 20 memcached + webuis)
 14. `phase21_queue_honesty_smoke.sh` (Faz 21 meilisearch/minio toggle-only)
 15. `phase22_native_horizon_smoke.sh` (Faz 22 native Horizon)
+16. `phase23_supervisor_doctor_smoke.sh` (Faz 23 supervisor doctor/upgrade)
+17. `phase24_per_site_horizon_smoke.sh` (D-150 per-site Horizon programs)
 
 Beklenen sonuc:
 

@@ -2,6 +2,106 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-09-29 - D-155 - Pinned VERSION + Homebrew/Packagist release (Herd P3)
+
+- Durum: accepted
+- Karar:
+  - Repo `VERSION` tek kaynak; `plumectl version` / `--json version` okur.
+  - Yayin: [release.md](../docs/operations/release.md) + [install.md](../docs/operations/install.md).
+  - Manual Release workflow `./tests/run_smoke_suite.sh --release` gate.
+  - Homebrew formula: `packaging/homebrew/plumectl.rb` + `Formula/plumectl.rb` (`plumectl` / alias `plume`).
+  - Packagist: `galaxous/laravel-plume` (`composer.json`, `bin/plumectl`); auto-update = `brew upgrade` / `composer global update`.
+  - Linux: distro-agnostic `packaging/linux/install.sh` (`PLUME_REF`, `PREFIX`); `.deb`/`.rpm` yok.
+  - Asamali kurulum: [install.md](../docs/operations/install.md) A–H (maintainer → macOS → Debian/Ubuntu → RHEL/Fedora → diger Linux).
+  - `plumectl self-update` bilerek yok.
+- Gerekce:
+  - Kullanici onceligi P4 sonra P3; hard-coded surum + yalnizca clone/`make install` yetersiz; Linux distrolari atlanmamali.
+- Etki:
+  - Faz 28 done, `VERSION`, composer.json, Formula, linux install.sh, phase28 smoke, manual-release.yml.
+
+## 2026-09-27 - D-154 - Composer + Node workspace CLI (Herd parity P4)
+
+- Durum: accepted
+- Karar:
+  - Yeni komutlar: `plumectl composer|npm|node` (`lib/commands/workspace.sh`).
+  - Proje yolu: `--path` / `--site` / cwd site eslesmesi / cwd / mode path.
+  - Native Composer: site veya default PHP `PATH` basina eklenir (`COMPOSER_PHP` mumkunse).
+  - docker-lite / laradock-bridge: `workspace` container `exec -T`.
+  - Binary override: `PLUME_COMPOSER_BIN`, `PLUME_NPM_BIN`, `PLUME_NODE_BIN`.
+  - Oncelik: P4 once, sonra P3 release; P1 Docker-lite ve P2 meilisearch/minio ertelendi (kullanici).
+- Gerekce:
+  - Herd parity acik maddesi; `project init` yalnizca bootstrap, gunluk `composer`/`npm` yuzeyi yoktu.
+- Etki:
+  - Faz 27, [workspace.md](../docs/commands/workspace.md), `phase27_workspace_composer_npm_smoke.sh`.
+
+## 2026-09-17 - D-153 - Homebrew supervisor drop-in: etc/supervisor.d/*.ini
+
+- Durum: accepted
+- Karar:
+  - Homebrew `supervisord.conf` include: `/opt/homebrew/etc/supervisor.d/*.ini` (formula `opt/supervisor/etc/.../*.conf` degil).
+  - Plume program path/ext: main conf `[include] files=` satirindan turetilir; brew varsayilan ext=`ini`.
+  - Stale `host.env` `supervisor_programs_dir=.../opt/supervisor/etc/supervisor.d` yok sayilir; yazimda eski `.conf` temizlenir.
+- Gerekce:
+  - Horizon conf yaziliyordu ama supervisord programi gormuyordu (`ERROR no such process`); Redis healthy olsa bile Horizon stopped kaliyordu.
+- Etki:
+  - `native_supervisor.sh`, `phase26_supervisor_brew_ini_smoke.sh`, docs services-supervisor/horizon.
+
+## 2026-09-17 - D-152 - Horizon/supervisor diagnose via Plume only
+
+- Durum: accepted
+- Karar:
+  - Kullaniciya `supervisorctl` / `brew services` yazdirilmaz; teşhis ve remediation yalnizca `plumectl` komutlari.
+  - `services up horizon` saglik basarisizsa program status + worker log kuyrugu + `doctor`/`logs`/`restart` ipuclari basar.
+  - `services logs horizon [--site=]` native per-site `horizon-<site-id>.log` dosyalarini okur.
+  - Drop-in henuz yuklenmediyse Plume system supervisor'i sessizce restart eder (brew mesaji gizlenir).
+  - `doctor supervisor` horizon WARN/FAIL satirlari plumectl remediation icerir.
+- Gerekce:
+  - Horizon stopped/health fail senaryosunda kullanici brew/supervisorctl'e itiliyordu; urun sozu plumectl-only.
+- Etki:
+  - `native_horizon.sh`, `native_supervisor.sh`, `registry.sh` logs, doctor, [services-horizon.md](../docs/commands/services-horizon.md).
+
+## 2026-09-15 - D-151 - Native nginx HTTP port 80 guarantee (macOS + Linux)
+
+- Durum: accepted
+- Karar:
+  - Varsayilan `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true`, hedef `PLUME_NATIVE_NGINX_HTTP_PORT=80`.
+  - Site snippet render: manage acikken *desired* port kullanilir (main conf hâlâ 8080 olsa bile `listen 80` yazilir).
+  - `plumectl services web ensure`: main conf sync + privileged bind (sudo/brew|systemctl) + tum native nginx sitelerini republish.
+  - `site publish` / `services up|restart web`: otomatik ensure (`PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH` / `_ON_WEB_UP`, default true).
+  - macOS Homebrew ve Linux `/etc/nginx/nginx.conf` path'leri; port < 1024 elevated restart.
+- Gerekce:
+  - Kullanici `http://site.test` (portsuz) bekler; brew 8080 + opt-in sync UX'i Plume amacina aykiridir.
+- Etki:
+  - `native_web_nginx_config.sh`, `services web ensure`, site publish hook, docs/commands/services-web.md.
+
+## 2026-08-30 - D-150 - Per-site native Horizon supervisor programs
+
+- Durum: accepted
+- Karar:
+  - Her Plume site kaydi icin ayri supervisor programi: `plume-horizon-<site-id>`; proje yolu site `path`, PHP site `php_version`.
+  - Site kaydinda `horizon: true|false`; CLI: `site add|update --horizon` / `--no-horizon`.
+  - `services up|down horizon [--site=<site-id>]`: tum horizon-enabled siteler veya tek site.
+  - Legacy tek program (`plume-horizon` + `PLUME_HORIZON_PATH`) yalnizca horizon-enabled site yokken fallback.
+  - `doctor supervisor`: site basina `horizon-program:<site-id>` satirlari.
+- Gerekce:
+  - Cok projeli gelistirme ortaminda global `PLUME_HORIZON_PATH` yetersiz; Herd/Laradock'ta proje basina worker beklentisi.
+- Etki:
+  - `lib/services/native_horizon.sh`, `site` komutu, `phase24_per_site_horizon_smoke.sh`, [services-horizon.md](../docs/commands/services-horizon.md).
+
+## 2026-08-30 - D-149 - System-primary supervisor + doctor + upgrade --force
+
+- Durum: accepted
+- Karar:
+  - Native supervisor runtime: sistem birincil (`brew services supervisor` / `systemctl`), D-147 Plume-owned supervisord legacy; `services supervisor upgrade --force --yes` migrasyon.
+  - `doctor supervisor`: host.env cache, binary/unit/schema/registry/horizon kontrolleri; REMEDIATION satiri.
+  - Ilk `--force` kapili upgrade: `--force` + `--yes` zorunlu; `--dry-run` plan.
+  - `services supervisor program add`: template + interaktif placeholder sorulari; conf OS drop-in + registry.
+  - `host.env`: `supervisor_*` alanlari persist (`plume_host_profile_set_value`).
+- Gerekce:
+  - Kullanici sistem supervisor + tam yetkiyle conf ekleme istedi; D-147 state-dir daemon operasyonel degil.
+- Etki:
+  - `lib/services/native_supervisor.sh`, `doctor supervisor`, `services supervisor`, `phase-23.md`, D-147 partial supersede.
+
 ## 2026-08-18 - D-148 - Native Redis keeps configured port if already listening
 
 - Durum: accepted

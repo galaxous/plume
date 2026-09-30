@@ -215,6 +215,7 @@ plume_native_driver_brew_service_name() {
     rabbitmq) echo "rabbitmq" ;;
     mailpit) echo "mailpit" ;;
     memcached) echo "memcached" ;;
+    supervisor) echo "supervisor" ;;
     *) return 1 ;;
   esac
 }
@@ -231,6 +232,13 @@ plume_native_driver_systemd_unit() {
     rabbitmq) echo "rabbitmq" ;;
     mongodb) echo "mongod" ;;
     memcached) echo "memcached" ;;
+    supervisor)
+      if declare -F plume_native_supervisor_systemd_unit_name >/dev/null 2>&1; then
+        plume_native_supervisor_systemd_unit_name
+      else
+        echo "supervisor"
+      fi
+      ;;
     *) return 1 ;;
   esac
 }
@@ -372,7 +380,8 @@ plume_native_driver_install_packages() {
     elif [[ "${service}" == "pgadmin" ]]; then
       plume_native_pgadmin_install || true
     elif [[ "${service}" == "supervisor" || "${service}" == "horizon" ]]; then
-      plume_native_supervisor_write_conf || true
+      plume_native_supervisor_ensure_programs_dir || true
+      plume_host_profile_supervisor_persist || true
     else
       plume_native_stack_sync_on_lifecycle "${service}" || true
     fi
@@ -381,9 +390,15 @@ plume_native_driver_install_packages() {
 
   if [[ "${service}" == "horizon" ]]; then
     plume_native_driver_install_packages supervisor || return 2
-    plume_native_supervisor_write_conf || true
-    plume_native_horizon_write_program || true
+    plume_native_supervisor_ensure_programs_dir || true
+    plume_native_horizon_sync_programs || true
+    plume_host_profile_supervisor_persist || true
     return 0
+  fi
+
+  if [[ "${service}" == "supervisor" ]]; then
+    plume_native_supervisor_ensure_programs_dir || true
+    plume_host_profile_supervisor_persist || true
   fi
 
   if [[ "${service}" == "pgadmin" ]]; then
@@ -453,7 +468,8 @@ plume_native_driver_install_packages() {
   elif [[ "${service}" == "pgadmin" ]]; then
     plume_native_pgadmin_sync_config "false" || true
   elif [[ "${service}" == "supervisor" ]]; then
-    plume_native_supervisor_write_conf || true
+    plume_native_supervisor_ensure_programs_dir || true
+    plume_host_profile_supervisor_persist || true
   else
     plume_native_stack_sync_on_lifecycle "${service}" || true
     case "${service}" in
@@ -574,13 +590,51 @@ plume_native_driver_start_service() {
     return 0
   fi
 
+  if [[ "${service}" == "nginx" ]] \
+    && [[ "$(plume_bool "${PLUME_NATIVE_NGINX_ENSURE_ON_WEB_UP:-true}")" == "true" ]] \
+    && declare -F plume_native_nginx_ensure_http_port >/dev/null 2>&1; then
+    plume_native_nginx_ensure_http_port "" "false" "false" || {
+      plume_warn "nginx HTTP port ensure on start failed — run: plumectl services web ensure"
+    }
+  fi
+
   pm="$(plume_detect_package_manager)"
   os="$(plume_detect_os)"
   case "${pm}" in
     brew)
       local svc
       svc="$(plume_native_driver_brew_service_name "${service}")" || return 2
-      brew services start "${svc}" 2>/dev/null || brew services restart "${svc}"
+      if [[ "${service}" == "nginx" ]]; then
+        local want_port=""
+        want_port="$(plume_native_nginx_desired_http_port 2>/dev/null || printf '%s' "80")"
+        if declare -F plume_native_nginx_port_needs_elevation >/dev/null 2>&1 \
+          && plume_native_nginx_port_needs_elevation "${want_port}"; then
+          if declare -F plume_sites_nginx_reload_or_restart >/dev/null 2>&1 \
+            && plume_sites_nginx_reload_or_restart; then
+            :
+          elif declare -F plume_sites_nginx_run_elevated >/dev/null 2>&1; then
+            plume_sites_nginx_run_elevated \
+              "Port ${want_port} requires administrator privileges so nginx can bind." \
+              env HOMEBREW_NO_AUTO_UPDATE=1 brew services restart "${svc}" || return 2
+          else
+            brew services start "${svc}" 2>/dev/null || brew services restart "${svc}" || return 2
+          fi
+        elif declare -F plume_sites_nginx_needs_elevated >/dev/null 2>&1 \
+          && plume_sites_nginx_needs_elevated; then
+          if declare -F plume_sites_nginx_reload_or_restart >/dev/null 2>&1 \
+            && plume_sites_nginx_reload_or_restart; then
+            :
+          else
+            plume_sites_nginx_run_elevated \
+              "nginx start/restart needs admin because nginx is running as root." \
+              env HOMEBREW_NO_AUTO_UPDATE=1 brew services restart "${svc}" || return 2
+          fi
+        else
+          brew services start "${svc}" 2>/dev/null || brew services restart "${svc}"
+        fi
+      else
+        brew services start "${svc}" 2>/dev/null || brew services restart "${svc}"
+      fi
       ;;
     apt|dnf)
       local unit
@@ -743,13 +797,30 @@ plume_native_driver_health_probe() {
       ;;
     nginx|apache2|caddy)
       plume_native_driver_is_mock && return 0
+      if [[ "${service}" == "nginx" ]] && declare -F plume_native_nginx_main_listen_port >/dev/null 2>&1; then
+        local listen_port=""
+        listen_port="$(plume_native_nginx_main_listen_port 2>/dev/null || true)"
+        if [[ -n "${listen_port}" ]] && declare -F plume_service_port_in_use >/dev/null 2>&1 \
+          && plume_service_port_in_use "${listen_port}"; then
+          return 0
+        fi
+      fi
       if declare -F plume_service_effective_port >/dev/null 2>&1; then
         port="$(plume_service_effective_port "${service}" native 2>/dev/null || true)"
       fi
       [[ -n "${port}" ]] || port="${PLUME_WEB_PORT:-80}"
       if declare -F plume_service_port_in_use >/dev/null 2>&1; then
-        plume_service_port_in_use "${port}"
-        return $?
+        if plume_service_port_in_use "${port}"; then
+          return 0
+        fi
+        # Homebrew nginx often listens on 8080 while registry still says 80.
+        if [[ "${service}" == "nginx" && "${port}" != "8080" ]] \
+          && plume_service_port_in_use "8080"; then
+          return 0
+        fi
+      fi
+      if [[ "${service}" == "nginx" ]] && pgrep -f 'nginx: master process' >/dev/null 2>&1; then
+        return 0
       fi
       return 1
       ;;

@@ -64,7 +64,10 @@ Not:
 - `PLUME_INTERACTIVE=true|false`: TTY disinda veya icinde interaktif prompt davranisi (bkz. `docs/operations/macos-permissions.md`).
 - `PLUME_SITE_AUTO_PROVISION_WEB=true|false`: native `site publish --reload` sirasinda web sunucusu yoksa otomatik host kurulum/baslatma. Varsayilan `true`.
 - Native Homebrew nginx ana config port yonetimi:
-  - `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true|false`: `services web sync-config` / `doctor web fix-ports` ile ana `nginx.conf` listen patch (varsayilan `false`).
+  - `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true|false`: ana `nginx.conf` listen yonetimi (varsayilan `true`, D-151).
+  - `PLUME_NATIVE_NGINX_HTTP_PORT`: hedef HTTP port (varsayilan `80` — portsuz `http://site.test`).
+  - `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH` / `PLUME_NATIVE_NGINX_ENSURE_ON_WEB_UP`: otomatik ensure (varsayilan `true`).
+  - `plumectl services web ensure`: sync + elevated bind + site republish.
   - `PLUME_NATIVE_NGINX_HTTP_PORT`: hedef HTTP port (varsayilan `80`).
   - `PLUME_NATIVE_NGINX_MAIN_CONF`: ana nginx config dosya yolu override.
   - `PLUME_NATIVE_HOMEBREW_HTTP_PORT`: site `port: 80` renderinda effective port zorlamasi (orn. `8080`; ana config 80 olsa bile override eder).
@@ -142,8 +145,10 @@ Yalnizca `PLUME_*` (eski stil) hâlâ calisir; deprecated.
 | `MEMCACHED_ENABLED` / `MEMCACHED_PORT` | `PLUME_MEMCACHED_*` | `false` / `11211` |
 | `MAILPIT_ENABLED` / `MAILPIT_PORT` / `MAILPIT_SMTP_PORT` | `PLUME_MAILPIT_*` | `false` / `8025` / `1025` |
 | `SUPERVISOR_ENABLED` / `HORIZON_ENABLED` | `PLUME_SUPERVISOR_ENABLED` / `PLUME_HORIZON_ENABLED` | `false` |
-| `PLUME_HORIZON_PATH` | Laravel kök (`artisan`) | boş → ilk kayıtlı site / cwd |
+| `PLUME_HORIZON_PATH` | Legacy tek-program fallback (artisan yolu) | boş → horizon-enabled siteler; yoksa ilk site/cwd |
 | `PLUME_HORIZON_REQUIRE_SUPERVISOR` | `up horizon` supervisor ister | `true` |
+| `PLUME_NATIVE_SUPERVISOR_MAIN_CONF` | Ana supervisord.conf override (smoke) | otomatik |
+| `PLUME_NATIVE_SUPERVISOR_PROGRAMS_DIR` | Program drop-in override (smoke) | otomatik |
 
 Degisiklik sonrasi runtime: `services restart <svc> --mode=native` veya `services env set ... --restart`. Redis icin ayrica `services redis sync-config --reload`. Bkz. [services-env.md](../commands/services-env.md), [services-redis.md](../commands/services-redis.md).
 

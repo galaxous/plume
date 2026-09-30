@@ -33,7 +33,7 @@ Ayni PR’de:
 | `@web` | `web` (aktif driver: nginx/apache2/caddy; registry adi `web`) |
 | `@db` | mariadb, mysql, postgres, phpmyadmin, pgadmin |
 | `@cache` | redis, mongodb, rabbitmq, memcached, mongo_webui, redis_webui |
-| `@queue` | php_worker (registry-only), horizon, supervisor (native host, D-147) |
+| `@queue` | php_worker (registry-only), horizon, supervisor (system-primary, D-149) |
 | `@core` | php, composer, web drivers, DB engines, redis, phpmyadmin, pgadmin, mailpit — **queue yok** |
 
 `services up @core` yalnizca `enabled=true` uyeleri baslatir. Native brew: mariadb+mysql XOR (D-128). Engine secimi: `services use mariadb|mysql|postgres`.

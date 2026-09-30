@@ -2,7 +2,7 @@
 
 Plume, Laravel projeleri icin Linux/macOS uzerinde calisacak 3 modlu (`native`, `docker-lite`, `laradock-bridge`) bir operasyon util'idir.
 
-**Guncel durum:** Faz 1–22 tamamlandi; native Horizon worker (D-147). Sonraki aday **Docker-lite unfreeze** (bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)). Faz 7 (`docker-lite`) **beta-frozen**.
+**Guncel durum:** Faz 1–28 tamamlandi (Faz 7 docker-lite **beta-frozen**). P3 Release: Homebrew + Packagist hazir. Sonraki aday **P2 meilisearch/minio** (bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)).
 
 Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker.md)
 
@@ -50,12 +50,24 @@ Ilk kurulum runbook: [docs/operations/first-run-onboarding.md](docs/operations/f
 
 ## Kurulum (Release)
 
-1. Repoyu klonlayin veya release artifact indirin.
-2. `bin/plumectl` dosyasini PATH'e ekleyin veya `./plume.sh` kullanin.
-3. `./plume.sh env init --from=templates/native-local.env.example` (native local preset, opsiyonel).
-4. `./plume.sh init onboarding` — macOS TCC, nginx port ve path kontrol listesi.
-5. `./plume.sh init shell` ile PHP shim PATH blogu (opsiyonel).
+Asamali rehber (Homebrew + Linux distrolari + Packagist): **[docs/operations/install.md](docs/operations/install.md)**
 
+```bash
+# macOS
+brew tap galaxous/plume https://github.com/galaxous/plume && brew install plumectl
+
+# Linux (Debian/Ubuntu/Fedora/…)
+curl -fsSL https://raw.githubusercontent.com/galaxous/plume/main/packaging/linux/install.sh | \
+  sudo env PLUME_REF=v0.3.0 PREFIX=/usr/local bash
+
+# Composer (macOS + Linux)
+composer global require galaxous/laravel-plume
+
+# Gelistirme clone
+make install
+```
+
+Maintainer yayin: [docs/operations/release.md](docs/operations/release.md)  
 Release oncesi smoke: [docs/operations/release-readiness.md](docs/operations/release-readiness.md)
 
 ## Ornek Komutlar

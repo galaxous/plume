@@ -1,0 +1,35 @@
+{
+  "name": "galaxous/laravel-plume",
+  "description": "Plume — Laravel local ops CLI (plumectl)",
+  "type": "library",
+  "license": "MIT",
+  "keywords": ["laravel", "cli", "devops", "plume", "plumectl"],
+  "homepage": "https://github.com/galaxous/plume",
+  "support": {
+    "issues": "https://github.com/galaxous/plume/issues",
+    "source": "https://github.com/galaxous/plume"
+  },
+  "authors": [
+    {
+      "name": "Plume contributors",
+      "homepage": "https://github.com/galaxous/plume"
+    }
+  ],
+  "bin": [
+    "bin/plumectl"
+  ],
+  "require": {
+    "php": ">=8.1",
+    "ext-json": "*"
+  },
+  "suggest": {
+    "ext-sqlite3": "Required for Plume state DB on most hosts"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "extra": {
+    "branch-alias": {
+      "dev-main": "0.3.x-dev"
+    }
+  }
+}

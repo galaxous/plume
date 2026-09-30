@@ -33,7 +33,7 @@ plumectl services supported --mode=docker-lite
 | mailpit     | yes    | yes         | opt             | native: macOS brew; Linux docker-lite |
 | meilisearch | opt    | opt         | opt              | native toggle-only (D-146); driver backlog |
 | minio       | opt    | yes         | opt             | native toggle-only (D-146); laradock compose'ta varsa |
-| supervisor  | yes    | opt         | yes             | native Plume supervisord (D-147); compose'ta gercek |
+| supervisor  | yes    | opt         | yes             | system brew/systemd + program registry (D-149) |
 | horizon     | yes    | yes         | yes             | native: `php artisan horizon` + supervisor gate |
 | php-worker  | yes    | yes         | yes             | native: registry-only; queue worker |
 

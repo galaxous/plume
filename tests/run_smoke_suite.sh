@@ -134,6 +134,12 @@ run_ci_release_suite() {
   run_step "phase20-native-cache-broker" "phase20_native_cache_broker_smoke.sh"
   run_step "phase21-queue-honesty" "phase21_queue_honesty_smoke.sh"
   run_step "phase22-native-horizon" "phase22_native_horizon_smoke.sh"
+  run_step "phase23-supervisor-doctor" "phase23_supervisor_doctor_smoke.sh"
+  run_step "phase24-per-site-horizon" "phase24_per_site_horizon_smoke.sh"
+  run_step "phase25-nginx-port80-ensure" "phase25_nginx_port80_ensure_smoke.sh"
+  run_step "phase26-supervisor-brew-ini" "phase26_supervisor_brew_ini_smoke.sh"
+  run_step "phase27-workspace-composer-npm" "phase27_workspace_composer_npm_smoke.sh"
+  run_step "phase28-release-version" "phase28_release_version_smoke.sh"
 }
 
 run_phase11_full_suite() {

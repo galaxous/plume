@@ -60,6 +60,7 @@ Native veya container modunda servisleri kurmak ve yonetmek.
 ./plume.sh services workspace down --mode=docker-lite
 ./plume.sh services workspace init --mode=docker-lite --path=/abs/project
 ./plume.sh services workspace reinit --mode=docker-lite --path=/abs/project
+./plume.sh services web ensure
 ./plume.sh services web sync-config --reload
 ./plume.sh services web port 80 --reload
 ./plume.sh services update
@@ -127,9 +128,10 @@ Native veya container modunda servisleri kurmak ve yonetmek.
   - `init`: varsayilan `https://github.com/laradock/laradock.git` reposunu clone eder (veya mevcut repoda pull/sync), mode path'i laradock-bridge olarak kaydeder.
   - `sync`: git fetch/pull ile laradock repo gunceller (repo url override destekler).
 - `web` (native, nginx driver):
+  - `services web ensure [--port=80] [--dry-run] [--no-republish]` — port 80 garantisi (D-151)
   - `services web sync-config [--port=80] [--dry-run] [--reload]`
   - `services web port <n> [--dry-run] [--reload]`
-  - Ana Homebrew `nginx.conf` listen portunu yedekleyip gunceller; `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true` gerekir. Bkz. [services-web.md](services-web.md).
+  - Ana nginx listen yonetimi varsayilan acik; bkz. [services-web.md](services-web.md).
   - `check`: strict konfigurasyon kontrolu yapar:
     - gerekli servisler compose dosyasinda var mi (`nginx,apache2,caddy,mariadb,mysql,phpmyadmin,php-fpm,redis,laravel-horizon,php-worker,workspace`)
     - `.env` icinde `APP_CODE_PATH_CONTAINER=/var/www` uyumlu mu
@@ -312,4 +314,4 @@ PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
 - Horizon baslatilamadi (supervisor eksik/aktif degil)
 - `services update` reconcile adiminda kurulum/baslatma hatasi
 
-Horizon/supervisor native: [services-horizon.md](./services-horizon.md). Redis: [services-redis.md](./services-redis.md).
+Horizon/supervisor native: [services-horizon.md](./services-horizon.md), [services-supervisor.md](./services-supervisor.md). Teşhis: `./plume.sh doctor supervisor`.

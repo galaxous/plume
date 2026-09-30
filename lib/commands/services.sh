@@ -84,6 +84,16 @@ plume_services_parse_mode() {
   printf '%s' "${mode}"
 }
 
+plume_services_parse_horizon_site() {
+  PLUME_HORIZON_SITE_ID=""
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --site=*) PLUME_HORIZON_SITE_ID="${arg#*=}" ;;
+    esac
+  done
+}
+
 plume_services_first_positional() {
   local arg
   for arg in "$@"; do
@@ -1094,6 +1104,8 @@ cmd_services_up() {
   if ! mode="$(plume_services_parse_mode "$@")"; then
     return 2
   fi
+  plume_services_parse_horizon_site "$@"
+  export PLUME_HORIZON_SITE_ID
   if [[ "${mode}" == "laradock-bridge" ]]; then
     plume_services_laradock_runtime_prepare "$@" || return 2
   fi
@@ -1115,6 +1127,8 @@ cmd_services_down() {
   if ! mode="$(plume_services_parse_mode "$@")"; then
     return 2
   fi
+  plume_services_parse_horizon_site "$@"
+  export PLUME_HORIZON_SITE_ID
   if [[ "${mode}" == "laradock-bridge" ]]; then
     plume_services_laradock_runtime_prepare "$@" || return 2
   fi
@@ -1297,6 +1311,8 @@ cmd_services_logs() {
   fi
   follow="$(plume_services_logs_follow "$@")"
   running_only="$(plume_services_status_running_only "$@")"
+  plume_services_parse_horizon_site "$@"
+  export PLUME_HORIZON_SITE_ID
   if [[ "${mode}" == "laradock-bridge" ]]; then
     plume_services_laradock_runtime_prepare "$@" || return 2
   fi
@@ -3412,10 +3428,32 @@ cmd_services_web_port() {
   plume_native_nginx_sync_main_config "${target_port}" "${dry_run}" "${do_reload}"
 }
 
+cmd_services_web_ensure() {
+  local target_port="" dry_run="false" no_republish="false"
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --port=*) target_port="${arg#*=}" ;;
+      --dry-run) dry_run="true" ;;
+      --no-republish) no_republish="true" ;;
+      *)
+        plume_err "unknown services web ensure option: ${arg}"
+        return 2
+        ;;
+    esac
+  done
+  local republish="true"
+  [[ "${no_republish}" == "true" ]] && republish="false"
+  plume_native_nginx_ensure_http_port "${target_port}" "${republish}" "${dry_run}"
+}
+
 cmd_services_web() {
   local action="${1:-}"
   shift || true
   case "${action}" in
+    ensure)
+      cmd_services_web_ensure "$@"
+      ;;
     sync-config)
       cmd_services_web_sync_config "$@"
       ;;
@@ -3423,7 +3461,7 @@ cmd_services_web() {
       cmd_services_web_port "$@"
       ;;
     *)
-      plume_err "unknown services web action: ${action} (use sync-config|port)"
+      plume_err "unknown services web action: ${action:-} (use ensure|sync-config|port)"
       return 2
       ;;
   esac
@@ -3454,6 +3492,83 @@ cmd_services_redis() {
       ;;
     *)
       plume_err "unknown services redis action: ${action} (use sync-config)"
+      return 2
+      ;;
+  esac
+}
+
+plume_services_supervisor_parse_flags() {
+  PLUME_SUPERVISOR_FORCE="false"
+  PLUME_SUPERVISOR_DRY_RUN="false"
+  PLUME_SUPERVISOR_PROGRAM_TEMPLATE="generic"
+  PLUME_SUPERVISOR_PROGRAM_NAME=""
+  PLUME_SUPERVISOR_PROGRAM_NON_INTERACTIVE="false"
+  local arg
+  for arg in "$@"; do
+    case "${arg}" in
+      --force) PLUME_SUPERVISOR_FORCE="true" ;;
+      --dry-run) PLUME_SUPERVISOR_DRY_RUN="true" ;;
+      --non-interactive) PLUME_SUPERVISOR_PROGRAM_NON_INTERACTIVE="true" ;;
+      --template=*) PLUME_SUPERVISOR_PROGRAM_TEMPLATE="${arg#*=}" ;;
+      --name=*) PLUME_SUPERVISOR_PROGRAM_NAME="${arg#*=}" ;;
+      --mode=*) ;;
+      *)
+        return 0
+        ;;
+    esac
+  done
+}
+
+cmd_services_supervisor_upgrade() {
+  local mode
+  mode="$(plume_services_parse_mode "$@")" || return 2
+  plume_services_supervisor_parse_flags "$@"
+
+  if [[ "${PLUME_SUPERVISOR_FORCE}" != "true" ]]; then
+    plume_err "supervisor upgrade requires --force (package + config migration)"
+    return 2
+  fi
+  if ! plume_require_yes_for_critical "${mode}" "critical.supervisor.upgrade" "force=true" "Use --yes services supervisor upgrade --force"; then
+    return 2
+  fi
+
+  if [[ "${PLUME_SUPERVISOR_DRY_RUN}" == "true" ]]; then
+    plume_native_supervisor_upgrade "true"
+    return 0
+  fi
+  plume_native_supervisor_upgrade "false"
+}
+
+cmd_services_supervisor_program_add() {
+  plume_services_parse_mode "$@" >/dev/null || return 2
+  plume_services_supervisor_parse_flags "$@"
+
+  if [[ "${PLUME_OUTPUT:-text}" == "json" ]]; then
+    PLUME_SUPERVISOR_PROGRAM_NON_INTERACTIVE="true"
+  fi
+  plume_native_supervisor_program_add
+}
+
+cmd_services_supervisor() {
+  local action="${1:-}"
+  shift || true
+  case "${action}" in
+    upgrade)
+      cmd_services_supervisor_upgrade "$@"
+      ;;
+    program)
+      local sub="${1:-}"
+      shift || true
+      case "${sub}" in
+        add) cmd_services_supervisor_program_add "$@" ;;
+        *)
+          plume_err "unknown services supervisor program action: ${sub} (use add)"
+          return 2
+          ;;
+      esac
+      ;;
+    *)
+      plume_err "unknown services supervisor action: ${action} (use upgrade|program)"
       return 2
       ;;
   esac
@@ -3661,6 +3776,8 @@ cmd_services_restart() {
   if ! mode="$(plume_services_parse_mode "$@")"; then
     return 2
   fi
+  plume_services_parse_horizon_site "$@"
+  export PLUME_HORIZON_SITE_ID
   if [[ "${mode}" == "laradock-bridge" ]]; then
     plume_services_laradock_runtime_prepare "$@" || return 2
   fi
@@ -3852,6 +3969,9 @@ cmd_services() {
       ;;
     redis)
       cmd_services_redis "$@"
+      ;;
+    supervisor)
+      cmd_services_supervisor "$@"
       ;;
     manifest)
       cmd_services_manifest "$@"
