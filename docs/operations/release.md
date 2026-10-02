@@ -26,13 +26,22 @@ Kisa:
 
 ## Yayin adimlari (maintainer)
 
-1. `VERSION` guncelle; `packaging/homebrew/plumectl.rb` + `Formula/plumectl.rb` icinde `url`/`version` senkronla
-2. Yerel: `./tests/run_smoke_suite.sh --release`
-3. GitHub Actions → **Manual Release** (`workflow_dispatch`) — smoke gate + tag + Release
-4. Release sonrasi:
-   - Tag tarball sha256 hesapla → formula `sha256` alanini guncelle (artik `:no_check` kaldir)
+1. Yerel: `./tests/run_smoke_suite.sh --release` (opsiyonel; CI de calistirir)
+2. GitHub Actions → **Manual Release** (`workflow_dispatch`)
+   - Smoke gate (`--release`)
+   - `autonomous-tag` → tag adi
+   - **`packaging/homebrew/sync-release-version.sh`**: `VERSION` + `Formula/plumectl.rb` + `packaging/homebrew/plumectl.rb` icinde `version` / `url` (aynı commit; `sha256` dokunulmaz)
+   - Tag bu commit’e force-move → GitHub Release
+3. Release sonrasi (opsiyonel / brew audit):
+   - Tag tarball sha256 hesapla → formula `sha256` alanini `main`’e yaz (**retag yok**)
    - Packagist (`galaxous/laravel-plume`): webhook / “Update” (ilk kez [submit](https://packagist.org/packages/submit))
-5. `update-changelog.yml` CHANGELOG.md gunceller
+4. `update-changelog.yml` CHANGELOG.md gunceller
+
+Elle `VERSION` / formula `version`+`url` senkronu **gerekmez** — Manual Release CI yapar. Yerel deneme:
+
+```bash
+./packaging/homebrew/sync-release-version.sh v0.3.1
+```
 
 ## Auto-update
 
@@ -46,3 +55,5 @@ Kisa:
 - [release-readiness.md](./release-readiness.md)
 - [naming-policy.md](./naming-policy.md)
 - [phase-28.md](../../implementation/phases/phase-28.md)
+- Sync script: [`packaging/homebrew/sync-release-version.sh`](../../packaging/homebrew/sync-release-version.sh)
+- Workflow: [`.github/workflows/manual-release.yml`](../../.github/workflows/manual-release.yml)

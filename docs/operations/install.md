@@ -12,27 +12,30 @@ Bu dokuman **senin (maintainer)** yapman gerekenleri ve **kullanicinin** macOS /
 
 Asagidaki asamalar **sira ile** yapilir. Linux’u atlama: Packagist + `packaging/linux/install.sh` Linux kullanicilarinin birincil yolu.
 
-### A1. Surum ve formula senkron
+### A1. Yerel dogrulama (opsiyonel)
 
-1. `VERSION` dosyasini hedef semver yap (orn. `0.3.0`).
-2. `packaging/homebrew/plumectl.rb` ve `Formula/plumectl.rb` icinde:
-   - `version "0.3.0"`
-   - `url ".../tags/v0.3.0.tar.gz"`
-3. Yerel dogrulama:
-   ```bash
-   ./tests/phase28_release_version_smoke.sh
-   ./tests/run_smoke_suite.sh --release
-   ```
+```bash
+./tests/phase28_release_version_smoke.sh
+./tests/run_smoke_suite.sh --release
+```
 
-### A2. GitHub Release
+`VERSION` + Homebrew formula `version`/`url` senkronunu **elle yapmana gerek yok** — Manual Release CI (`sync-release-version.sh`) tag oncesi tek commit’te yazar.
+
+Yerel deneme:
+
+```bash
+./packaging/homebrew/sync-release-version.sh v0.3.0
+```
+
+### A2. GitHub Release (tek workflow)
 
 1. GitHub Actions → **Manual Release** (`workflow_dispatch`).
-2. Smoke gate gecince tag + Release olusur (orn. `v0.3.0`).
-3. Tag tarball sha256 hesapla ve formula’ya yaz (artik `sha256 :no_check` kaldir):
+2. Smoke → tag adi → `VERSION` + her iki `plumectl.rb` (`version`/`url`) → force-tag → Release.
+3. `sha256` bu adimda **guncellenmez** (`:no_check` kalabilir). Brew audit icin sonra, **retag olmadan** `main`’e:
    ```bash
    curl -sL "https://github.com/galaxous/plume/archive/refs/tags/v0.3.0.tar.gz" | shasum -a 256
+   # digest’i Formula + packaging/homebrew dosyalarina yaz, commit, push
    ```
-4. Formula commit’ini `main`’e push et (tap / `brew install` stabil olsun).
 
 ### A3. Homebrew (macOS)
 
@@ -243,10 +246,9 @@ Linux ek: firewall / SELinux (RHEL) gerekirse dokun; port 80 icin root/`setcap` 
 
 ## H) Maintainer tek bakis checklist
 
-- [ ] `VERSION` + formula `version`/`url` senkron
-- [ ] `./tests/run_smoke_suite.sh --release`
-- [ ] GitHub Manual Release → tag `vX.Y.Z`
-- [ ] Formula `sha256` guncelle ve push
+- [ ] `./tests/run_smoke_suite.sh --release` (opsiyonel; CI de kosar)
+- [ ] GitHub Manual Release → tag `vX.Y.Z` (CI: VERSION + formula version/url)
+- [ ] (Opsiyonel) Formula `sha256` → `main` (retag yok)
 - [ ] Packagist submit / auto-update
 - [ ] `install.sh` + [bu dokuman](./install.md) linklerini README’de dogrula
 - [ ] macOS’ta `brew install` dene

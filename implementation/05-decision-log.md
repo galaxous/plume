@@ -2,6 +2,19 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-10-02 - D-156 - Manual Release pre-tag VERSION + Formula version/url sync
+
+- Durum: accepted
+- Karar:
+  - Tek workflow: [manual-release.yml](../.github/workflows/manual-release.yml) — smoke → tag → sync → force-tag → Release.
+  - Sync script: [packaging/homebrew/sync-release-version.sh](../packaging/homebrew/sync-release-version.sh) ayni commit’te `VERSION` + her iki Homebrew formula `version`/`url` yazar.
+  - `sha256` sync’te dokunulmaz (tarball hash frozen tag sonrasi; `:no_check` veya retag’siz `main` bump).
+  - galaxous/github-workflows `reusable-manual-release` VERSION sync modeli ile uyumlu; Formula genisletmesi Plume-side (reusable henuz multi-file/formula hook yok).
+- Gerekce:
+  - Elle formula senkronu hata egilimli; tag icerigi `plumectl version` + brew `url`/`version` ile hizali olmali.
+- Etki:
+  - Maintainer checklist sadelesti; phase28 smoke sync script + formula↔VERSION assert.
+
 ## 2026-09-29 - D-155 - Pinned VERSION + Homebrew/Packagist release (Herd P3)
 
 - Durum: accepted
@@ -14,6 +27,7 @@ Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
   - Linux: distro-agnostic `packaging/linux/install.sh` (`PLUME_REF`, `PREFIX`); `.deb`/`.rpm` yok.
   - Asamali kurulum: [install.md](../docs/operations/install.md) A–H (maintainer → macOS → Debian/Ubuntu → RHEL/Fedora → diger Linux).
   - `plumectl self-update` bilerek yok.
+  - Surum bump CI: D-156 (VERSION + formula version/url).
 - Gerekce:
   - Kullanici onceligi P4 sonra P3; hard-coded surum + yalnizca clone/`make install` yetersiz; Linux distrolari atlanmamali.
 - Etki:

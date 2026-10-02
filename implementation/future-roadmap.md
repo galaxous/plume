@@ -16,7 +16,7 @@
 |---------|------|-----|
 | **Sonraki** | **P2 meilisearch / minio native** | D-146 toggle → driver |
 | Ertelendi | **P1 Docker-lite unfreeze** | D-089 |
-| Stretch | homebrew tap CI / release sha256 automation | Faz 28 notu |
+| Stretch | homebrew tap CI / post-release sha256 on main | Faz 28 / D-156 |
 
 ---
 

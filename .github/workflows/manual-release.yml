@@ -1,5 +1,10 @@
 name: Manual Release
 
+# Smoke gate → tag → sync VERSION + Homebrew formula version/url → force-tag → GitHub Release.
+# Mirrors galaxous/github-workflows reusable-manual-release VERSION sync, extended for Formula.
+# sha256 is intentionally not updated here (tarball hash needs a frozen tag; keep :no_check
+# or bump digest on main after release without retagging).
+
 on:
   workflow_dispatch:
     inputs:
@@ -23,6 +28,11 @@ on:
         type: string
         description: The tag name
         default: ''
+      create_as_prerelease:
+        type: boolean
+        description: Mark the GitHub Release as a prerelease
+        default: true
+
 permissions:
   contents: write
 
@@ -43,6 +53,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: oobook/autonomous-tag@v1
         id: tag-generation
@@ -53,10 +66,33 @@ jobs:
           force_release: ${{ github.event.inputs.force_release }}
           tag: ${{ github.event.inputs.tag }}
 
+      - name: Sync VERSION + Homebrew formulas
+        if: ${{ steps.tag-generation.outputs.tag != '' }}
+        env:
+          RELEASE_TAG: ${{ steps.tag-generation.outputs.tag }}
+        run: |
+          set -euo pipefail
+          bash ./packaging/homebrew/sync-release-version.sh "${RELEASE_TAG}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add VERSION Formula/plumectl.rb packaging/homebrew/plumectl.rb
+          if git diff --staged --quiet; then
+            echo "VERSION + formulas already at ${RELEASE_TAG#v} — skip commit"
+          else
+            git commit -m "chore: bump VERSION to ${RELEASE_TAG#v}"
+            BRANCH="${GITHUB_REF_NAME}"
+            git push origin "HEAD:${BRANCH}"
+            git tag -f "${RELEASE_TAG}"
+            git push origin "refs/tags/${RELEASE_TAG}" --force
+          fi
+
       - name: Create Release
+        if: ${{ steps.tag-generation.outputs.tag != '' }}
         uses: oobook/autonomous-release@v1
         id: release-generation
         with:
           gh_token: ${{ secrets.GITHUB_TOKEN }}
           tag: "${{ steps.tag-generation.outputs.tag }}"
-          prerelease: true
+          prerelease: ${{ github.event.inputs.create_as_prerelease }}

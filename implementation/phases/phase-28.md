@@ -18,8 +18,9 @@ Pinned CLI version + GitHub release + Homebrew formula + Packagist (`galaxous/la
 - [x] Homebrew: `packaging/homebrew/plumectl.rb` + `Formula/plumectl.rb`
 - [x] Packagist: root `composer.json` (`galaxous/laravel-plume`, `bin/plumectl`)
 - [x] Linux: `packaging/linux/install.sh` + install.md A–H (Debian/Ubuntu, RHEL/Fedora, diger)
+- [x] Manual Release: pre-tag `VERSION` + formula `version`/`url` sync (D-156)
 - [x] `LICENSE` (MIT)
-- [ ] Stretch: dedicated `homebrew-plume` tap CI, live sha256 on every release automation, `self-update` command, `.deb`/`.rpm`
+- [ ] Stretch: dedicated `homebrew-plume` tap CI, post-release sha256 on `main`, reusable `sync_script` hook, `self-update`, `.deb`/`.rpm`
 
 ## Gate Checklist
 

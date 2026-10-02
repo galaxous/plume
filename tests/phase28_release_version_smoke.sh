@@ -57,7 +57,12 @@ echo "[PASS] version --json"
   echo "[FAIL] missing docs/operations/release.md" >&2
   exit 1
 }
-echo "[PASS] release.md present"
+grep -q 'sync-release-version.sh' "${ROOT_DIR}/.github/workflows/manual-release.yml" || {
+  echo "[FAIL] manual-release.yml should call sync-release-version.sh" >&2
+  exit 1
+}
+echo "[PASS] manual-release.yml wires VERSION+formula sync"
+
 
 [[ -f "${ROOT_DIR}/docs/operations/install.md" ]] || {
   echo "[FAIL] missing docs/operations/install.md" >&2
@@ -73,7 +78,45 @@ grep -q 'class Plumectl' "${ROOT_DIR}/packaging/homebrew/plumectl.rb" || {
   echo "[FAIL] formula class missing" >&2
   exit 1
 }
-echo "[PASS] Homebrew formula present"
+for formula in \
+  "${ROOT_DIR}/Formula/plumectl.rb" \
+  "${ROOT_DIR}/packaging/homebrew/plumectl.rb"
+do
+  grep -q "version \"${EXPECTED}\"" "${formula}" || {
+    echo "[FAIL] ${formula} version should match VERSION (${EXPECTED})" >&2
+    exit 1
+  }
+  grep -q "url \".*/tags/v${EXPECTED}.tar.gz\"" "${formula}" || {
+    echo "[FAIL] ${formula} url should target v${EXPECTED}.tar.gz" >&2
+    exit 1
+  }
+done
+echo "[PASS] Homebrew formula present + version/url match VERSION"
+
+SYNC_SCRIPT="${ROOT_DIR}/packaging/homebrew/sync-release-version.sh"
+[[ -x "${SYNC_SCRIPT}" ]] || {
+  echo "[FAIL] sync-release-version.sh missing or not executable" >&2
+  exit 1
+}
+SYNC_TMP="${TMP_ROOT}/sync-formula"
+mkdir -p "${SYNC_TMP}/Formula" "${SYNC_TMP}/packaging/homebrew"
+cp "${ROOT_DIR}/VERSION" "${SYNC_TMP}/VERSION"
+cp "${ROOT_DIR}/Formula/plumectl.rb" "${SYNC_TMP}/Formula/"
+cp "${ROOT_DIR}/packaging/homebrew/plumectl.rb" "${SYNC_TMP}/packaging/homebrew/"
+cp "${SYNC_SCRIPT}" "${SYNC_TMP}/packaging/homebrew/sync-release-version.sh"
+chmod +x "${SYNC_TMP}/packaging/homebrew/sync-release-version.sh"
+(
+  cd "${SYNC_TMP}"
+  bash ./packaging/homebrew/sync-release-version.sh "v9.9.9"
+  test "$(tr -d '[:space:]' < VERSION)" = "9.9.9"
+  grep -q 'version "9.9.9"' Formula/plumectl.rb
+  grep -q 'version "9.9.9"' packaging/homebrew/plumectl.rb
+  grep -q 'url "https://github.com/galaxous/plume/archive/refs/tags/v9.9.9.tar.gz"' Formula/plumectl.rb
+  grep -q 'sha256 :no_check' Formula/plumectl.rb
+  bash ./packaging/homebrew/sync-release-version.sh "v${EXPECTED}"
+  test "$(tr -d '[:space:]' < VERSION)" = "${EXPECTED}"
+)
+echo "[PASS] sync-release-version.sh"
 
 [[ -f "${ROOT_DIR}/composer.json" ]] || {
   echo "[FAIL] missing composer.json" >&2

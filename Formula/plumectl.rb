@@ -8,7 +8,8 @@
 #   brew tap galaxous/plume
 #   brew install plumectl
 #
-# On each GitHub release: update `url`/`version`/`sha256` (shasum -a 256 of the tag tarball).
+# On each GitHub release, Manual Release CI runs packaging/homebrew/sync-release-version.sh
+# (VERSION + version/url). sha256 stays :no_check or is bumped on main after the tag freezes.
 
 # Plume Laravel ops CLI — installs plumectl (+ plume alias).
 class Plumectl < Formula
