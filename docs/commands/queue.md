@@ -1,10 +1,10 @@
 # `queue` Commands
 
-## Amac
+## Purpose
 
-Laravel kuyruk operasyonlari: calisan/Horizon durumu (`status`) ve basarisiz is listesi (`list` → `queue:failed`). Native’de Horizon gercek worker (D-147): `services up horizon --mode=native` supervisor + `php artisan horizon`. `php_worker` hâlâ registry-only.
+Laravel queue operations: worker/Horizon status (`status`) and failed job list (`list` → `queue:failed`). On native, Horizon is the real worker (D-147): `services up horizon --mode=native` starts supervisor + `php artisan horizon`. `php_worker` remains registry-only.
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh queue status
@@ -16,25 +16,25 @@ Laravel kuyruk operasyonlari: calisan/Horizon durumu (`status`) ve basarisiz is 
 ./plume.sh queue list --mode=native --path=/abs/laravel-app
 ```
 
-## Parametreler
+## Parameters
 
-- `status` (varsayilan alt komut): Kuyruk/Horizon ozeti.
-- `list`: Proje dizininde `php artisan queue:failed` calistirir. `PLUME_HORIZON_ENABLED=true` ise ek INFO: `horizon:status` ve `./plume.sh services status horizon` onerisi.
-- `--mode=native|docker-lite|laradock-bridge`: Servis runtime kaynagi (`status` ve Horizon ipucu icin).
-- `--path=/abs/project`: Laravel proje kokunu zorla (cozumleme `schedule status` ile ayni).
-- Global `--json`: Yalnizca `status` icin JSON cikti.
+- `status` (default subcommand): Queue/Horizon summary.
+- `list`: Runs `php artisan queue:failed` in the project directory. If `PLUME_HORIZON_ENABLED=true`, extra INFO: `horizon:status` and suggestion to run `./plume.sh services status horizon`.
+- `--mode=native|docker-lite|laradock-bridge`: Service runtime source (for `status` and Horizon hint).
+- `--path=/abs/project`: Force Laravel project root (resolution same as `schedule status`).
+- Global `--json`: JSON output for `status` only.
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: Basarili.
-- `1`: Artisan `queue:failed` basarisiz (Laravel cikis kodu iletilir).
-- `2`: Gecersiz arguman, proje yolu cozulemedi, `artisan` yok veya `php` bulunamadi.
+- `0`: Success.
+- `1`: Artisan `queue:failed` failed (Laravel exit code is forwarded).
+- `2`: Invalid argument, project path unresolved, `artisan` missing, or `php` not found.
 
-Text `status` ciktisi: `QUEUE_CONNECTION`, `HORIZON` / `SUPERVISOR` / `PHP_WORKER` satirlari. Native modda Horizon acik ama calismiyorsa `./plume.sh services up horizon --mode=native` ipucu.
+Text `status` output: `QUEUE_CONNECTION`, `HORIZON` / `SUPERVISOR` / `PHP_WORKER` lines. In native mode, if Horizon is enabled but not running, hint: `./plume.sh services up horizon --mode=native`.
 
-Horizon detayli durum icin plume `queue list` yerine dogrudan `php artisan horizon:status` kullanin (veya `services status horizon`).
+For detailed Horizon status, use `php artisan horizon:status` directly (or `services status horizon`) instead of plume `queue list`.
 
-## Ornekler
+## Examples
 
 ```bash
 # tunnelion + Horizon env
@@ -44,8 +44,8 @@ PLUME_HORIZON_ENABLED=true ./plume.sh queue status --mode=native --path=/Users/m
 ./plume.sh queue status --path=/var/www/myapp --mode=docker-lite
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Proje yolu cozulemez.
-- Modda servis desteklenmiyorsa `status` satirinda `unsupported` health.
-- Horizon icin supervisor zorunlulugu (`PLUME_HORIZON_REQUIRE_SUPERVISOR`) `services up horizon` ile ayni kurallara tabidir; bu komutlar yalnizca durum / Artisan sarmalayicisidir.
+- Project path cannot be resolved.
+- If the service is unsupported in the mode, `status` line shows `unsupported` health.
+- Horizon supervisor requirement (`PLUME_HORIZON_REQUIRE_SUPERVISOR`) follows the same rules as `services up horizon`; these commands are status / Artisan wrappers only.

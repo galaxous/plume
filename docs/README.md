@@ -1,18 +1,18 @@
 # Plume Documentation
 
-Bu klasor Plume'in komut, operasyon ve kontrat dokumantasyonunu tutar.
+This directory holds Plume's command, operations, and contract documentation.
 
-## Zorunlu Kural
+## Mandatory Rule
 
-- Her kod degisikliginde ilgili dokuman dosyasi da guncellenmelidir.
-- Dokuman guncellenmediyse is tamamlanmis sayilmaz.
+- Every code change must also update the related documentation file.
+- Work is not considered complete if documentation was not updated.
 
-## Icerik
+## Contents
 
-- `commands/`: Komut bazli detayli kullanim
-- `contracts/`: CLI output ve exit-code sozlesmeleri
-- `operations/`: Operasyon runbook'lari
-- `.env` sozlesmesi: `docs/operations/env-contract.md`
+- `commands/`: Detailed command-based usage
+- `contracts/`: CLI output and exit-code contracts
+- `operations/`: Operations runbooks
+- `.env` contract: `docs/operations/env-contract.md`
 
 ## Naming Policy
 

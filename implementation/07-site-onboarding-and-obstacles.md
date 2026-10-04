@@ -1,29 +1,29 @@
 # Site Onboarding & Obstacles (Planning)
 
-## Amaç
+## Purpose
 
-Herhangi bir website/Laravel projesini sistemde tek komutla web server'a eklemek:
+Add any website/Laravel project to a web server on the system with a single command:
 
-- Path al
-- Domain al
-- Server sec (nginx/apache2/caddy)
-- Config yaz + active et + check et
+- Take path
+- Take domain
+- Choose server (nginx/apache2/caddy)
+- Write config + activate + check
 
-## Hedef UX
+## Target UX
 
 - `plumectl site add`
-  - Interaktif prompt ile tum bilgiler alinır
+  - Collects all information via interactive prompt
 - `plumectl site add --path=/abs/path --domain=myapp.test --server=nginx`
-  - CI/otomasyon icin non-interactive
+  - Non-interactive for CI/automation
 
-## Registry Modeli
+## Registry Model
 
-- Site kayitlari Plume'in merkezi dizininde tutulur
-- Her site icin ayri dosya: `<site-id>.website.yaml`
-- Global indeks: `index.yaml`
-- `site-id` deterministik uretilir (`slug + short-hash`)
+- Site records are kept in Plume's central directory
+- Separate file per site: `<site-id>.website.yaml`
+- Global index: `index.yaml`
+- `site-id` is generated deterministically (`slug + short-hash`)
 
-Ornek site kaydi:
+Example site record:
 
 ```yaml
 id: myapp-a1b2c3
@@ -38,48 +38,48 @@ mode: native
 status: enabled
 ```
 
-## CWD Karmasasini Engelleme
+## Preventing CWD Confusion
 
-- Komut hangi klasorden calisirsa calissin registry source-of-truth olur
-- Relative path verilirse:
-  - `path_policy=absolute-only` ise reddet
-  - `path_policy=resolve-relative` ise working dir'e gore absolute'a cevir
-- Kayda her zaman absolute path yaz
+- Regardless of which directory the command runs from, the registry is the source of truth
+- If a relative path is given:
+  - reject when `path_policy=absolute-only`
+  - convert to absolute relative to the working dir when `path_policy=resolve-relative`
+- Always write an absolute path into the record
 
-## Muhtemel Engeller ve Onlemler
+## Likely Obstacles and Mitigations
 
-1. Path gecersiz veya tasindi
-- Engel: registry kaydi stale kalir
-- Onlem: `site check` komutu path existence ve web root check yapsin
+1. Path invalid or moved
+- Obstacle: registry record goes stale
+- Mitigation: `site check` should verify path existence and web root
 
-2. Domain cakismasi
-- Engel: ayni domain birden fazla siteye baglanir
-- Onlem: `site add` sirasinda domain uniqueness kontrolu + zorunlu override flag
+2. Domain conflict
+- Obstacle: same domain is bound to more than one site
+- Mitigation: domain uniqueness check during `site add` + required override flag
 
 3. Server config drift
-- Engel: registry ile nginx/apache/caddy config farkli hale gelir
-- Onlem: `site doctor` ile registry->config reconcile raporu
+- Obstacle: registry and nginx/apache/caddy config diverge
+- Mitigation: `site doctor` reports registry->config reconcile
 
-4. Permission/sudo problemi
-- Engel: `/etc` veya server config yazimi basarisiz olur
-- Onlem: write adimindan once permission preflight + net aksiyon mesaji
+4. Permission/sudo problem
+- Obstacle: writing `/etc` or server config fails
+- Mitigation: permission preflight before write + clear action message
 
-5. Farkli server semanticleri
-- Engel: nginx/apache2/caddy config yapilari farkli
-- Onlem: server bazli template adaptorleri (`sites_nginx`, `sites_apache`, `sites_caddy`)
+5. Different server semantics
+- Obstacle: nginx/apache2/caddy config structures differ
+- Mitigation: server-specific template adapters (`sites_nginx`, `sites_apache`, `sites_caddy`)
 
-6. Laravel disi projeler
-- Engel: `public/` yoksa varsayim bozulur
-- Onlem: promptte custom `document_root` secenegi
+6. Non-Laravel projects
+- Obstacle: assumptions break when `public/` is missing
+- Mitigation: custom `document_root` option in the prompt
 
-## Fazlama
+## Phasing
 
-- Faz 1:
+- Phase 1:
   - Registry + `site add/list/remove/check` (native)
   - nginx template
-- Faz 2:
-  - docker-lite uyumlu site publish
-- Faz 3:
+- Phase 2:
+  - docker-lite compatible site publish
+- Phase 3:
   - laradock bridge site sync
-- Faz 4+:
+- Phase 4+:
   - apache2/caddy template parity

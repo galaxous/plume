@@ -1,47 +1,47 @@
 # `doctor supervisor`
 
-## Amac
+## Purpose
 
-Native supervisor kurulumunu, sistem birimini (brew services / systemd), legacy Plume daemon kalintisini, paket upgrade ihtiyacini ve kayitli program conf'larini teşhis etmek (D-149).
+Diagnose native supervisor install, system unit (brew services / systemd), legacy Plume daemon leftovers, package upgrade need, and registered program confs (D-149).
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh doctor supervisor
 ./plume.sh doctor supervisor --strict
 ```
 
-## Parametreler
+## Parameters
 
-- `--mode=native` (varsayilan: aktif mode)
-- `--strict`: kritik FAIL veya upgrade WARN iken exit 2
+- `--mode=native` (default: active mode)
+- `--strict`: exit 2 on critical FAIL or upgrade WARN
 
-Host bilgisi `~/.config/plume/host.env` cache'inden okunur (`package_manager`, `supervisor_*`). Eksikse `init host --force` onerilir.
+Host info is read from `~/.config/plume/host.env` cache (`package_manager`, `supervisor_*`). If missing, `init host --force` is recommended.
 
-## Cikti / exit-code
+## Output / exit-code
 
-- `0`: OVERALL OK (WARN olabilir)
-- `2`: `--strict` ve kritik FAIL / upgrade gerekli
+- `0`: OVERALL OK (WARN allowed)
+- `2`: `--strict` and critical FAIL / upgrade required
 
-Remediation satiri (upgrade gerekiyorsa):
+Remediation line (when upgrade is needed):
 
 ```text
 REMEDIATION  run: ./plume.sh services supervisor upgrade --force --yes
 ```
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh doctor supervisor --strict
 ./plume.sh init host --force
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `supervisord` / `supervisorctl` yok — `services install supervisor`
+- `supervisord` / `supervisorctl` missing — `services install supervisor`
 - Legacy Plume-owned supervisord — `services supervisor upgrade --force --yes`
-- `horizon-program` WARN — `plumectl site update <id> --horizon` sonra `plumectl services up horizon`
-- Site basina kontrol: `horizon-program:<site-id>` (D-150)
-- Program not RUNNING — `plumectl services logs horizon --site=<id>` ve `plumectl services restart horizon --site=<id>` (D-152; supervisorctl gerekmez)
+- `horizon-program` WARN — `plumectl site update <id> --horizon` then `plumectl services up horizon`
+- Per-site check: `horizon-program:<site-id>` (D-150)
+- Program not RUNNING — `plumectl services logs horizon --site=<id>` and `plumectl services restart horizon --site=<id>` (D-152; supervisorctl not required)
 
-Iliskili: [services-supervisor.md](./services-supervisor.md), [services-horizon.md](./services-horizon.md).
+Related: [services-supervisor.md](./services-supervisor.md), [services-horizon.md](./services-horizon.md).

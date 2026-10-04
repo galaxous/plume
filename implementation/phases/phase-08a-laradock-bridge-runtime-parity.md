@@ -2,13 +2,13 @@
 
 ## Objective
 
-- `laradock-bridge` modunda mevcut Laradock stack'lerini Plume'in standart service komut yuzeyi ile guvenli sekilde yonetmek.
-- Hedef: `native` ile ayni komut contract'ini korurken engine tarafinda Laradock compose/container durumuna baglanmak.
+- Safely manage existing Laradock stacks in `laradock-bridge` mode through Plume's standard service command surface.
+- Goal: keep the same command contract as `native` while binding the engine side to Laradock compose/container state.
 
 ## Delivery Scope
 
-Bu alt faz sadece ilk runtime parity dilimini kapsar.
-Asagidaki komutlar gercek Laradock runtime'a baglanacak:
+This sub-phase covers only the first runtime parity slice.
+The following commands will bind to real Laradock runtime:
 
 - `services up <service>|all --mode=laradock-bridge`
 - `services down <service>|all --mode=laradock-bridge`
@@ -20,21 +20,21 @@ Asagidaki komutlar gercek Laradock runtime'a baglanacak:
 
 ## Non-Goals
 
-- Laradock repo icini plume'nin yeniden tasarlamasi
-- Yeni compose template olusturma
-- Docker-lite parity genisletmesi
+- Redesigning the Laradock repo interior by Plume
+- Creating a new compose template
+- Expanding Docker-lite parity
 - Native host provisioning
-- TLS, secrets, backup, rollback production akislari
+- TLS, secrets, backup, rollback production flows
 
 ## Runtime Source of Truth
 
-- `laradock-bridge` icin birincil source-of-truth canli docker compose/container durumudur.
-- State env dosyalari ve SQLite yalnizca cache/telemetry amaclidir.
-- Live docker ile state cakisirse, live docker kazanir.
+- For `laradock-bridge`, the primary source-of-truth is live docker compose/container state.
+- State env files and SQLite are cache/telemetry only.
+- If live docker and state conflict, live docker wins.
 
 ## Service Mapping Baseline
 
-Ilk dilimde asagidaki service map standardize edilir:
+In the first slice, the following service map is standardized:
 
 | Plume Service | Laradock Compose Service |
 |---|---|
@@ -52,49 +52,49 @@ Ilk dilimde asagidaki service map standardize edilir:
 | `supervisor` | `laravel-horizon` |
 | `php-worker` | `php-worker` |
 
-Not:
+Note:
 
-- Bu dilimde `supervisor`, Laradock tarafinda ayrik container olarak degil `laravel-horizon` icindeki process manager davranisi olarak modellenir.
-- `composer` ayrik container degil, `workspace` alias'i olarak kalir.
+- In this slice, `supervisor` is modeled as process-manager behavior inside `laravel-horizon`, not as a separate Laradock container.
+- `composer` remains a `workspace` alias, not a separate container.
 
 ## Implementation Plan
 
 ### 1. Compose Discovery Normalization
 
-- `mode path get laradock-bridge` + `--path` + env override zinciri tek yerde normalize edilecek.
-- Compose file cozumleme Laradock icin deterministic hale getirilecek.
-- `COMPOSE_PROJECT_NAME` ve container isimleri dogrudan `.env` + compose uzerinden cozumlenecek.
+- The `mode path get laradock-bridge` + `--path` + env override chain will be normalized in one place.
+- Compose file resolution for Laradock will be made deterministic.
+- `COMPOSE_PROJECT_NAME` and container names will be resolved directly from `.env` + compose.
 
 ### 2. Runtime Lifecycle
 
-- `services up/down` Laradock compose service map'i ile gercek `docker compose up -d/stop` calistiracak.
-- `all` davranisi destructive olmayacak:
-  - sadece Plume destek matrisindeki hedef servisleri etkileyecek
-  - Laradock'taki bilinmeyen servisleri hedeflemeyecek
+- `services up/down` will run real `docker compose up -d/stop` via the Laradock compose service map.
+- `all` behavior will not be destructive:
+  - it will only affect target services in the Plume support matrix
+  - it will not target unknown services in Laradock
 
 ### 3. Status/Health/Logs
 
 - `status`:
-  - live container state okunacak
-  - `enabled/running/health/port/version` normalize edilecek
+  - live container state will be read
+  - `enabled/running/health/port/version` will be normalized
 - `health`:
-  - container running + healthcheck state okunacak
-  - healthcheck yoksa `running=true -> healthy`, degilse `stopped`
+  - container running + healthcheck state will be read
+  - if there is no healthcheck, `running=true -> healthy`, otherwise `stopped`
 - `logs`:
   - `docker compose logs --tail N`
-- Her okuma sonunda SQLite `services` tablosu cache olarak guncellenecek.
+- After each read, the SQLite `services` table will be updated as cache.
 
 ### 4. Exec/Containers Hardening
 
-- Mevcut `exec` ve `containers` komutlari Laradock path normalization ile sertlestirilecek.
-- `composer` -> `workspace` alias'i korunacak.
-- `native` modda block davranisi degismeyecek.
+- Existing `exec` and `containers` commands will be hardened with Laradock path normalization.
+- The `composer` -> `workspace` alias will be preserved.
+- Block behavior in `native` mode will not change.
 
 ### 5. Safe Interoperability
 
-- `services up/down` once `services laradock check` benzeri minimal preflight yapacak.
-- Path/compose bulunamazsa fail-fast donecek.
-- Bilinmeyen service mapping'lerde fallback yerine explicit error donulecek.
+- `services up/down` will first run a minimal preflight similar to `services laradock check`.
+- If path/compose cannot be found, fail-fast.
+- Unknown service mappings will return an explicit error instead of a fallback.
 
 ## Test Plan
 
@@ -108,27 +108,27 @@ Not:
 
 ### Regression Gates
 
-- mevcut `phase8_laradock_bootstrap_smoke.sh`
-- mevcut `phase7_services_exec_smoke.sh`
-- mevcut `phase7_services_containers_smoke.sh`
-- native service smoke'lar kirilmamali
+- existing `phase8_laradock_bootstrap_smoke.sh`
+- existing `phase7_services_exec_smoke.sh`
+- existing `phase7_services_containers_smoke.sh`
+- native service smokes must not break
 
 ## Definition of Done
 
-- `laradock-bridge` modunda `up/down/status/health/logs/exec/containers` komutlari canli Laradock compose durumuna baglanir
-- state DB cache senkron kalir
-- unsupported/destructive davranis default olarak yapilmaz
-- docs guncellenir
-- decision log eklenir
+- In `laradock-bridge` mode, `up/down/status/health/logs/exec/containers` commands bind to live Laradock compose state
+- state DB cache stays in sync
+- unsupported/destructive behavior is not done by default
+- docs are updated
+- decision log entry is added
 
 ## Risks
 
-- Laradock compose varyasyonlari (`docker-compose.override`, custom compose file zinciri)
-- `COMPOSE_PROJECT_NAME` farkliliklari nedeniyle container isimlerinin beklenenden sapmasi
-- `laravel-horizon`/`php-worker` image veya service isimlerinin repo fork'larinda degisebilmesi
+- Laradock compose variations (`docker-compose.override`, custom compose file chain)
+- Container names drifting from expectations due to `COMPOSE_PROJECT_NAME` differences
+- `laravel-horizon`/`php-worker` image or service names changing in repo forks
 
 ## Immediate Next Step
 
-- Once `status/health/logs` uygulanmali.
-- Ardindan `up/down`.
-- En sonda `exec/containers` normalization + DB sync sertlestirmesi.
+- First implement `status/health/logs`.
+- Then `up/down`.
+- Finally `exec/containers` normalization + DB sync hardening.

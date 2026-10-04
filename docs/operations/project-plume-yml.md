@@ -1,36 +1,36 @@
 # Project-local `plume.yml` (Phase 16 MVP)
 
-Proje kokundeki `plume.yml`, site onboarding ve CLI cozumlemesi icin **dar bir MVP** alan seti okur. Tam taslak: [implementation/03-config-yaml-draft.md](../../implementation/03-config-yaml-draft.md). Karar: [implementation/05-decision-log.md](../../implementation/05-decision-log.md) (D-117).
+`plume.yml` at the project root reads a **narrow MVP** field set for site onboarding and CLI resolution. Full draft: [implementation/03-config-yaml-draft.md](../../implementation/03-config-yaml-draft.md). Decision: [implementation/05-decision-log.md](../../implementation/05-decision-log.md) (D-117).
 
-## MVP alanlari
+## MVP fields
 
 ```yaml
-version: 2          # opsiyonel; dokumantasyon amacli
+version: 2          # optional; for documentation
 project:
   mode: native      # native | docker-lite | laradock-bridge
   php_version: "8.3"
-  type: laravel     # laravel | generic-php | static (opsiyonel)
-mode: native        # phase-4 geriye uyum; project.mode onceliklidir
+  type: laravel     # laravel | generic-php | static (optional)
+mode: native        # phase-4 backward compatibility; project.mode takes precedence
 ```
 
-Dosya adi varsayilan `plume.yml`; override: `PLUME_CONFIG_FILE` (proje kokune gore relative veya mutlak yol).
+Default file name is `plume.yml`; override: `PLUME_CONFIG_FILE` (relative to project root or absolute path).
 
-## Merge / oncelik kurallari
+## Merge / precedence rules
 
-| Alan | Proje `plume.yml` | Kullanici `services.yml` | `~/.config/plume/.env` | CLI / registry |
+| Field | Project `plume.yml` | User `services.yml` | `~/.config/plume/.env` | CLI / registry |
 |------|-------------------|--------------------------|-------------------------|----------------|
-| `project.mode` | Cozumleme hint | — | `PLUME_MODE` (global) | `--mode` kazanir; kayitli site `mode` site operasyonunda authoritative |
-| `project.php_version` | `site add` hint | — | `PLUME_PHP_*` kurulu surum listesi | `--php` / `--php-version` kazanir |
-| Servis enable | MVP disi (stretch) | Evet (D-103) | Evet (manifest uzerinde) | `services` komutlari |
-| Domain / path | MVP disi | — | — | Site registry + `site add/update` |
+| `project.mode` | Resolution hint | — | `PLUME_MODE` (global) | `--mode` wins; registered site `mode` is authoritative for site operations |
+| `project.php_version` | `site add` hint | — | `PLUME_PHP_*` installed version list | `--php` / `--php-version` wins |
+| Service enable | Outside MVP (stretch) | Yes (D-103) | Yes (over the manifest) | `services` commands |
+| Domain / path | Outside MVP | — | — | Site registry + `site add/update` |
 
-Registry (`PLUME_SITE_REGISTRY_DIR` veya `~/.config/plume/sites`) ile otomatik iki yon sync **yok**; manifest yalnizca okuma/hint katmanidir.
+There is **no** automatic two-way sync with the registry (`PLUME_SITE_REGISTRY_DIR` or `~/.config/plume/sites`); the manifest is a read/hint layer only.
 
-## Komutlar
+## Commands
 
-- `plumectl project config show --path=/abs/project` — yuklenen MVP alanlarini yazar.
-- `plumectl site add` — `--mode` yoksa manifest mode; `--php` yoksa `project.php_version` (validation sonrasi).
+- `plumectl project config show --path=/abs/project` — prints loaded MVP fields.
+- `plumectl site add` — if `--mode` is absent, manifest mode; if `--php` is absent, `project.php_version` (after validation).
 
 ## Smoke
 
-Hermetik test: `tests/phase16_plume_yml_v2_smoke.sh` (`HOME`, `PLUME_STATE_DIR`, `PLUME_SITE_REGISTRY_DIR` gecici).
+Hermetic test: `tests/phase16_plume_yml_v2_smoke.sh` (temporary `HOME`, `PLUME_STATE_DIR`, `PLUME_SITE_REGISTRY_DIR`).

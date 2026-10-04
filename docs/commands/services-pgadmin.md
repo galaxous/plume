@@ -1,10 +1,10 @@
 # Native pgAdmin (PostgreSQL UI)
 
-## Amac
+## Purpose
 
-Laradock `pgadmin` parity: native modda PostgreSQL icin web UI. Plume state altinda Python venv + `pip install pgadmin4`, HTTP `127.0.0.1:5050`.
+Laradock `pgadmin` parity: web UI for PostgreSQL in native mode. Python venv under Plume state + `pip install pgadmin4`, HTTP `127.0.0.1:5050`.
 
-## Kullanim
+## Usage
 
 ```bash
 # ~/.config/plume/.env
@@ -17,7 +17,7 @@ PGADMIN_DEFAULT_PASSWORD=admin
 ./plume.sh services install postgres --mode=native
 ./plume.sh services install pgadmin --mode=native
 ./plume.sh services up postgres pgadmin --mode=native
-# veya enabled filtreli:
+# or with enabled filter:
 ./plume.sh services up @db --mode=native
 
 open http://127.0.0.1:5050
@@ -25,17 +25,17 @@ open http://127.0.0.1:5050
 # Register server: Host=127.0.0.1 Port=5432 User/Password=POSTGRES_*
 ```
 
-`pgadmin` icin `postgres` enabled olmalidir (dependency).
+`postgres` must be enabled for `pgadmin` (dependency).
 
-## Parametreler
+## Parameters
 
-| Degisken | Aciklama | Varsayilan |
-|----------|----------|------------|
-| `PGADMIN_ENABLED` / `PLUME_PGADMIN_ENABLED` | Servis toggle | `false` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PGADMIN_ENABLED` / `PLUME_PGADMIN_ENABLED` | Service toggle | `false` |
 | `PGADMIN_PORT` / `PLUME_PGADMIN_PORT` | HTTP port | `5050` |
 | `PGADMIN_DEFAULT_EMAIL` | UI login email | `pgadmin4@pgadmin.org` |
-| `PGADMIN_DEFAULT_PASSWORD` | UI login sifre | `admin` |
-| `PLUME_PGADMIN_VERSION` | Manifest version etiketi | `latest` |
+| `PGADMIN_DEFAULT_PASSWORD` | UI login password | `admin` |
+| `PLUME_PGADMIN_VERSION` | Manifest version label | `latest` |
 
 State:
 
@@ -43,14 +43,14 @@ State:
 - `state/native/pgadmin/data/` — pgAdmin DATA_DIR
 - `state/native/pgadmin/venv/.../config_local.py` — port/DATA_DIR
 
-## Cikti / exit-code
+## Output / exit-code
 
 - `services url pgadmin`: `url=http://127.0.0.1:5050`
 - `services credentials pgadmin`: `email=`, `password=`, `http_port=`, `db_host=`, `db_port=`, …
-- `0`: basarili
-- `2`: postgres disabled, python3 yok, veya kurulum/start hatasi
+- `0`: success
+- `2`: postgres disabled, python3 missing, or install/start error
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh services credentials pgadmin --mode=native
@@ -58,11 +58,12 @@ State:
 ./plume.sh services down pgadmin --mode=native
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- **pgadmin requires postgres to be enabled**: `.env` icinde `POSTGRES_ENABLED=true` yap.
-- **python3 required**: host'ta Python 3 yok; kur veya docker-lite/laradock-bridge kullan.
-- **5050 connection refused**: `services up pgadmin` calismamis veya PID olmus; log: `logs/services/native/pgadmin.log`.
-- **Failed to create /var/lib/pgadmin**: eski install `config_local.py` yazamadi; `services install pgadmin` + `services restart pgadmin` (D-139).
-- **running=false / health=stopped**: genelde yukaridaki config/path hatasi veya ilk pip kurulumu yarim kaldi.
-OS matrisi: [native-stack-os-matrix.md](../operations/native-stack-os-matrix.md).
+- **pgadmin requires postgres to be enabled**: set `POSTGRES_ENABLED=true` in `.env`.
+- **python3 required**: no Python 3 on host; install or use docker-lite/laradock-bridge.
+- **5050 connection refused**: `services up pgadmin` did not run or PID died; log: `logs/services/native/pgadmin.log`.
+- **Failed to create /var/lib/pgadmin**: old install could not write `config_local.py`; `services install pgadmin` + `services restart pgadmin` (D-139).
+- **running=false / health=stopped**: usually the config/path error above, or first pip install incomplete.
+
+OS matrix: [native-stack-os-matrix.md](../operations/native-stack-os-matrix.md).

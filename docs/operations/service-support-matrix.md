@@ -1,8 +1,8 @@
 # Service Support Matrix
 
-Bu dosya `native` ve `docker-lite` modlarinda hangi servislerin desteklendigini tek noktada gosterir.
+This file shows in one place which services are supported in `native` and `docker-lite` modes.
 
-Komutla sorgulama:
+Query via command:
 
 ```bash
 plumectl services supported
@@ -15,72 +15,72 @@ plumectl services supported --mode=docker-lite
 | Service     | native | docker-lite | laradock-bridge | Notes |
 |-------------|--------|-------------|-----------------|-------|
 | nginx       | yes    | yes         | yes             | web server |
-| apache2     | yes    | no          | opt             | laradock compose'ta varsa |
-| caddy       | yes    | yes         | opt             | laradock compose'ta varsa |
+| apache2     | yes    | no          | opt             | if present in laradock compose |
+| caddy       | yes    | yes         | opt             | if present in laradock compose |
 | php-fpm     | yes    | yes         | yes             | php runtime |
 | composer    | yes    | yes         | yes             | tool/runtime support |
 | xdebug      | opt    | opt         | opt              | optional profile |
 | mysql       | yes    | yes         | yes             | database |
 | mariadb     | yes    | yes         | yes             | database |
-| phpmyadmin  | yes    | yes         | yes             | PMA_DB_ENGINE ile mysql/mariadb secimi |
-| postgres    | yes    | yes         | opt             | laradock compose'ta varsa |
-| pgadmin     | yes    | opt         | opt             | Laradock pgadmin parity; postgres gerektirir |
+| phpmyadmin  | yes    | yes         | yes             | mysql/mariadb selection via PMA_DB_ENGINE |
+| postgres    | yes    | yes         | opt             | if present in laradock compose |
+| pgadmin     | yes    | opt         | opt             | Laradock pgadmin parity; requires postgres |
 | redis       | yes    | yes         | yes             | cache/queue |
-| memcached   | yes    | no          | opt             | native brew/apt (D-145); laradock compose'ta varsa |
-| rabbitmq    | yes    | no          | opt             | laradock compose'ta varsa |
-| mongodb     | yes    | opt         | opt             | laradock compose'ta varsa |
-| mongo-webui | yes    | opt         | opt             | laradock compose'ta varsa |
+| memcached   | yes    | no          | opt             | native brew/apt (D-145); if present in laradock compose |
+| rabbitmq    | yes    | no          | opt             | if present in laradock compose |
+| mongodb     | yes    | opt         | opt             | if present in laradock compose |
+| mongo-webui | yes    | opt         | opt             | if present in laradock compose |
 | mailpit     | yes    | yes         | opt             | native: macOS brew; Linux docker-lite |
 | meilisearch | opt    | opt         | opt              | native toggle-only (D-146); driver backlog |
-| minio       | opt    | yes         | opt             | native toggle-only (D-146); laradock compose'ta varsa |
+| minio       | opt    | yes         | opt             | native toggle-only (D-146); if present in laradock compose |
 | supervisor  | yes    | opt         | yes             | system brew/systemd + program registry (D-149) |
 | horizon     | yes    | yes         | yes             | native: `php artisan horizon` + supervisor gate |
 | php-worker  | yes    | yes         | yes             | native: registry-only; queue worker |
 
 Laradock-bridge note:
 
-- Bu matris Laradock icin minimum beklenen baseline'i gosterir.
-- Gercek runtime'ta `laradock-bridge`, aktif Laradock `docker-compose.yml` dosyasindaki tum servisleri discover edip gosterebilir/yonetebilir.
-- Yani Laradock kolonu static minimum capability'dir; runtime service listesi compose dosyasindan gelir.
+- This matrix shows the minimum expected baseline for Laradock.
+- At real runtime, `laradock-bridge` can discover and show/manage all services in the active Laradock `docker-compose.yml`.
+- So the Laradock column is a static minimum capability; the runtime service list comes from the compose file.
 
-## Durum Etiketleri
+## Status Labels
 
-- `yes`: destekli
-- `no`: desteklenmiyor
-- `opt`: opsiyonel/profile bazli
+- `yes`: supported
+- `no`: not supported
+- `opt`: optional/profile-based
 
 ## Default Toggle Policy
 
-- Minimal default profile'ta yalnizca su servisler default `true`:
+- In the minimal default profile, only these services default to `true`:
   - nginx(web)
   - php runtime
   - composer
   - mariadb
-- Diger servisler default `false` olup ihtiyaca gore sonradan acilir.
-- `services update` ile sonradan `true` olan servisler otomatik reconcile edilir.
+- Other services default to `false` and are enabled later as needed.
+- Services later set to `true` via `services update` are automatically reconciled.
 
 ## Versioning
 
-- Her servis icin opsiyonel `PLUME_<SERVICE>_VERSION` env degeri desteklenir.
-- `services status/supported --json` komutlarinda her servis icin aktif surum bilgisi gosterilir.
-- PHP servisleri icin alias cozumlemesi desteklenir (`php`, `default`, alias adlari).
+- Optional `PLUME_<SERVICE>_VERSION` env value is supported per service.
+- `services status/supported --json` shows active version info per service.
+- Alias resolution is supported for PHP services (`php`, `default`, alias names).
 
 ## Phase 6 Native Runtime
 
-- Native mode icin `services install/up/down/status/health/logs` command-path'leri calisir.
-- Port kullanan servislerde fallback port secimi uygulanir:
-  - default port doluysa `+1..+50` araliginda bos port aranir.
-  - secilen port `services_ports_native.env` state dosyasina yazilir.
-- Runtime state (`running`, `health`) `services_runtime_native.env` dosyasinda tutulur.
+- For native mode, `services install/up/down/status/health/logs` command-paths work.
+- For services that use ports, fallback port selection applies:
+  - if the default port is taken, a free port is searched in the `+1..+50` range.
+  - the selected port is written to the `services_ports_native.env` state file.
+- Runtime state (`running`, `health`) is kept in `services_runtime_native.env`.
 
 ## Phase 7 Docker-Lite Runtime
 
-- Docker-lite mode icin `services install/up/down/status/health/logs` command-path'leri compose-service eslemesi ile calisir.
-- `services workspace up|down|status --mode=docker-lite` komutlari compose workspace lifecycle'ini yonetir.
-- Docker-lite runtime state/port metadata dosyalari native ile ayni formatta tutulur.
-- 2026-03-10 notu: docker-lite `beta-frozen` durumundadir; aktif gelistirme onceligi native + laradock-bridge parity'sine kaydirilmistir.
+- For docker-lite mode, `services install/up/down/status/health/logs` command-paths work via compose-service mapping.
+- `services workspace up|down|status --mode=docker-lite` commands manage the compose workspace lifecycle.
+- Docker-lite runtime state/port metadata files use the same format as native.
+- Note 2026-03-10: docker-lite is in `beta-frozen` status; active development priority has shifted to native + laradock-bridge parity.
 
-## Kural
+## Rule
 
-- Yeni servis eklendiginde bu matris ve `services supported` komut dokumani ayni degisiklikte guncellenir.
-- Service custom version destegi aktif oldugunda, desteklenen major/minor araliklar da bu dosyada belirtilir.
+- When a new service is added, this matrix and the `services supported` command doc are updated in the same change.
+- When service custom version support is active, supported major/minor ranges are also listed in this file.

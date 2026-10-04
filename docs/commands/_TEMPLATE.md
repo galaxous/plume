@@ -1,32 +1,32 @@
 # `<command>` Commands
 
-## Amac
+## Purpose
 
-<!-- Komut neyi cozer -->
+<!-- What problem the command solves -->
 
-## Kullanim
-
-```bash
-plumectl <command> ...
-```
-
-## Parametreler
-
-- `--flag`: aciklama
-
-## Cikti / Exit Codes
-
-- `0`: basarili
-- `1`: runtime hata
-- `2`: validation/prereq hata
-
-## Ornekler
+## Usage
 
 ```bash
 plumectl <command> ...
 ```
 
-## Hata Senaryolari
+## Parameters
 
-- Muhtemel hata 1
-- Muhtemel hata 2
+- `--flag`: description
+
+## Output / Exit Codes
+
+- `0`: success
+- `1`: runtime error
+- `2`: validation/prereq error
+
+## Examples
+
+```bash
+plumectl <command> ...
+```
+
+## Error scenarios
+
+- Likely error 1
+- Likely error 2

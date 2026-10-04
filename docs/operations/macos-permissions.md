@@ -7,7 +7,7 @@ Plume native mode runs **Homebrew nginx** and **php-fpm** as separate processes.
 | Area                                 | Plume behavior                                                                                                     |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | Detect TCC-risk paths                | `Desktop`, `Documents`, `Downloads` in site registry (`doctor web` → `macos-site-tcc`, `doctor php` → `MACOS_TCC`) |
-| Explain why                          | Interactive menu + `init permissions` checklist (English CLI; Turkish summary in this doc)                         |
+| Explain why                          | Interactive menu + `init permissions` checklist (English CLI; product summary in this doc)                         |
 | Open System Settings                 | `init permissions --open`, menu option `[1]`                                                                       |
 | Reveal nginx binaries                | `init permissions --reveal`, menu option `[1]`                                                                     |
 | Suggest `~/Sites/...` bmove          | Menu option `[2]`, `plume_macos_permissions_suggest_sites_path`                                                    |
@@ -59,17 +59,17 @@ export PLUME_NONINTERACTIVE=1
 
 See also [first-run-onboarding.md](./first-run-onboarding.md) and [init-permissions.md](../commands/init-permissions.md).
 
-## Turkish summary (product)
+## Product summary
 
-**Neden?** Masaüstü / Documents / Downloads altındaki Laravel projelerine nginx ve php-fpm erişemeyebilir; tarayıcıda “No input file specified” görürsünüz.
+**Why?** nginx and php-fpm may not be able to access Laravel projects under Desktop / Documents / Downloads; you will see “No input file specified” in the browser.
 
-**Ne yapmalı?**
+**What to do?**
 
-1. `./plume.sh init permissions --interactive` veya `--open --reveal`
-2. System Settings’te **nginx** ve **php-fpm** binary’lerine Full Disk Access verin
-3. Ya da projeyi `~/Sites/...` altına taşıyın (`site update --path=... --publish --reload`)
+1. `./plume.sh init permissions --interactive` or `--open --reveal`
+2. Grant Full Disk Access to the **nginx** and **php-fpm** binaries in System Settings
+3. Or move the project under `~/Sites/...` (`site update --path=... --publish --reload`)
 
-**Plume uygulaması yok** — FDA listesine plume.sh eklemeyin.
+**There is no Plume app** — do not add plume.sh to the FDA list.
 
 ## Related decisions
 

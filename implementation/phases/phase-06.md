@@ -50,6 +50,6 @@
 - Owner: @team
 - Related PR/Commit: phase-06-native-orchestration-baseline
 - Open risks:
-  - Native mode adaptorlari su an deterministic state/log/port dosya modeliyle calisiyor; systemd/service-manager entegrasyonu sonraki iterasyonda genisletilecek.
-  - Port fallback algoritmasi local socket taramasi bazli; production'da stricter reserved-port politikasi gerekebilir.
-  - Phase-07/08'de docker-lite/laradock icin runtime log-health semantiklerinin native ile tamamen esitlenmesi gerekiyor.
+  - Native mode adapters currently run on a deterministic state/log/port file model; systemd/service-manager integration will be expanded in a later iteration.
+  - The port fallback algorithm is based on local socket scanning; a stricter reserved-port policy may be needed in production.
+  - In Phase-07/08, runtime log-health semantics for docker-lite/laradock must be fully equalized with native.

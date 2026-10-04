@@ -1,17 +1,17 @@
 # `init` Commands
 
-## Amac
+## Purpose
 
-Shell ortaminda plume PHP shim'lerini tek komutla aktif etmek; ilk kurulumda host profili ve onboarding.
+Activate plume PHP shims in the shell environment with one command; host profile and onboarding on first install.
 
-Alt komutlar:
+Subcommands:
 
-- `init shell` — bu dosya
+- `init shell` — this file
 - `init host` — [init-host.md](init-host.md)
 - `init onboarding` — [init-onboarding.md](init-onboarding.md)
 - `init permissions` — [init-permissions.md](init-permissions.md)
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh init shell
@@ -23,32 +23,31 @@ Alt komutlar:
 ./plume.sh init shell --rc=$HOME/.zshrc --force
 ```
 
-## Parametreler
+## Parameters
 
 - `shell`
-  - `--shell=zsh|bash`: hedef shell tipi
-  - `--rc=/abs/path`: custom rc dosyasi
-  - `--force`: mevcut plume bloğunu silip yeniden yazar
+  - `--shell=zsh|bash`: target shell type
+  - `--rc=/abs/path`: custom rc file
+  - `--force`: delete the existing plume block and rewrite it
 
-## Davranis
+## Behavior
 
-- `php shim install` otomatik calisir.
-- Shell rc dosyasina su blok eklenir:
+- `php shim install` runs automatically.
+- This block is added to the shell rc file:
   - `# >>> plume php shim >>>`
   - `eval "$(<plume-exec> php shim env)"`
   - `# <<< plume php shim <<<`
-- Bu sayede her shell acilisinda:
-  - shim `PATH` aktivasyonu
-  - default disi kurulu PHP versiyonlari icin `php81`, `php82`, `phpfpm81` gibi aliaslar
-  otomatik yuklenir.
-- Tekrar calistirilirsa duplicate yazmaz (idempotent).
+- On every shell start this loads:
+  - shim `PATH` activation
+  - aliases such as `php81`, `php82`, `phpfpm81` for installed PHP versions other than the default
+- Re-running does not write duplicates (idempotent).
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: basarili
-- `2`: invalid option/shell veya yazma hatasi
+- `0`: success
+- `2`: invalid option/shell or write error
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh php install 8.4
@@ -57,8 +56,8 @@ source ~/.zshrc
 php8.4 -v
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Desteklenmeyen shell (`fish`, vb.)
-- RC dosyasina yazma izni olmamasi
-- plume executable cozumlenememesi
+- Unsupported shell (`fish`, etc.)
+- No write permission on the RC file
+- plume executable cannot be resolved

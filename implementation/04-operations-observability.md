@@ -1,47 +1,47 @@
 # Operations & Observability Plan
 
-## Operasyon Komutlari (Hedef)
+## Operations Commands (Target)
 
-- `plumectl status`: Mod + servislerin anlik durumu
-- `plumectl health`: Health-check raporu
-- `plumectl logs`: Servis loglarina erisim
-- `plumectl monitor summary`: Ozet telemetry
-- `plumectl doctor --deep`: Konfig + port + process + dependency analizi
+- `plumectl status`: Instant status of mode + services
+- `plumectl health`: Health-check report
+- `plumectl logs`: Access to service logs
+- `plumectl monitor summary`: Summary telemetry
+- `plumectl doctor --deep`: Config + port + process + dependency analysis
 
-## Health-Check Modeli
+## Health-Check Model
 
-- Tipler:
-  - Port acik mi
-  - HTTP endpoint cevap veriyor mu
-  - CLI probe (ornek: `redis-cli ping`)
-- Durumlar:
+- Types:
+  - Is the port open
+  - Does the HTTP endpoint respond
+  - CLI probe (example: `redis-cli ping`)
+- States:
   - `healthy`
   - `degraded`
   - `down`
-- Cikti:
-  - JSON ve human-readable ozet
+- Output:
+  - JSON and human-readable summary
 
-## Log Stratejisi
+## Log Strategy
 
-- Konum:
-  - Lokal: `~/.config/plume/logs`
-  - Sunucu: `/var/log/plume`
-- Rotasyon:
-  - Boyut tabanli (ornek 10MB x 5)
-- Modlara gore kaynak:
-  - native: system service loglari + plumectl action log
+- Location:
+  - Local: `~/.config/plume/logs`
+  - Server: `/var/log/plume`
+- Rotation:
+  - Size-based (example 10MB x 5)
+- Sources by mode:
+  - native: system service logs + plumectl action log
   - docker-lite: container logs + plumectl action log
   - laradock-bridge: docker compose logs + bridge action log
 
-## Monitoring Scope (Baslangic)
+## Monitoring Scope (Initial)
 
 - Service uptime
-- Son 5 hata
-- Port cakisma olaylari
-- Son deploy/upgrade izi
-- Laravel runtime metrikleri:
-  - queue backlog/islenme hizi
-  - failed jobs sayisi
+- Last 5 errors
+- Port conflict events
+- Last deploy/upgrade trail
+- Laravel runtime metrics:
+  - queue backlog/processing rate
+  - failed jobs count
   - horizon status
-  - scheduler son calisma izi
-  - deploy health gate sonucu
+  - scheduler last-run trail
+  - deploy health gate result

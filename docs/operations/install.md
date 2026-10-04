@@ -1,103 +1,103 @@
-# Plume kurulum ve yayin — asamali rehber (macOS Homebrew + Linux)
+# Plume install and publish — staged guide (macOS Homebrew + Linux)
 
-Bu dokuman **senin (maintainer)** yapman gerekenleri ve **kullanicinin** macOS / Linux’ta kurulum sirasini adim adim anlatir.
+This document walks through what **you (the maintainer)** must do and the step-by-step install order for **users** on macOS / Linux.
 
-- Resmi CLI: **`plumectl`** (alias: `plume`)
-- Surum kaynagi: repo [`VERSION`](../../VERSION)
-- Iliskili: [release.md](./release.md), [release-readiness.md](./release-readiness.md), [first-run-onboarding.md](./first-run-onboarding.md)
+- Official CLI: **`plumectl`** (alias: `plume`)
+- Version source: repo [`VERSION`](../../VERSION)
+- Related: [release.md](./release.md), [release-readiness.md](./release-readiness.md), [first-run-onboarding.md](./first-run-onboarding.md)
 
 ---
 
-## A) Maintainer — ilk yayin (sirayla)
+## A) Maintainer — first publish (in order)
 
-Asagidaki asamalar **sira ile** yapilir. Linux’u atlama: Packagist + `packaging/linux/install.sh` Linux kullanicilarinin birincil yolu.
+The stages below are done **in order**. Do not skip Linux: Packagist + `packaging/linux/install.sh` are the primary path for Linux users.
 
-### A1. Yerel dogrulama (opsiyonel)
+### A1. Local verification (optional)
 
 ```bash
 ./tests/phase28_release_version_smoke.sh
 ./tests/run_smoke_suite.sh --release
 ```
 
-`VERSION` + Homebrew formula `version`/`url` senkronunu **elle yapmana gerek yok** — Manual Release CI (`sync-release-version.sh`) tag oncesi tek commit’te yazar.
+You do **not** need to sync `VERSION` + Homebrew formula `version`/`url` by hand — Manual Release CI (`sync-release-version.sh`) writes them in a single commit before the tag.
 
-Yerel deneme:
+Local trial:
 
 ```bash
 ./packaging/homebrew/sync-release-version.sh v0.3.0
 ```
 
-### A2. GitHub Release (tek workflow)
+### A2. GitHub Release (single workflow)
 
 1. GitHub Actions → **Manual Release** (`workflow_dispatch`).
-2. Smoke → tag adi → `VERSION` + her iki `plumectl.rb` (`version`/`url`) → force-tag → Release.
-3. `sha256` bu adimda **guncellenmez** (`:no_check` kalabilir). Brew audit icin sonra, **retag olmadan** `main`’e:
+2. Smoke → tag name → `VERSION` + both `plumectl.rb` files (`version`/`url`) → force-tag → Release.
+3. `sha256` is **not** updated in this step (`:no_check` may remain). For brew audit later, on `main` **without retag**:
    ```bash
    curl -sL "https://github.com/galaxous/plume/archive/refs/tags/v0.3.0.tar.gz" | shasum -a 256
-   # digest’i Formula + packaging/homebrew dosyalarina yaz, commit, push
+   # write the digest into Formula + packaging/homebrew files, commit, push
    ```
 
 ### A3. Homebrew (macOS)
 
-**Seçenek 1 — ayni repodan formula (hemen):**
+**Option 1 — formula from the same repo (immediate):**
 
 ```bash
-# gelistirici makinesi veya dokumantasyon ornegi
+# developer machine or documentation example
 brew install --formula ./packaging/homebrew/plumectl.rb
 ```
 
-**Seçenek 2 — tap (onerilen uzun vadeli):**
+**Option 2 — tap (recommended long-term):**
 
-1. Kullanicilar:
+1. Users:
    ```bash
    brew tap galaxous/plume https://github.com/galaxous/plume
    brew install plumectl
    ```
-2. Repo’da `Formula/plumectl.rb` zaten var; tap bu dosyayi kullanir.
+2. The repo already has `Formula/plumectl.rb`; the tap uses that file.
 3. Upgrade: `brew upgrade plumectl`
 
-Ilk seferde tag yoksa: `brew install --HEAD --formula ./packaging/homebrew/plumectl.rb`.
+If there is no tag yet: `brew install --HEAD --formula ./packaging/homebrew/plumectl.rb`.
 
-### A4. Packagist (macOS + Linux ortak)
+### A4. Packagist (shared for macOS + Linux)
 
 1. https://packagist.org/packages/submit → GitHub: `https://github.com/galaxous/plume`
-2. Paket adi: **`galaxous/laravel-plume`** (`composer.json`)
-3. GitHub webhook / Packagist “Auto-Update” ac
-4. Dogrula:
+2. Package name: **`galaxous/laravel-plume`** (`composer.json`)
+3. Enable GitHub webhook / Packagist “Auto-Update”
+4. Verify:
    ```bash
    composer global require galaxous/laravel-plume
    plumectl version
    ```
 
-### A5. Linux dagitim yuzeyi (distro-agnostic)
+### A5. Linux distribution surface (distro-agnostic)
 
-Debian/Ubuntu **veya** RHEL/Fedora icin ayri `.deb`/`.rpm` su an yok; Linux icin resmi yollar:
+There is no separate `.deb`/`.rpm` for Debian/Ubuntu **or** RHEL/Fedora yet; official Linux paths:
 
-| Yol | Kim icin |
+| Path | Who for |
 |-----|----------|
-| `packaging/linux/install.sh` | Tek komut kurulum (PREFIX) |
-| `composer global require` | PHP/Composer olan sunucu/dev |
-| `git clone` + `make install` | Katki / gelistirme |
+| `packaging/linux/install.sh` | One-command install (PREFIX) |
+| `composer global require` | Server/dev with PHP/Composer |
+| `git clone` + `make install` | Contribution / development |
 
-`install.sh` release tag ile:
+`install.sh` with a release tag:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/galaxous/plume/main/packaging/linux/install.sh | \
   sudo env PLUME_REF=v0.3.0 PREFIX=/usr/local bash
 ```
 
-(Ilk seferde raw URL `main`’deki script’i ceker; `PLUME_REF` checkout tag’ini secer.)
+(On first use the raw URL pulls the script from `main`; `PLUME_REF` selects the checkout tag.)
 
 ---
 
-## B) Kullanici — macOS (Homebrew) asamali
+## B) User — macOS (Homebrew) staged
 
 ### B1. Plume CLI
 
 ```bash
 brew tap galaxous/plume https://github.com/galaxous/plume
 brew install plumectl
-# veya clone uzerinden:
+# or from a clone:
 # brew install --formula ./packaging/homebrew/plumectl.rb
 
 plumectl version
@@ -108,7 +108,7 @@ plumectl version
 ```bash
 plumectl env init
 plumectl init host
-plumectl init onboarding          # gerekirse --fix
+plumectl init onboarding          # --fix if needed
 plumectl init permissions --interactive   # TCC / FDA (nginx + php-fpm)
 plumectl doctor workspace
 plumectl doctor web
@@ -125,27 +125,27 @@ Upgrade: `brew upgrade plumectl`
 
 ---
 
-## C) Kullanici — Linux (Debian / Ubuntu — apt)
+## C) User — Linux (Debian / Ubuntu — apt)
 
-### C1. Sistem araclari
+### C1. System tools
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y git curl ca-certificates
-# Composer yolu kullanacaksan:
+# if you will use the Composer path:
 sudo apt-get install -y php-cli php-xml php-mbstring php-curl unzip
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 ```
 
-### C2. Plume CLI (birini sec)
+### C2. Plume CLI (pick one)
 
-**A — install.sh (onerilen, distro bagimsiz):**
+**A — install.sh (recommended, distro-agnostic):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/galaxous/plume/main/packaging/linux/install.sh | \
   sudo env PLUME_REF=v0.3.0 PREFIX=/usr/local bash
-# root istemezsen:
+# if you do not want root:
 curl -fsSL https://raw.githubusercontent.com/galaxous/plume/main/packaging/linux/install.sh | \
   env PLUME_REF=v0.3.0 PREFIX="$HOME/.local" bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
@@ -157,7 +157,7 @@ plumectl version
 
 ```bash
 composer global require galaxous/laravel-plume
-# PATH: ~/.config/composer/vendor/bin veya ~/.composer/vendor/bin
+# PATH: ~/.config/composer/vendor/bin or ~/.composer/vendor/bin
 plumectl version
 ```
 
@@ -170,28 +170,28 @@ sudo make install    # /usr/local/bin/plumectl
 plumectl version
 ```
 
-### C3. Onboarding + native stack notu
+### C3. Onboarding + native stack note
 
 ```bash
 plumectl env init
 plumectl init host
 plumectl init onboarding
 plumectl doctor workspace
-# Native servisler: apt paketleri (nginx, php-fpm, redis, mariadb, supervisor, …)
-# PLUME_NATIVE_HOST_PROVISION=true ile plumectl services up …
+# Native services: apt packages (nginx, php-fpm, redis, mariadb, supervisor, …)
+# with PLUME_NATIVE_HOST_PROVISION=true, plumectl services up …
 ```
 
-Detay OS matrisi: [native-stack-os-matrix.md](./native-stack-os-matrix.md)
+OS matrix detail: [native-stack-os-matrix.md](./native-stack-os-matrix.md)
 
 ---
 
-## D) Kullanici — Linux (RHEL / Fedora / CentOS — dnf)
+## D) User — Linux (RHEL / Fedora / CentOS — dnf)
 
-### D1. Sistem araclari
+### D1. System tools
 
 ```bash
 sudo dnf install -y git curl ca-certificates
-# Composer yolu:
+# Composer path:
 sudo dnf install -y php-cli php-xml php-mbstring php-json unzip
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
@@ -199,25 +199,25 @@ sudo mv composer.phar /usr/local/bin/composer
 
 ### D2. Plume CLI
 
-Debian ile **ayni** `install.sh` / Composer / `make install` (bolum C2).  
-PREFIX ornekleri: `/usr/local` veya `"$HOME/.local"`.
+Same as Debian: **`install.sh` / Composer / `make install`** (section C2).  
+PREFIX examples: `/usr/local` or `"$HOME/.local"`.
 
 ### D3. Onboarding
 
-Bolum C3 ile ayni; paket adlari `dnf` (`nginx`, `php-fpm`, `redis`, `mariadb-server`, `supervisor`, …) — [native-stack-os-matrix.md](./native-stack-os-matrix.md).
+Same as section C3; package names via `dnf` (`nginx`, `php-fpm`, `redis`, `mariadb-server`, `supervisor`, …) — [native-stack-os-matrix.md](./native-stack-os-matrix.md).
 
 ---
 
-## E) Kullanici — Linux (diger / Alpine / Arch — genel)
+## E) User — Linux (other / Alpine / Arch — general)
 
-1. `git`, `bash`, `curl` kur.
-2. **`packaging/linux/install.sh`** veya **Composer global** kullan (distro paketi yok).
-3. `plumectl init host` → `package_manager` algilanir; bilinmeyen PM’de native provision sinirli olabilir — `doctor host` kontrol et.
-4. Gerekirse stack’i elle kur veya `docker-lite` / `laradock-bridge` moda gec.
+1. Install `git`, `bash`, `curl`.
+2. Use **`packaging/linux/install.sh`** or **Composer global** (no distro package).
+3. `plumectl init host` → `package_manager` is detected; on an unknown PM, native provision may be limited — check `doctor host`.
+4. Install the stack by hand if needed, or switch to `docker-lite` / `laradock-bridge` mode.
 
 ---
 
-## F) Kurulum sonrasi ortak kontrol listesi
+## F) Shared post-install checklist
 
 ```bash
 plumectl version
@@ -227,30 +227,30 @@ plumectl doctor check --mode=native
 plumectl init onboarding
 ```
 
-macOS ek: `plumectl init permissions --interactive`  
-Linux ek: firewall / SELinux (RHEL) gerekirse dokun; port 80 icin root/`setcap` veya Plume elevated nginx akisi.
+macOS extra: `plumectl init permissions --interactive`  
+Linux extra: touch firewall / SELinux (RHEL) if needed; for port 80 use root/`setcap` or Plume’s elevated nginx flow.
 
 ---
 
-## G) Ozet tablo
+## G) Summary table
 
-| Platform | CLI kurulum | Upgrade |
+| Platform | CLI install | Upgrade |
 |----------|-------------|---------|
 | macOS | `brew tap` + `brew install plumectl` | `brew upgrade plumectl` |
-| Debian/Ubuntu | `install.sh` veya Composer | script’i tekrar / `composer global update` |
-| RHEL/Fedora | ayni `install.sh` / Composer | ayni |
-| Diger Linux | `install.sh` / Composer / clone | ayni |
-| Tum OS (dev) | `git clone` + `make install` | `git pull` + `make install` |
+| Debian/Ubuntu | `install.sh` or Composer | re-run script / `composer global update` |
+| RHEL/Fedora | same `install.sh` / Composer | same |
+| Other Linux | `install.sh` / Composer / clone | same |
+| All OS (dev) | `git clone` + `make install` | `git pull` + `make install` |
 
 ---
 
-## H) Maintainer tek bakis checklist
+## H) Maintainer at-a-glance checklist
 
-- [ ] `./tests/run_smoke_suite.sh --release` (opsiyonel; CI de kosar)
+- [ ] `./tests/run_smoke_suite.sh --release` (optional; CI also runs it)
 - [ ] GitHub Manual Release → tag `vX.Y.Z` (CI: VERSION + formula version/url)
-- [ ] (Opsiyonel) Formula `sha256` → `main` (retag yok)
+- [ ] (Optional) Formula `sha256` → `main` (no retag)
 - [ ] Packagist submit / auto-update
-- [ ] `install.sh` + [bu dokuman](./install.md) linklerini README’de dogrula
-- [ ] macOS’ta `brew install` dene
-- [ ] Ubuntu ve Fedora’da (veya container’da) `install.sh` dene
-- [ ] `composer global require galaxous/laravel-plume` dene
+- [ ] Verify `install.sh` + [this document](./install.md) links in the README
+- [ ] Try `brew install` on macOS
+- [ ] Try `install.sh` on Ubuntu and Fedora (or in a container)
+- [ ] Try `composer global require galaxous/laravel-plume`

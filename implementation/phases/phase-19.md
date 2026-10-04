@@ -2,7 +2,7 @@
 
 ## Objective
 
-Kritik native servisler Laradock container’i gibi: enable → up → live health → credentials/url. `@core` sade, status yalan soylemez, `services use` DB XOR.
+Critical native services behave like Laradock containers: enable → up → live health → credentials/url. `@core` stays lean, status does not lie, `services use` enforces DB XOR.
 
 ## Status
 
@@ -12,8 +12,8 @@ Kritik native servisler Laradock container’i gibi: enable → up → live heal
 
 ## MVP Scope
 
-- [x] Sozlesme: [native-service-contract.md](../../docs/operations/native-service-contract.md)
-- [x] `@core` queue uyeleri cikarildi; postgres/pgadmin/mailpit eklendi
+- [x] Contract: [native-service-contract.md](../../docs/operations/native-service-contract.md)
+- [x] `@core` queue members removed; postgres/pgadmin/mailpit added
 - [x] Status: brew/HTTP live probe; stale PID → stopped
 - [x] `services use mariadb|mysql|postgres`
 - [x] Redis + mailpit credentials/url (SMTP 1025)
@@ -22,11 +22,11 @@ Kritik native servisler Laradock container’i gibi: enable → up → live heal
 ## Gate Checklist
 
 - [x] MVP scope complete
-- [x] Targeted smoke yesil
+- [x] Targeted smoke green
 - [x] Decision log D-144
-- [x] Tracker satiri
+- [x] Tracker row
 
-## Referans
+## Reference
 
 - [docs/commands/services-use.md](../../docs/commands/services-use.md)
 - [lib/commands/services.sh](../../lib/commands/services.sh)

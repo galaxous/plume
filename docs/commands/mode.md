@@ -1,10 +1,10 @@
 # `mode` Commands
 
-## Amac
+## Purpose
 
-Calisma modunu degistirmek ve dogrulamak.
+Change and validate the working mode.
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh mode use native
@@ -21,7 +21,7 @@ Calisma modunu degistirmek ve dogrulamak.
 ./plume.sh mode path clear docker-lite
 ```
 
-## Parametreler
+## Parameters
 
 - `use <mode> [--force] [--down-running]`
 - `current`
@@ -30,54 +30,54 @@ Calisma modunu degistirmek ve dogrulamak.
 - `path clear [docker-lite|laradock-bridge]`
 - `path list`
 
-Not:
+Note:
 
-- `path` komutlarinda mode verilmezse aktif mode (`mode current`) kullanilir.
+- If mode is omitted in `path` commands, the active mode (`mode current`) is used.
 
-Oncelik sirasi (deterministic):
+Priority order (deterministic):
 
-- `mode`: `--mode` > `mode use` ile kaydedilen global state > `native`
+- `mode`: `--mode` > global state saved by `mode use` > `native`
 - docker-lite compose/path: `--path` > `mode path` > workspace remembered compose > current working directory compose
 - laradock-bridge path: `--path` > `mode path`
 - laradock-bridge compose: `PLUME_LARADOCK_COMPOSE_FILE` > `<mode-path>/docker-compose.yml|compose.yml`
-- `.env` dosyasi `mode/path` degerlerini override etmez.
+- The `.env` file does not override `mode/path` values.
 
-Laradock guvenlik kurali:
+Laradock safety rule:
 
-- `laradock-bridge` runtime komutlari path tahmin etmez.
-- `mode path set laradock-bridge <path>` yapilmamis ve `--path` gecilmemisse komut fail eder.
-- Boylece plume hangi Laradock dizinine dokunacagini deterministic sekilde bilir.
+- `laradock-bridge` runtime commands do not guess the path.
+- If `mode path set laradock-bridge <path>` was not done and `--path` was not passed, the command fails.
+- This way plume knows deterministically which Laradock directory it will touch.
 
-Lock davranisi:
+Lock behavior:
 
-- Kurulum/servis baslatma sonrasinda global context lock aktif olur.
-- Lock stale ise (canli workload yoksa) lock otomatik temizlenir.
-- Lock aktifken `mode use` ve `mode path set/clear` komutlari `--force` olmadan degisiklik yapmaz.
-- Aktif `docker-lite` path'te container calisiyorsa `mode/path` degisikligi `--force` ile bile yapilmaz.
-- Bu durumda once `./plume.sh services workspace down --mode=docker-lite` calistirilmalidir.
-- Aktif `laradock-bridge` konteynerleri varken `mode use native` gecisi bloklanir.
-  - Otomatik kapatma icin:
+- After install/service start, the global context lock becomes active.
+- If the lock is stale (no live workload), it is cleared automatically.
+- While the lock is active, `mode use` and `mode path set/clear` do not change state without `--force`.
+- If containers are running on the active `docker-lite` path, `mode/path` changes are blocked even with `--force`.
+- In that case run `./plume.sh services workspace down --mode=docker-lite` first.
+- Switching to `mode use native` is blocked while active `laradock-bridge` containers exist.
+  - For automatic shutdown:
     - `./plume.sh mode use native --force --yes --down-running`
-  - Manual kapatma alternatifi:
+  - Manual shutdown alternative:
     - `cd <laradock-path> && docker compose down`
-- `docker-lite` path degisimi (`mode path set ... --force`) sirasinda:
-  - eski path'te calisan container varsa degisim engellenir,
-  - yeni path'te compose dosyasi yoksa komut warning verir (`services workspace init` onerilir).
+- During `docker-lite` path change (`mode path set ... --force`):
+  - if containers are running on the old path, the change is blocked,
+  - if the new path has no compose file, the command warns (`services workspace init` is suggested).
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: mod degisimi basarili
-- `2`: gecersiz mod
+- `0`: mode change succeeded
+- `2`: invalid mode
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh mode use native
 ./plume.sh mode current
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Gecersiz mode degeri
-- Prereq saglanmayan moda gecis denemesi
-- Gecersiz veya olmayan path ile `mode path set`
+- Invalid mode value
+- Attempt to switch to a mode whose prereqs are not met
+- `mode path set` with an invalid or missing path

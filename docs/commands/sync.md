@@ -1,10 +1,10 @@
 # `sync` Commands
 
-## Amac
+## Purpose
 
-Canli runtime durumunu (ozellikle docker-lite) state dosyalari + SQLite ile senkron tutmak.
+Keep live runtime state (especially docker-lite) in sync via state files + SQLite.
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh sync state --mode=docker-lite
@@ -18,15 +18,15 @@ Canli runtime durumunu (ozellikle docker-lite) state dosyalari + SQLite ile senk
 ./plume.sh sync cron run --mode=docker-lite
 ```
 
-## Notlar
+## Notes
 
-- `sync state` docker-lite'ta canli container durumunu okuyup `services_runtime_*.env`, `services_ports_*.env` ve `plume-state.db` tablolarini gunceller.
-- `sync state` laradock-bridge'de explicit Laradock context ister:
+- `sync state` in docker-lite reads live container state and updates `services_runtime_*.env`, `services_ports_*.env`, and `plume-state.db` tables.
+- `sync state` in laradock-bridge requires an explicit Laradock context:
   - `--path=/abs/laradock`
-  - veya `mode path set laradock-bridge /abs/laradock`
-- Laradock-bridge sync'te source-of-truth canli `docker compose` durumudur.
-- Laradock-bridge sync port introspection davranisi:
-  - servis portlari tekil degil coklu host port olarak da yazilabilir (`workspace=2222,3000`, `nginx=80,443`)
-  - web servisleri icin `web_https` anahtari da senkronize edilir.
-- `sync cron install` varsayilan olarak saatlik cron yazar (`0 * * * *`).
-- Zamanlama `--schedule="15 * * * *"` ile degistirilebilir.
+  - or `mode path set laradock-bridge /abs/laradock`
+- For laradock-bridge sync, source-of-truth is live `docker compose` state.
+- Laradock-bridge sync port introspection behavior:
+  - service ports may be written as multiple host ports, not only a single one (`workspace=2222,3000`, `nginx=80,443`)
+  - for web services, the `web_https` key is also synchronized.
+- `sync cron install` writes an hourly cron by default (`0 * * * *`).
+- Schedule can be changed with `--schedule="15 * * * *"`.

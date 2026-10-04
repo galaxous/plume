@@ -1,10 +1,10 @@
-# `project` Komutu
+# `project` Command
 
-## Amac
+## Purpose
 
-`plumectl project` ailesi, Laravel proje bootstrap ve `.env` secret senkron adimlarini tek yuzeyde toplar.
+The `plumectl project` family gathers Laravel project bootstrap and `.env` secret sync steps into one surface.
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl project init --path=/abs/project
@@ -14,50 +14,50 @@ plumectl project init --path=/abs/project --dry-run
 plumectl project env sync-secrets --path=/abs/project --keys=APP_KEY,DB_PASSWORD
 ```
 
-## Parametreler
+## Parameters
 
-- `--path=<abs_path>`: zorunlu proje yolu
-- `--dry-run`: adimlari sadece plan olarak yazdirir, dosya/komut degisikligi yapmaz
+- `--path=<abs_path>`: required project path
+- `--dry-run`: print steps as a plan only; no file/command changes
 - `--migrate`: `php artisan migrate --force`
-- `--seed`: `php artisan db:seed --force` (otomatik olarak `--migrate` de calisir)
+- `--seed`: `php artisan db:seed --force` (also runs `--migrate` automatically)
 - `--npm-install`: `npm install`
 - `--npm-build`: `npm run build`
 - `--npm-dev`: `npm run dev`
-- `--skip-composer`: `composer install` adimini atlar
-- `--skip-key-generate`: `php artisan key:generate` adimini atlar
-- `--skip-storage-link`: `php artisan storage:link` adimini atlar
+- `--skip-composer`: skip the `composer install` step
+- `--skip-key-generate`: skip the `php artisan key:generate` step
+- `--skip-storage-link`: skip the `php artisan storage:link` step
 - `project env sync-secrets`:
-  - `--path=<abs_path>`: zorunlu proje yolu
-  - `--keys=K1,K2`: opsiyonel key filtresi (verilmezse tum secret keyleri)
-  - `--dry-run`: yazmadan planlanan `.env` degisimlerini gosterir
-  - `--create-env`: `.env` yoksa `.env.example` uzerinden olusturur
+  - `--path=<abs_path>`: required project path
+  - `--keys=K1,K2`: optional key filter (all secret keys if omitted)
+  - `--dry-run`: show planned `.env` changes without writing
+  - `--create-env`: if `.env` is missing, create it from `.env.example`
 
-## Davranis
+## Behavior
 
-1. `composer.json` varsa `composer install`
-2. `.env` yoksa `.env.example` dosyasindan `.env` olusturur
-3. `artisan` varsa:
+1. If `composer.json` exists, `composer install`
+2. If `.env` is missing, create `.env` from `.env.example`
+3. If `artisan` exists:
    - `key:generate`
    - `storage:link`
-   - opsiyonel `migrate` / `db:seed`
-4. `package.json` varsa opsiyonel npm adimlari
-5. `project env sync-secrets`, state'deki `secrets.env` keylerini proje `.env` dosyasina yazar/gunceller
-6. `project config show`, proje `plume.yml` MVP alanlarini okur — ayrinti: [project-config.md](project-config.md)
+   - optional `migrate` / `db:seed`
+4. If `package.json` exists, optional npm steps
+5. `project env sync-secrets` writes/updates keys from state `secrets.env` into the project `.env`
+6. `project config show` reads project `plume.yml` MVP fields — details: [project-config.md](project-config.md)
 
-## Alt komutlar
+## Subcommands
 
-| Alt komut | Dokuman |
-|-----------|---------|
-| `init` | bu dosya |
+| Subcommand | Docs |
+|------------|------|
+| `init` | this file |
 | `config show` | [project-config.md](project-config.md) |
-| `env sync-secrets` | bu dosya |
+| `env sync-secrets` | this file |
 
-## Exit Kodlari
+## Exit Codes
 
-- `0`: basarili
-- `2`: girdi/validation hatasi veya adim komutu hatasi
+- `0`: success
+- `2`: input/validation error or step command error
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl project init --path=/var/www/myapp

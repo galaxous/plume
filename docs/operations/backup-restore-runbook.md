@@ -1,13 +1,13 @@
 # Backup Restore Runbook
 
-## 1. Backup Al
+## 1. Take a Backup
 
 ```bash
 plumectl backup create --mode=<mode> --scope=all --name=before-change
 plumectl backup list --mode=<mode>
 ```
 
-## 2. Metadata Dogrula
+## 2. Verify Metadata
 
 ```bash
 plumectl backup show <backup-id>
@@ -26,7 +26,7 @@ plumectl --yes backup restore <backup-id> --mode=<mode>
 plumectl monitor summary --mode=<mode>
 ```
 
-## Notlar
+## Notes
 
-- `backup restore` kritik komuttur; `--yes` zorunludur (dry-run haric).
-- Restore sonrasi `monitor summary --strict` ile kritik issue kontrolu yapin.
+- `backup restore` is a critical command; `--yes` is required (except dry-run).
+- After restore, check critical issues with `monitor summary --strict`.

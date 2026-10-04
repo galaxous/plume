@@ -27,9 +27,9 @@ System-primary native supervisor (brew/systemd), `doctor supervisor`, first `--f
 - [x] Decision log D-149
 - [x] `docs/commands/doctor-supervisor.md`, `docs/commands/services-supervisor.md`
 - [x] OS matrix + services-horizon update
-- [x] Tracker satiri
+- [x] Tracker row
 
-## Referans
+## Reference
 
 - [services-supervisor.md](../../docs/commands/services-supervisor.md)
 - [doctor-supervisor.md](../../docs/commands/doctor-supervisor.md)

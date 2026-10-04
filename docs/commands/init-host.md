@@ -1,10 +1,10 @@
 # `init host` Command
 
-## Amac
+## Purpose
 
-Ilk kurulumda (ve gerektiginde) makine kimligini tespit edip `~/.config/plume/host.env` dosyasina yazmak. Adapter ve doktor komutlari bu dosyayi parse edebilir.
+Detect machine identity on first install (and when needed) and write it to `~/.config/plume/host.env`. Adapter and doctor commands can parse this file.
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh init host
@@ -15,59 +15,59 @@ Ilk kurulumda (ve gerektiginde) makine kimligini tespit edip `~/.config/plume/ho
 ./plume.sh doctor host --force
 ```
 
-Eksikse `templates/services.yml.example` → `~/.config/plume/services.yml` kopyalanir (mevcut dosya korunur). Bkz. [services-manifest.md](../operations/services-manifest.md).
+If missing, `templates/services.yml.example` → `~/.config/plume/services.yml` is copied (existing file is kept). See [services-manifest.md](../operations/services-manifest.md).
 
-## Parametreler
+## Parameters
 
-- `--force`: mevcut profili yeniden tespit edip uzerine yazar
-- `--json`: ciktiyi tek satir JSON olarak verir (dosya icerigi alanlari)
-- `--apply`: manifest'e gore native host kurulumu (`services provision --from-manifest` ile ayni)
+- `--force`: re-detect and overwrite the existing profile
+- `--json`: emit output as a single-line JSON (file content fields)
+- `--apply`: native host install from the manifest (same as `services provision --from-manifest`)
 
-## Dosya formati
+## File format
 
-Yol: `~/.config/plume/host.env` (override: `PLUME_HOST_PROFILE_FILE`)
+Path: `~/.config/plume/host.env` (override: `PLUME_HOST_PROFILE_FILE`)
 
-Alanlar (key=value):
+Fields (key=value):
 
-| Alan | Aciklama |
-|------|----------|
+| Field | Description |
+|-------|-------------|
 | `os` | `macos`, `linux`, `windows`, `unknown` |
-| `os_version` | macOS productVersion veya linux VERSION_ID |
+| `os_version` | macOS productVersion or linux VERSION_ID |
 | `arch` | `uname -m` |
 | `package_manager` | `brew`, `apt`, `dnf`, `manual`, `missing` |
-| `web_driver_hint` | Aktif `PLUME_WEB_SERVER_DRIVER` (varsayilan nginx) |
-| `nginx_http_port_detected` | Ana nginx.conf listen portu (bos = bulunamadi) |
+| `web_driver_hint` | Active `PLUME_WEB_SERVER_DRIVER` (default nginx) |
+| `nginx_http_port_detected` | Main nginx.conf listen port (empty = not found) |
 | `homebrew_nginx` | `true` / `false` |
-| `state_dir` | `PLUME_STATE_DIR` anlik degeri |
+| `state_dir` | Current `PLUME_STATE_DIR` value |
 | `detected_at` | UTC ISO8601 |
-| `native_support_note` | Yalnizca Windows: sinirli native mod notu |
+| `native_support_note` | Windows only: limited native mode note |
 
-## Cikti / Exit code
+## Output / Exit code
 
-- `0`: basarili veya profil zaten var (--force yok)
-- `2`: yazma/option hatasi
+- `0`: success or profile already exists (without `--force`)
+- `2`: write/option error
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh init host
 grep nginx_http_port_detected ~/.config/plume/host.env
 ```
 
-## Otomatik bootstrap
+## Automatic bootstrap
 
-`PLUME_AUTO_HOST_BOOTSTRAP=true` (varsayilan) iken profil yoksa ilk `plume.sh`/`plumectl` cagrisinda sessizce `init host` calisir. Kapatmak icin:
+With `PLUME_AUTO_HOST_BOOTSTRAP=true` (default), if the profile is missing, the first `plume.sh`/`plumectl` call silently runs `init host`. To disable:
 
 ```bash
 export PLUME_AUTO_HOST_BOOTSTRAP=false
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `$HOME/.config/plume` yazilamaz: exit 2
-- Windows/Git Bash: `os=windows` ve `native_support_note` set edilir; tam native nginx kurulmaz
+- `$HOME/.config/plume` not writable: exit 2
+- Windows/Git Bash: `os=windows` and `native_support_note` are set; full native nginx is not installed
 
-## Ilgili
+## Related
 
 - `docs/operations/first-run-onboarding.md`
 - `init onboarding`, `doctor web`, `services web sync-config`

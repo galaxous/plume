@@ -1,20 +1,20 @@
 # Phase Gate Checklist
 
-Her faz kapanmadan once zorunlu checklist:
+Mandatory checklist before a phase is closed:
 
-1. Ozellik kapsamı tamamlandi
-2. Testler eklendi ve gecti
-3. `docs/commands/` ilgili dosyalar guncellendi
-4. `docs/contracts/` gerekirse guncellendi
-5. `implementation/05-decision-log.md` guncellendi
-6. Sonraki faz riskleri yazildi
-7. Faz kapsamindaki E2E senaryolari (smoke degil) gecti
-8. `implementation/10-herd-parity-and-beyond.md` checklist etkileri guncellendi
+1. Feature scope is complete
+2. Tests were added and passed
+3. Related files under `docs/commands/` were updated
+4. `docs/contracts/` was updated if needed
+5. `implementation/05-decision-log.md` was updated
+6. Risks for the next phase were written down
+7. E2E scenarios in phase scope (not smoke) passed
+8. Checklist impacts in `implementation/10-herd-parity-and-beyond.md` were updated
 
-Checklist tamamlanmadan sonraki faza gecilmez.
+Do not move to the next phase until the checklist is complete.
 
-## Takip Akisi
+## Tracking Flow
 
-1. Master durum icin `implementation/phase-tracker.md` guncellenir.
-2. Faz detaylari icin `implementation/phases/phase-XX.md` dosyasi guncellenir.
-3. Faz `done` olmadan once bu dosyadaki 8 gate maddesinin tamami isaretlenir.
+1. Update `implementation/phase-tracker.md` for master status.
+2. Update `implementation/phases/phase-XX.md` for phase details.
+3. Before the phase is `done`, mark all 8 gate items in this file.

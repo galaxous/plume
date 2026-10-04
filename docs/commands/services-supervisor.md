@@ -1,10 +1,10 @@
 # `services supervisor`
 
-## Amac
+## Purpose
 
-Sistem birincil native supervisor (brew services / systemd): paket upgrade + config migrasyonu ve template tabanli program conf ekleme (D-149).
+System-primary native supervisor (brew services / systemd): package upgrade + config migration and template-based program conf add (D-149).
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh doctor supervisor
@@ -17,44 +17,44 @@ Sistem birincil native supervisor (brew services / systemd): paket upgrade + con
 ./plume.sh services up horizon --site=<site-id>
 ```
 
-Horizon icin tercih edilen yol: `site update <id> --horizon` + `services up horizon` (D-150, site basina `plume-horizon-<site-id>`). Manuel `program add --template=horizon` ozel worker icin.
+Preferred path for Horizon: `site update <id> --horizon` + `services up horizon` (D-150, per-site `plume-horizon-<site-id>`). Manual `program add --template=horizon` is for custom workers.
 
-Teşhis ve log: `plumectl doctor supervisor`, `plumectl services logs horizon` — `supervisorctl` yazmaniz gerekmez (D-152).
+Diagnose and logs: `plumectl doctor supervisor`, `plumectl services logs horizon` — you do not need to run `supervisorctl` (D-152).
 
-## Parametreler
+## Parameters
 
 ### `upgrade`
 
-- `--force` (zorunlu): paket upgrade + legacy Plume supervisord migrasyonu
-- `--yes` (zorunlu): kritik islem onayi
-- `--dry-run`: plan yaz, uygulama yok
+- `--force` (required): package upgrade + legacy Plume supervisord migration
+- `--yes` (required): confirm critical operation
+- `--dry-run`: print plan, do not apply
 
 ### `program add`
 
 - `--template=generic|horizon`
-- `--name=plume-worker` — program adi (`[program:name]`)
-- `--non-interactive`: template default'lari kullan (smoke/CI)
+- `--name=plume-worker` — program name (`[program:name]`)
+- `--non-interactive`: use template defaults (smoke/CI)
 
-Interaktif modda her template placeholder icin soru sorulur; onizleme sonrasi onay istenir.
+In interactive mode, each template placeholder is prompted; confirmation is required after preview.
 
-Program conf hedefi OS'e gore:
+Program conf target by OS:
 
 - macOS Homebrew: `$(brew --prefix)/etc/supervisor.d/plume-*.ini` (Homebrew include `*.ini`; D-153)
-- Debian/Ubuntu: `/etc/supervisor/conf.d/` (sudo gerekebilir)
-- RHEL/Fedora: `/etc/supervisord.d/` veya `/etc/supervisor/conf.d/`
+- Debian/Ubuntu: `/etc/supervisor/conf.d/` (sudo may be required)
+- RHEL/Fedora: `/etc/supervisord.d/` or `/etc/supervisor/conf.d/`
 
-Plume drop-in dizini/uzantisini `supervisord.conf` `[include] files=` satirindan okur; yanlis `opt/supervisor/etc` cache'i yok sayilir.
+Plume reads the drop-in directory/extension from `supervisord.conf` `[include] files=`; a wrong `opt/supervisor/etc` cache is ignored.
 Registry: `$(plume_state_dir)/native/supervisor/programs-registry.env`
 
-## Cikti / exit-code
+## Output / exit-code
 
-- `0`: basarili
-- `2`: `--force`/`--yes` eksik, yazma hatasi, supervisor down
+- `0`: success
+- `2`: missing `--force`/`--yes`, write error, supervisor down
 
-## Ornekler
+## Examples
 
 ```bash
-# Legacy D-147 -> system-primary migrasyon
+# Legacy D-147 -> system-primary migration
 ./plume.sh services supervisor upgrade --force --yes
 
 # Horizon worker (tunnelion)
@@ -65,10 +65,10 @@ PLUME_HORIZON_PATH=/path/to/laravel
 ./plume.sh services supervisor program add --template=generic
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `upgrade requires --force` — bilincli migrasyon icin `--force --yes`
-- `cannot write supervisor program conf` — Linux'ta sudo veya yazilabilir conf.d
-- Horizon icin artisan yok — `PLUME_HORIZON_PATH` veya site kaydi
+- `upgrade requires --force` — use `--force --yes` for intentional migration
+- `cannot write supervisor program conf` — sudo on Linux or a writable conf.d
+- No artisan for Horizon — `PLUME_HORIZON_PATH` or site record
 
-Iliskili: [doctor-supervisor.md](./doctor-supervisor.md), [services-horizon.md](./services-horizon.md).
+Related: [doctor-supervisor.md](./doctor-supervisor.md), [services-horizon.md](./services-horizon.md).

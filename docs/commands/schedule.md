@@ -1,10 +1,10 @@
 # `schedule` Commands
 
-## Amac
+## Purpose
 
-Laravel zamanlayici operasyonlari: durum ozeti (`status`), kayitli gorev listesi (`list`), tek seferlik `schedule:run` (`run-once`), kullanici crontab satiri ekleme/kaldirma (`cron-install`).
+Laravel scheduler operations: status summary (`status`), registered task list (`list`), one-shot `schedule:run` (`run-once`), and user crontab line add/remove (`cron-install`).
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh schedule status
@@ -21,35 +21,35 @@ Laravel zamanlayici operasyonlari: durum ozeti (`status`), kayitli gorev listesi
 ./plume.sh schedule cron-install --path=/abs/laravel-app --remove
 ```
 
-## Parametreler
+## Parameters
 
-- `status` (varsayilan alt komut): Scheduler durumu.
-- `list`: Proje dizininde `php artisan schedule:list` calistirir (Laravel 8+); cikti Artisan'a aittir.
-- `run-once`: Proje dizininde `php artisan schedule:run --no-interaction` bir kez calistirir.
-- `cron-install`: Kullanicinin crontab'ina (root degil) tek satir ekler veya `--remove` ile kaldirilir. Satir sonunda `# plume-laravel-schedule-cron` marker vardir.
-- `--dry-run` (`run-once`, `cron-install`): Komutu/crontab yazimini calistirmaz; planlanan shell veya crontab satirini yazar.
-- `--remove` (`cron-install`): Marker iceren plume scheduler satirlarini crontab'dan siler.
-- `--mode=native|docker-lite|laradock-bridge`: `status` icin mod baglami (diger alt komutlarda yok sayilir).
-- `--path=/abs/project`: Laravel proje kokunu zorla; verilmezse kayitli site (CWD eslesmesi), CWD'de `artisan`, veya aktif mod workspace yolu denenir.
-- Global `--json`: Yalnizca `status` icin JSON cikti (`ok`, `command`, `data`).
-- Test/smoke: `PLUME_CRONTAB_FILE=/path/to/file` ile gercek `crontab` yerine dosya kullanilir (hermetik testler).
+- `status` (default subcommand): Scheduler status.
+- `list`: Runs `php artisan schedule:list` in the project directory (Laravel 8+); output belongs to Artisan.
+- `run-once`: Runs `php artisan schedule:run --no-interaction` once in the project directory.
+- `cron-install`: Adds a single line to the user's crontab (not root), or removes it with `--remove`. Lines end with the `# plume-laravel-schedule-cron` marker.
+- `--dry-run` (`run-once`, `cron-install`): Does not run the command/crontab write; prints the planned shell or crontab line.
+- `--remove` (`cron-install`): Deletes plume scheduler lines containing the marker from crontab.
+- `--mode=native|docker-lite|laradock-bridge`: Mode context for `status` (ignored by other subcommands).
+- `--path=/abs/project`: Force Laravel project root; if omitted, tries registered site (CWD match), `artisan` in CWD, or active mode workspace path.
+- Global `--json`: JSON output for `status` only (`ok`, `command`, `data`).
+- Test/smoke: `PLUME_CRONTAB_FILE=/path/to/file` uses a file instead of real `crontab` (hermetic tests).
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: Basarili (`status`, `list`, `run-once`, `cron-install`, `--dry-run`, `--remove`, zaten kurulu idempotent).
-- `1`: Artisan komutu basarisiz (`list`, `run-once`; Laravel cikis kodu iletilir).
-- `2`: Gecersiz arguman, proje yolu cozulemedi, `artisan` yok, `php` bulunamadi, root kullanici, veya `crontab` yok.
+- `0`: Success (`status`, `list`, `run-once`, `cron-install`, `--dry-run`, `--remove`, already installed idempotent).
+- `1`: Artisan command failed (`list`, `run-once`; Laravel exit code is forwarded).
+- `2`: Invalid argument, project path unresolved, `artisan` missing, `php` not found, root user, or `crontab` missing.
 
-Text `status` ciktisi: `MODE`, `PROJECT_PATH`, `PROJECT_SOURCE`, `ARTISAN` (`present|missing`), `SCHEDULER_CRON` (`configured|maybe|not-configured|unknown`), `CRON_HINT`.
+Text `status` output: `MODE`, `PROJECT_PATH`, `PROJECT_SOURCE`, `ARTISAN` (`present|missing`), `SCHEDULER_CRON` (`configured|maybe|not-configured|unknown`), `CRON_HINT`.
 
-`cron-install` satiri (ornek): `* * * * * cd /abs/project && /path/to/php artisan schedule:run >> /dev/null 2>&1 # plume-laravel-schedule-cron` — PHP yolu site surumu veya `PLUME_PHP_BIN` ile cozulur.
+`cron-install` line (example): `* * * * * cd /abs/project && /path/to/php artisan schedule:run >> /dev/null 2>&1 # plume-laravel-schedule-cron` — PHP path is resolved from site version or `PLUME_PHP_BIN`.
 
-`run-once`: Crontab yoksa (`not-configured`) basarili calismadan sonra INFO ile `cron-install` veya `CRON_HINT` hatirlatilir.
+`run-once`: If crontab is missing (`not-configured`), after a successful run INFO reminds about `cron-install` or `CRON_HINT`.
 
-## Ornekler
+## Examples
 
 ```bash
-# tunnelion (Desktop — site kayitli veya --path)
+# tunnelion (Desktop — site registered or --path)
 ./plume.sh schedule status --path=/Users/me/Desktop/Projects.nosync/tunnelion
 ./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --dry-run
 ./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion
@@ -61,11 +61,11 @@ cd ~/Desktop/Projects.nosync/tunnelion && ./plume.sh schedule list
 ./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --remove
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Proje yolu bulunamaz (`--path` gerekir veya site/CWD/mode path ayarlanmali).
-- `crontab` yoksa `status` icin `SCHEDULER_CRON=unknown`; `cron-install` exit `2`.
-- Root ile calistirilirsa `cron-install` exit `2` (kullanici crontab'i hedeflenir).
-- `artisan` yoksa `list` / `run-once` / `cron-install` exit `2`; `status` WARN ile devam eder.
-- Eski Laravel surumlerinde `--no-interaction` desteklenmiyorsa `run-once` Artisan hatasi ile exit `1` doner.
-- Ayni marker zaten varsa `cron-install` tekrar eklemez (exit `0`, INFO).
+- Project path not found (`--path` required, or site/CWD/mode path must be set).
+- Without `crontab`, `status` shows `SCHEDULER_CRON=unknown`; `cron-install` exits `2`.
+- When run as root, `cron-install` exits `2` (targets user crontab).
+- Without `artisan`, `list` / `run-once` / `cron-install` exit `2`; `status` continues with WARN.
+- On older Laravel versions that do not support `--no-interaction`, `run-once` returns exit `1` with an Artisan error.
+- If the same marker already exists, `cron-install` does not add again (exit `0`, INFO).

@@ -1,10 +1,10 @@
 # `services` memcached (native)
 
-## Amac
+## Purpose
 
-Laradock `memcached` container’i gibi native cache: enable → up → credentials. Laravel `.env`: `MEMCACHED_HOST=127.0.0.1`.
+Native cache like the Laradock `memcached` container: enable → up → credentials. Laravel `.env`: `MEMCACHED_HOST=127.0.0.1`.
 
-## Kullanim
+## Usage
 
 ```bash
 MEMCACHED_ENABLED=true
@@ -13,25 +13,25 @@ MEMCACHED_ENABLED=true
 ./plume.sh services status memcached --mode=native
 ```
 
-## Parametreler
+## Parameters
 
 - `--mode=native`
-- Port: `PLUME_MEMCACHED_PORT` / `MEMCACHED_PORT` (varsayilan `11211`)
+- Port: `PLUME_MEMCACHED_PORT` / `MEMCACHED_PORT` (default `11211`)
 - OS: brew `memcached`; apt/dnf `memcached` + systemd
 
-## Cikti / exit-code
+## Output / exit-code
 
 - credentials: `host=127.0.0.1` `port=11211`
-- `0` basarili; `2` native olmayan mode veya kurulum hatasi
+- `0` success; `2` non-native mode or install error
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh services up @cache --mode=native
 ./plume.sh services env show memcached --mode=native
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- Port dolu: allocate `+1..+50` (registry port contract)
-- Linux: systemd yoksa start fail
+- Port in use: allocate `+1..+50` (registry port contract)
+- Linux: start fails without systemd

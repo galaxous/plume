@@ -2,7 +2,7 @@
 
 ## Objective
 
-Smoke matrix CI, golden JSON baseline, manual release test gate, kurulum dokumantasyonu.
+Smoke matrix CI, golden JSON baseline, manual release test gate, install documentation.
 
 ## Status
 
@@ -13,7 +13,7 @@ Smoke matrix CI, golden JSON baseline, manual release test gate, kurulum dokuman
 - [x] `.github/workflows/smoke-tests.yml`
 - [x] Manual release depends on smoke chain
 - [x] `tests/phase14_golden_json_smoke.sh`
-- [x] README kurulum bolumu
+- [x] README install section
 
 ## Test Checklist
 

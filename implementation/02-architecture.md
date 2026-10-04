@@ -1,30 +1,30 @@
 # Target Architecture
 
-## Tasarim Ilkeleri
+## Design Principles
 
-- Tek binary/entrypoint: `plumectl`
-- Mod bazli engine secimi: `native | docker-lite | laradock-bridge`
-- Idempotent komutlar: ayni komut tekrarinda bozucu etki olmamali
-- Durum farkindaligi: "kurulu mu, calisiyor mu, port bos mu" zeka katmani
-- Monolitik script yok: import (`source`) ile moduler shell mimarisi
+- Single binary/entrypoint: `plumectl`
+- Mode-based engine selection: `native | docker-lite | laradock-bridge`
+- Idempotent commands: repeating the same command must not have a destructive effect
+- State awareness: intelligence layer for "is it installed, is it running, is the port free"
+- No monolithic script: modular shell architecture via import (`source`)
 
-## Katmanlar
+## Layers
 
 1. CLI Layer
-   - Komut parse
-   - Mode secimi
+   - Command parse
+   - Mode selection
    - Output formatting
 
 2. Config Layer
-   - `plume.yml` okuma/dogrulama
+   - `plume.yml` read/validate
    - Environment override
-   - Secret referanslari (path/env)
+   - Secret references (path/env)
    - Unified `.env` contract (`PLUME_*`) + mode-specific prefixes
 
 3. State Layer
-   - Runtime state (`~/.config/plume/state.json` benzeri)
-   - Port allocation kayitlari
-   - Last health-check sonuclari
+   - Runtime state (similar to `~/.config/plume/state.json`)
+   - Port allocation records
+   - Last health-check results
 
 4. Engine Layer
    - NativeEngine
@@ -32,15 +32,15 @@
    - LaradockBridgeEngine
 
 5. Service Adapters
-   - Her servis icin install/start/stop/status/health/logs
-   - Paket yonetimi ve config dosyasi template isleri
-   - Mode bazli supported-service envanteri
-   - Servis bagimlilik kurallari (ornek: `horizon -> supervisor`)
+   - install/start/stop/status/health/logs for each service
+   - Package management and config file template work
+   - Mode-based supported-service inventory
+   - Service dependency rules (example: `horizon -> supervisor`)
 
 6. Observability Layer
-   - Health-check toplayici
-   - Log toplayici/yonlendirici
-   - Basit metrik ozeti
+   - Health-check collector
+   - Log collector/router
+   - Simple metrics summary
 
 7. Platform & Prerequisite Layer
    - OS detection (macOS/Linux)
@@ -48,14 +48,14 @@
    - Core dependency checks + fail-fast gate
 
 8. Site Registry Layer
-   - Merkezi websites kayitlari (`site-id`, path, domain, server, mode)
-   - Server-specific config render/publish akisi
-   - Drift detection (registry ile sistem config farki)
+   - Central website records (`site-id`, path, domain, server, mode)
+   - Server-specific config render/publish flow
+   - Drift detection (registry vs system config difference)
 
 9. Documentation & Contract Layer
-   - Komut bazli dokumantasyon (`docs/commands/*`)
-   - CLI output/exit-code sozlesmeleri (`docs/contracts/*`)
-   - Her release'te adapter-readiness kontrolu
+   - Command-based documentation (`docs/commands/*`)
+   - CLI output/exit-code contracts (`docs/contracts/*`)
+   - Adapter-readiness check on every release
 
 10. Security, Secrets & Rollback Layer
    - TLS certificate lifecycle (issue/renew/apply)
@@ -74,146 +74,146 @@
    - Deploy orchestration (`migrate`, warmup, restart, health gate, rollback)
 
 13. Service Reconcile Layer
-   - Config diff (enabled toggles) tespiti
-   - `false -> true` servisler icin auto install + auto start
-   - Drift ve partial-failure retry policy
+   - Config diff (enabled toggles) detection
+   - Auto install + auto start for `false -> true` services
+   - Drift and partial-failure retry policy
 
-## Shell Modulerlik Sozlesmesi
+## Shell Modularity Contract
 
-Onerilen dosya yapisi:
+Recommended file layout:
 
-- `bin/plumectl`: ince entrypoint, sadece bootstrap + router cagrisi
+- `bin/plumectl`: thin entrypoint, bootstrap + router call only
 - `lib/bootstrap.sh`: strict mode, env bootstrap, import loader
 - `lib/common/*.sh`: log, error, fs, process, ports
-- `lib/config/*.sh`: yaml parse/validate (ileride parser baglantisi)
-- `lib/commands/*.sh`: komut handler'lari (`cmd_status`, `cmd_services_up` vb.)
+- `lib/config/*.sh`: yaml parse/validate (parser wiring later)
+- `lib/commands/*.sh`: command handlers (`cmd_status`, `cmd_services_up`, etc.)
 - `lib/engines/*.sh`: `engine_native_*`, `engine_docker_lite_*`, `engine_laradock_bridge_*`
-- `lib/services/*.sh`: servis adaptorleri (`svc_mysql_*`, `svc_redis_*`)
+- `lib/services/*.sh`: service adapters (`svc_mysql_*`, `svc_redis_*`)
 - `lib/sites/*.sh`: site registry, prompt, server config publish, hosts sync
-- `lib/docs/*.sh` (opsiyonel): doc-sync yardimci scriptleri
+- `lib/docs/*.sh` (optional): doc-sync helper scripts
 
-Import kurallari:
+Import rules:
 
-- Tum moduller `#!/usr/bin/env bash` ve `set -euo pipefail` uyumlu olmali
-- Import sadece bootstrap uzerinden yapilmali (daginik `source` yasak)
-- Fonksiyon adlari namespace ile baslamali:
+- All modules must be compatible with `#!/usr/bin/env bash` and `set -euo pipefail`
+- Import must only happen through bootstrap (scattered `source` is forbidden)
+- Function names must start with a namespace:
   - `cmd_*`, `engine_*`, `svc_*`, `port_*`, `cfg_*`, `log_*`
-- Moduller global degisken yerine acik parametre + return code kullanmali
-- Komutlar test edilebilirlik icin yan etkili adimlari adaptor fonksiyonlarina deleg etmeli
+- Modules should use explicit parameters + return codes instead of global variables
+- For testability, commands should delegate side-effect steps to adapter functions
 
-## Website Onboarding Tasarimi
+## Website Onboarding Design
 
-Hedef komutlar:
+Target commands:
 
 - `plumectl site add` (interactive)
 - `plumectl site add --path=... --domain=... --server=nginx` (non-interactive)
-- `plumectl site link <site-id>` (registry kaydini aktif server config'e yazar)
-- `plumectl site check <site-id>` (path + config + port + health dogrulama)
+- `plumectl site link <site-id>` (writes registry record into active server config)
+- `plumectl site check <site-id>` (path + config + port + health validation)
 
-Interactive prompt adimlari (`site add`):
+Interactive prompt steps (`site add`):
 
-1. Proje yolu sor
-2. Yol gercek mi ve web root var mi kontrol et (`public/`, static root, custom root)
-3. Web server secimi sor (`nginx|apache2|caddy`)
-4. Domain/alias sor (`myapp.test`, `api.myapp.test`)
-5. Cakisma kontrolu yap (domain ayni, path ayni, port/service down)
-6. Registry kaydini yaz
-7. Server config dosyasini uret ve aktif et
-8. Gerekirse hosts guncelle + server reload + sonuc raporu
-9. Laravel proje ise bootstrap adimlarini oner/uygula
+1. Ask for project path
+2. Check whether the path is real and a web root exists (`public/`, static root, custom root)
+3. Ask for web server choice (`nginx|apache2|caddy`)
+4. Ask for domain/alias (`myapp.test`, `api.myapp.test`)
+5. Run conflict checks (same domain, same path, port/service down)
+6. Write the registry record
+7. Generate and activate the server config file
+8. Update hosts if needed + server reload + result report
+9. If it is a Laravel project, suggest/apply bootstrap steps
 
-Merkezi registry ve path cozumleme:
+Central registry and path resolution:
 
-- CWD'den bagimsiz calisir; her site kaydi absolute path tutar
-- Varsayilan registry konumu:
-  - Lokal: `~/.config/plumectl/sites/`
+- Works independently of CWD; every site record keeps an absolute path
+- Default registry locations:
+  - Local: `~/.config/plumectl/sites/`
   - Server: `/etc/plume/sites/`
-- Her proje icin bir `website.yaml`, global indeks icin `index.yaml`
-- Komutlar `--cwd` yerine registry'deki path'i source of truth kabul eder
+- One `website.yaml` per project, `index.yaml` for the global index
+- Commands treat the path in the registry as the source of truth instead of `--cwd`
 
-## Dokumantasyon Zorunlulugu
+## Documentation Requirement
 
-- Her yeni komut ve flag icin `docs/commands` altinda belge zorunlu
-- Davranis degisikliginde komut dokumani ve sozlesme dosyasi ayni degisiklikte guncellenmeli
-- CLI ciktilari adapter tarafinda parse edilecegi icin:
-  - Basarili islerde stabil alan isimleri
-  - Hatali islerde stabil error code + message semasi
+- Docs under `docs/commands` are mandatory for every new command and flag
+- On behavior changes, the command doc and contract file must be updated in the same change
+- Because CLI outputs will be parsed on the adapter side:
+  - Stable field names on success
+  - Stable error code + message schema on failure
 
-## Yetki Modeli (Privilege Split)
+## Privilege Model (Privilege Split)
 
-- Sudo/root zorunlu:
+- Sudo/root required:
   - install, uninstall, update, service package install, system config write
-- Root zorunlu olmayan runtime komutlari:
-  - `status`, `health`, `logs`, `services up/down` (mumkun oldugunca non-root)
-- Komut her zaman once yetki preflight kontrolu yapar ve eksikse net yonerge verir
+- Runtime commands that do not require root:
+  - `status`, `health`, `logs`, `services up/down` (non-root whenever possible)
+- Every command first runs a privilege preflight check and gives clear guidance if missing
 
-## Horizon & Supervisor Kurali
+## Horizon & Supervisor Rule
 
-- Laravel Horizon, native modda supervisor ile yonetilir.
-- `horizon.enabled=true` ise:
-  - `supervisor` prereq kontrolu zorunlu
-  - supervisor config/template publish zorunlu
-  - `plumectl services up horizon` supervisor uzerinden process acmali
-- Docker-lite modda Horizon icin supervisor veya esdeger process manager stratejisi dokumante edilir.
+- Laravel Horizon is managed with supervisor in native mode.
+- If `horizon.enabled=true`:
+  - `supervisor` prereq check is required
+  - supervisor config/template publish is required
+  - `plumectl services up horizon` must start the process through supervisor
+- In docker-lite mode, a supervisor or equivalent process manager strategy for Horizon is documented.
 
 ## Secrets & TLS
 
-- Secrets kaynaklari:
+- Secret sources:
   - environment variables
-  - encrypted/plain file reference (policy'ye gore)
+  - encrypted/plain file reference (per policy)
 - TLS:
-  - local: self-signed/mkcert benzeri akis
-  - production: ACME/letsencrypt benzeri otomasyon
-  - docker-lite icin gerekirse dedicated cert-helper container
+  - local: self-signed/mkcert-like flow
+  - production: ACME/letsencrypt-like automation
+  - for docker-lite, a dedicated cert-helper container if needed
 
-## Rollback Modeli
+## Rollback Model
 
-- Config apply adimlari transaction benzeri calisir:
-  1. once backup al
-  2. yeni config yaz
-  3. validation/reload yap
-  4. fail olursa onceki config'e otomatik don
-- Rollback sonucunu log ve status katmanina yaz
+- Config apply steps run in a transaction-like way:
+  1. take a backup first
+  2. write the new config
+  3. validate/reload
+  4. on failure, automatically restore the previous config
+- Write the rollback result to the log and status layers
 
 ## Laravel Project Lifecycle
 
 - Bootstrap:
   - `composer install`
-  - `.env` olustur/merge
+  - create/merge `.env`
   - `php artisan key:generate`
   - `php artisan storage:link`
-  - opsiyonel: `php artisan migrate --force`, `db:seed`, `config:cache`, `route:cache`
+  - optional: `php artisan migrate --force`, `db:seed`, `config:cache`, `route:cache`
 - Runtime:
   - scheduler: cron/systemd timer
   - queue worker: supervisor/system service
-  - horizon: supervisor zorunlu
-  - optional: octane/reverb process manager entegrasyonu
+  - horizon: supervisor required
+  - optional: octane/reverb process manager integration
 - Deploy:
   - preflight checks
   - code/artifact switch
   - migration gate
   - queue/horizon recycle
   - post-deploy health verification
-  - fail durumunda rollback
+  - rollback on failure
 
-## OS Ayrimi ve Prereq Gate
+## OS Split and Prereq Gate
 
-Platform fonksiyonlari:
+Platform functions:
 
 - `platform_detect_os` -> `macos | linux`
 - `platform_detect_pkg_manager` -> `brew | apt | dnf | unknown`
 - `platform_detect_init` -> `launchd | systemd | unknown`
 
-Core prereq politikasi:
+Core prereq policy:
 
-- Her komut execution'dan once ilgili profile gore prereq kontrolu yapar
-- Eksik zorunlu bagimlilik varsa komut `non-zero` ile durur
-- Ciktida su verilir:
-  - eksik paket listesi
-  - otomatik/manuel kurulum komut onerisi (OS'e gore)
-  - "yeniden dene" adimi
+- Every command runs the related profile prereq check before execution
+- If a required dependency is missing, the command stops with `non-zero`
+- Output includes:
+  - missing package list
+  - automatic/manual install command suggestion (by OS)
+  - "retry" step
 
-Ornek prereq profilleri:
+Example prereq profiles:
 
 - `base`: bash, sed, awk, grep, cut, xargs, tar, gzip, curl
 - `native-install`: base + sudo + package-manager(brew/apt/dnf)
@@ -223,43 +223,43 @@ Ornek prereq profilleri:
 
 ## Environment Contract
 
-- Tum ayarlar `.env` ve yaml'den birlikte cozulur.
-- Oncelik:
+- All settings are resolved together from `.env` and yaml.
+- Precedence:
   1. CLI flags
   2. `.env` (`PLUME_*`)
   3. yaml config
   4. built-in defaults
-- Mode-ozel prefixler:
+- Mode-specific prefixes:
   - native: `PLUME_NATIVE_*`
   - docker-lite: `PLUME_DOCKER_LITE_*`
   - laradock-bridge: `PLUME_LARADOCK_*`
 
 ## Service Versioning & PHP Alias
 
-- Her servis icin versiyon secimi desteklenir (ornek: mysql 8.0, redis 7, mariadb 11).
-- Version secimi precedence:
+- Version selection is supported per service (example: mysql 8.0, redis 7, mariadb 11).
+- Version selection precedence:
   1. CLI `--version`
   2. project yaml
   3. global default
-- PHP icin:
-  - Birden fazla surum birlikte bulunabilir
-  - `php` default alias'i aktif surume isaret eder
-  - versioned aliaslar (`php81`, `php82`, `php83`) olusturulur
-  - Composer ve PHP-FPM binding'i secilen aktif surumle uyumlu olur
+- For PHP:
+  - Multiple versions can coexist
+  - The `php` default alias points to the active version
+  - Versioned aliases (`php81`, `php82`, `php83`) are created
+  - Composer and PHP-FPM binding stay aligned with the selected active version
 
 ## Service Default Profile & Reconcile
 
-- Varsayilan profil: `minimal-default`
+- Default profile: `minimal-default`
   - enabled: nginx(web), php, composer, mariadb
-  - disabled: diger tum opsiyonel servisler
-- `services update` davranisi:
-  1. mevcut state + config karsilastir
-  2. `false -> true` servisleri bul
+  - disabled: all other optional services
+- `services update` behavior:
+  1. compare current state + config
+  2. find `false -> true` services
   3. prereq check
   4. install + start
-  5. sonuclari state/log'a yaz
+  5. write results to state/log
 
-## Ornek Komut Agaci
+## Example Command Tree
 
 - `plumectl mode use <mode>`
 - `plumectl project init`
@@ -273,22 +273,22 @@ Ornek prereq profilleri:
 - `plumectl health [service|all]`
 - `plumectl doctor [--deep]`
 
-## Port Intelligence Stratejisi
+## Port Intelligence Strategy
 
-- Her servis icin oncelik listesi:
-  - ornek mysql: `3306, 3307, 3308`
-- Algoritma:
-  - Bos port bul -> ata -> state'e yaz
-  - Doluluk degisti ise yeniden reconcile et
-- Cikti:
-  - Kullaniciya deterministic rapor:
+- Priority list per service:
+  - example mysql: `3306, 3307, 3308`
+- Algorithm:
+  - Find a free port -> allocate -> write to state
+  - If occupancy changes, reconcile again
+- Output:
+  - Deterministic report to the user:
     - "mysql: requested 3306, allocated 3307 (3306 occupied by process X)"
 
-## Guvenlik ve Operasyon
+## Security and Operations
 
-- Root/sudo gereken adimlar acikca ayrilacak
-- `dry-run` modu ile uygulanacak degisiklikler onceden gosterilecek
-- Uretim modunda kritik adimlar confirm gate ile korunacak
+- Steps that need root/sudo will be clearly separated
+- Changes to apply will be shown beforehand via `dry-run` mode
+- In production mode, critical steps will be protected by a confirm gate
 
 ## Naming Policy
 
@@ -298,4 +298,4 @@ Ornek prereq profilleri:
 - Repository naming: `laravel-plume`
 - Package naming:
   - Packagist: `<vendor>/laravel-plume`
-  - Homebrew formula: `laravel-plume` veya `plumectl`
+  - Homebrew formula: `laravel-plume` or `plumectl`

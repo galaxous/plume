@@ -1,82 +1,82 @@
 # Core Prerequisites Matrix
 
-Amac: Servis paketlerinden once calismasi gereken cekirdek bagimliliklari standardize etmek.
+Goal: Standardize the core dependencies that must work before service packages.
 
-## Kural
+## Rule
 
-- Core prereq eksikse ilgili komut fail-fast durur.
-- Cikti su bilgileri tasir:
-  - eksik komut/paket
-  - neden gerekli
-  - OS'e ozel kurulum onerisi
+- If a core prereq is missing, the related command stops fail-fast.
+- Output carries:
+  - missing command/package
+  - why it is required
+  - OS-specific install suggestion
 
-## OS Bazli Paket Yoneticisi
+## OS-Based Package Manager
 
 - macOS: `brew`
 - Linux:
   - Debian/Ubuntu: `apt`
   - RHEL/Fedora: `dnf`
-  - Digerleri: `manual` (rehber verilir, otomatik kurulum yok)
+  - Others: `manual` (guidance provided; no automatic install)
 
-## Prereq Profilleri (Phase 3)
+## Prereq Profiles (Phase 3)
 
 1. `base`
-- Komutlar: `bash sed awk grep cut xargs tar gzip curl`
-- Kullanim: tum komutlar icin minimum profil
+- Commands: `bash sed awk grep cut xargs tar gzip curl`
+- Usage: minimum profile for all commands
 
 2. `native-install`
-- Komutlar: `sudo` + OS package manager (`brew/apt/dnf`)
-- Kullanim: host uzerine servis kurulum adimlari
+- Commands: `sudo` + OS package manager (`brew/apt/dnf`)
+- Usage: host service install steps
 
 3. `git-ops`
-- Komutlar: `git ssh`
-- Kullanim: repo/remote operasyonlari
+- Commands: `git ssh`
+- Usage: repo/remote operations
 
 4. `docker-lite`
-- Komutlar: `docker`
-- Kullanim: docker-lite ve laradock-bridge pathleri
+- Commands: `docker`
+- Usage: docker-lite and laradock-bridge paths
 
 5. `security-check`
-- Komutlar:
+- Commands:
   - macOS: `pfctl`
   - Linux baseline: `getenforce`
-- Kullanim: firewall/OS security preflight baslangic kontrolu
+- Usage: initial firewall/OS security preflight check
 
 6. `horizon-runtime`
-- Komutlar: `supervisorctl php`
-- Kullanim: Laravel Horizon process kontrolu
+- Commands: `supervisorctl php`
+- Usage: Laravel Horizon process control
 
 7. `laravel-bootstrap`
-- Komutlar: `php composer`
-- Kullanim: `project init` bootstrap adimlari
+- Commands: `php composer`
+- Usage: `project init` bootstrap steps
 
 8. `frontend-build`
-- Komutlar: `node npm`
-- Kullanim: build/dev server akislari
+- Commands: `node npm`
+- Usage: build/dev server flows
 
-## CLI Davranisi
+## CLI Behavior
 
 - `./plume.sh prereq check --profile=<name>`
-  - eksikleri listeler
-  - exit code: eksik varsa `2`, yoksa `0`
+  - lists missing items
+  - exit code: `2` if missing, otherwise `0`
 - `./plume.sh prereq explain`
-  - profil + gerekce listesini verir
+  - returns profile + rationale list
 - `./plume.sh --json prereq check --profile=<name>`
-  - machine-readable cikti verir
+  - returns machine-readable output
 
 ## Root Boundary (Phase 3)
 
-- Kurulum/guncelleme adimlari root/sudo ister:
+- Install/update steps require root/sudo:
   - `./plume.sh services install ...`
   - `./plume.sh services update`
-- Runtime odakli komutlar root istemez:
-  - `services status`, `services supported`, `services up/down` (phase1/2 stub seviyesinde)
+- Runtime-focused commands do not require root:
+  - `services status`, `services supported`, `services up/down` (phase1/2 stub level)
 
-## Linux Test Cozumu (Mac Uzerinde)
+## Linux Test Solution (On Mac)
 
-- Lokal Linux dogrulamasi container ile yapilir:
+- Local Linux verification is done via container:
   - `tests/linux_prereq_matrix.sh`
-  - Ubuntu (`apt`) ve Fedora (`dnf`) containerlarinda prereq profilleri calistirilir
-- Tum Phase 3 smoke:
+  - Prereq profiles run in Ubuntu (`apt`) and Fedora (`dnf`) containers
+- Full Phase 3 smoke:
   - `tests/phase3_prereq_smoke.sh`
-  - Linux matrix dahil calistirmak icin: `PLUME_RUN_LINUX_TESTS=1 tests/phase3_prereq_smoke.sh`
+  - To include the Linux matrix: `PLUME_RUN_LINUX_TESTS=1 tests/phase3_prereq_smoke.sh`

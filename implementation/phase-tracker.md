@@ -1,7 +1,7 @@
 # Phase Tracker (Single Source of Truth)
 
-Bu dosya tum fazlarin ilerleme durumunu tek yerden takip eder.
-Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
+This file tracks the progress status of all phases in one place.
+After every PR/commit, update the relevant row and phase file.
 
 ## Status Legend
 
@@ -43,8 +43,8 @@ Her PR/commit sonunda ilgili satiri ve faz dosyasini guncelle.
 
 ## Update Rules
 
-1. Kod degisikligi hangi faza aitse, o faz checklist dosyasinda ilgili maddeleri isaretle.
-2. Faz tamamlanmadan `status=done` yapma.
-3. Faz kapanisinda gate maddelerinin hepsi tamam olmali.
-4. Her faz kapanisinda `implementation/05-decision-log.md` kaydi zorunlu.
-5. Her fazda ilgili komut dokumanlari ve operation dokumanlari guncel olmali.
+1. Mark the related checklist items in the phase file that the code change belongs to.
+2. Do not set `status=done` before the phase is complete.
+3. On phase closure, every gate item must be complete.
+4. Every phase closure requires an entry in `implementation/05-decision-log.md`.
+5. Related command docs and operations docs must stay up to date in every phase.

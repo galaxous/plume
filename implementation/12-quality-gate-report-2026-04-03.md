@@ -2,8 +2,8 @@
 
 ## Scope
 
-- Phase-10 stabilization baselini icin tek-komut matrix runner dogrulandi.
-- Native + Laradock-bridge + Docker-lite(beta-frozen regression) zinciri calistirildi.
+- Single-command matrix runner verified for the Phase-10 stabilization baseline.
+- Native + Laradock-bridge + Docker-lite (beta-frozen regression) chain was executed.
 
 ## Executed Commands
 
@@ -30,5 +30,5 @@
 
 ## Notes
 
-- Phase-9 kritik guard degisikligi nedeniyle phase-8 smoke testleri `--yes` uyumuna alinmistir.
-- Docker-lite full parity kapsami bu raporda yoktur; sadece beta-frozen regression sinyali vardir.
+- Due to a Phase-9 critical guard change, phase-8 smoke tests were aligned to `--yes` compatibility.
+- Full Docker-lite parity is out of scope for this report; only a beta-frozen regression signal is present.

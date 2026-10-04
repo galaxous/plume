@@ -46,5 +46,5 @@
 - Owner: @team
 - Related PR/Commit: local workspace changes
 - Open risks:
-  - `security-check` profili Linux'ta AppArmor/firewalld/ufw sinyalleriyle genisletilmeli.
-  - Phase 4'te site onboarding akisi prereq profilleri ile command-level enforce edilmeli.
+  - The `security-check` profile should be extended on Linux with AppArmor/firewalld/ufw signals.
+  - In Phase 4, the site onboarding flow must be enforced at command level together with prereq profiles.

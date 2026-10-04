@@ -2,7 +2,7 @@
 
 ## Objective
 
-- Native mode'u, kullaniciya laradock/docker workflow hissi verecek tek-contract adapter katmanina yaklastirmak.
+- Bring native mode closer to a single-contract adapter layer that gives users a laradock/docker workflow feel.
 
 ## Status
 
@@ -17,8 +17,8 @@
 - [x] Core parity: `phpmyadmin` (baseline)
 - [x] Core parity: `laravel-horizon` (+ supervisor) (baseline)
 - [x] Core parity: `redis` (baseline)
-- [x] Native service contract surface (laradock-benzeri komut semantigi)
-- [x] Native site lifecycle + php runtime secimi parity hardening
+- [x] Native service contract surface (laradock-like command semantics)
+- [x] Native site lifecycle + php runtime selection parity hardening
 - [x] Native queue/horizon/supervisor operational parity
 - [x] Native DB stack parity (mariadb/mysql/redis/phpmyadmin) with adapter mapping
 
@@ -29,7 +29,7 @@
 - [x] Global native env command surface (`env where|init`) + bootstrap wiring
 - [x] Built-in native core env example template (`templates/native-core.env.example`)
 - [x] Native service profiles (`@core/@web/@db/@queue`) laradock-equivalent behavior
-- [x] Site add/update/publish icin php runtime resolve contract stabilization
+- [x] Site add/update/publish php runtime resolve contract stabilization
 - [x] Horizon lifecycle wrapper (start/stop/status/logs) with supervisor dependency clarity
 - [x] PMA engine routing (`PMA_DB_ENGINE`) native UX hardening
 
@@ -68,46 +68,46 @@
 - Owner:
 - Related PR/Commit:
 - Progress:
-  - `tests/phase11_native_adapter_contract_smoke.sh` eklendi.
-  - `tests/phase11_native_core_services_parity_smoke.sh` eklendi ve gecti.
-  - `tests/phase11_native_php_matrix_smoke.sh` eklendi ve gecti.
-  - `tests/phase11_mode_switch_laradock_down_smoke.sh` eklendi ve gecti.
-  - `php` komut ailesi aktif edildi (`list|install|use|alias list|alias set|alias default`).
-  - Native PHP default/custom surum konfigurasyonu state dosyasina kalici yaziliyor (`php.env`).
-  - `env` komut ailesi eklendi (`env where|init`) ve global native env path yonetimi netlesti.
-  - Built-in native core env template eklendi (`templates/native-core.env.example`).
-  - `mode use ... --down-running` ile laradock-bridge'ten native'e geciste calisan compose servisleri kontrollu sekilde `down` edilebiliyor.
-  - Native/global env modeli aktif: varsayilan env `~/.config/plume/.env`, otomatik bootstrap destekli.
-  - Services contract'ta PHP target alias resolve genisletildi:
+  - `tests/phase11_native_adapter_contract_smoke.sh` added.
+  - `tests/phase11_native_core_services_parity_smoke.sh` added and passed.
+  - `tests/phase11_native_php_matrix_smoke.sh` added and passed.
+  - `tests/phase11_mode_switch_laradock_down_smoke.sh` added and passed.
+  - `php` command family activated (`list|install|use|alias list|alias set|alias default`).
+  - Native PHP default/custom version configuration is persisted to the state file (`php.env`).
+  - `env` command family added (`env where|init`) and global native env path management clarified.
+  - Built-in native core env template added (`templates/native-core.env.example`).
+  - With `mode use ... --down-running`, running compose services can be controlled `down` when switching from laradock-bridge to native.
+  - Native/global env model active: default env `~/.config/plume/.env`, with automatic bootstrap support.
+  - PHP target alias resolve expanded in the services contract:
     - `services up php84`, `services status php-fpm-8.4`, `services health php82`, `services logs php84`
-    - hepsi canonical `php` service + hedef PHP version resolve ile calisiyor.
-  - Yeni regression testi eklendi ve gecti:
+    - all run via the canonical `php` service + target PHP version resolve.
+  - New regression test added and passed:
     - `tests/phase11_services_php_alias_target_smoke.sh`
-  - `plume_load_env` dis env oneceligini koruyacak sekilde guncellendi:
-    - komut satirindan verilen `PLUME_*`/`PMA_*` degerleri global env tarafindan ezilmiyor.
-  - Host php shim komutlari eklendi:
+  - `plume_load_env` updated to preserve external env precedence:
+    - `PLUME_*`/`PMA_*` values provided on the command line are not overwritten by global env.
+  - Host php shim commands added:
     - `php shim install|env|list|remove`
-    - `php8.4` ve `php-fpm-8.4` gibi executable shim dosyalari uretilip PATH'e eklenebiliyor.
-  - Shell bootstrap komutu eklendi:
+    - executable shim files such as `php8.4` and `php-fpm-8.4` can be produced and added to PATH.
+  - Shell bootstrap command added:
     - `init shell [--shell=zsh|bash] [--rc=...] [--force]`
-    - rc dosyasina plume shim aktivasyon blogunu idempotent sekilde yazar.
-  - `php shim env` genisletildi:
-    - default disi tum kurulu PHP versiyonlari icin shell alias export eder (`php81`, `phpfpm81`).
-  - Doctor komutu genisletildi:
-    - `doctor php [--strict]` ile configured PHP matrix icin cli/fpm binary bulunurlugu raporlanir.
-    - `--strict` modunda eksik binary varsa `exit 2`.
-  - Native `services install php` gercek host binary provisioning'e baglandi:
-    - install driver: `brew|apt` (dnf su an manual yonlendirme)
-    - kurulum sonrasi cli/fpm binary verify + php matrix state auto-register.
-  - Native `services up php` auto-provision davranisi eklendi:
-    - hedef surum matrix/binary tarafinda hazir degilse install+verify+register otomatik calisir.
-  - PHP extension matrix eklendi:
+    - writes the plume shim activation block to the rc file idempotently.
+  - `php shim env` expanded:
+    - exports shell aliases for all installed PHP versions other than default (`php81`, `phpfpm81`).
+  - Doctor command expanded:
+    - `doctor php [--strict]` reports cli/fpm binary availability for the configured PHP matrix.
+    - in `--strict` mode, missing binaries yield `exit 2`.
+  - Native `services install php` wired to real host binary provisioning:
+    - install driver: `brew|apt` (dnf currently manual guidance)
+    - after install: cli/fpm binary verify + php matrix state auto-register.
+  - Native `services up php` auto-provision behavior added:
+    - if the target version is not ready on the matrix/binary side, install+verify+register runs automatically.
+  - PHP extension matrix added:
     - `PLUME_PHP_EXTENSIONS_GLOBAL` + `PLUME_PHP_EXTENSIONS_<major><minor>`
-    - `php ext sync <version|all>` ve `php ext doctor --strict`
-    - `services up php` sirasinda extension auto-sync (`PLUME_PHP_EXTENSIONS_AUTO_SYNC=true`)
-  - Doctor genisletmesi:
+    - `php ext sync <version|all>` and `php ext doctor --strict`
+    - extension auto-sync during `services up php` (`PLUME_PHP_EXTENSIONS_AUTO_SYNC=true`)
+  - Doctor expansion:
     - `doctor php-ext --strict`
-  - Yeni test eklendi ve gecti:
+  - New tests added and passed:
     - `tests/phase11_php_shim_smoke.sh`
     - `tests/phase11_init_shell_smoke.sh`
     - `tests/phase11_php_shell_alias_export_smoke.sh`
@@ -129,41 +129,41 @@
     - `tests/phase11_php_ext_resolve_contract_smoke.sh`
     - `tests/phase11_php_ext_toggle_disable_precedence_smoke.sh`
     - `tests/phase11_site_check_strict_visibility_smoke.sh`
-  - Core parity onceligi 6 servis setine kilitlendi:
+  - Core parity priority locked to a 6-service set:
     - `php(fpm)`, `nginx/caddy/apache2`, `mariadb/mysql`, `phpmyadmin`, `laravel-horizon`, `redis`
-  - Native alias contract regressioni kilitlendi:
+  - Native alias contract regression locked:
     - `php-fpm -> php`
     - `workspace -> composer`
-    - `laravel-horizon -> horizon` (supervisor guard ile)
-  - Web server publish guvenilirligi guclendirildi:
-    - Native `site publish --reload` akisina config test asamasi eklendi (`PLUME_SITE_RELOAD_VALIDATE=true` default).
-    - Geçersiz config'te reload atlanir, `PLUME_SITE_RELOAD_REQUIRED=true` ise publish fail-fast doner.
-    - Native nginx strict pipeline eklendi (`PLUME_SITE_NGINX_STRICT=true`):
-      - gercek include path sync (`PLUME_NGINX_INCLUDE_DIR` override veya auto-detect),
-      - lint (`nginx -t`) + reload zorunlulugu,
-      - fail durumunda include rollback.
-      - `site publish --reload` ile strict birlikte kullanildiginda duplicate reload engellendi.
-      - Strict pipeline nginx disinda apache2 ve caddy icin de eklendi (include sync + lint + reload + rollback).
-  - Site bazli PHP upstream override eklendi:
+    - `laravel-horizon -> horizon` (with supervisor guard)
+  - Web server publish reliability strengthened:
+    - Config test step added to the native `site publish --reload` flow (`PLUME_SITE_RELOAD_VALIDATE=true` default).
+    - On invalid config, reload is skipped; if `PLUME_SITE_RELOAD_REQUIRED=true`, publish returns fail-fast.
+    - Native nginx strict pipeline added (`PLUME_SITE_NGINX_STRICT=true`):
+      - real include path sync (`PLUME_NGINX_INCLUDE_DIR` override or auto-detect),
+      - lint (`nginx -t`) + reload requirement,
+      - include rollback on failure.
+      - Duplicate reload blocked when strict is used together with `site publish --reload`.
+      - Strict pipeline also added for apache2 and caddy besides nginx (include sync + lint + reload + rollback).
+  - Site-based PHP upstream override added:
     - `site add/update --php-upstream=<host:port|unix:/sock>`
-    - Site kaydinda `php_upstream` saklanir; snippet render'da resolver yerine oncelikli kullanilir.
-    - `site check` ciktisinda `php_upstream` ve `php_upstream_resolved` alanlari gorunur.
-    - `site check` ciktisina strict publish gorunurlugu eklendi:
+    - `php_upstream` is stored in the site record; used with priority over the resolver during snippet render.
+    - `site check` output shows `php_upstream` and `php_upstream_resolved` fields.
+    - Strict publish visibility added to `site check` output:
       - `mode`, `strict_enabled`, `strict_include_dir`, `strict_include_target`
-  - PHP extension contract hibrit modele tasindi:
+  - PHP extension contract moved to a hybrid model:
     - preset (`PLUME_PHP_EXT_PRESET`, `PLUME_PHP_EXT_PRESET_<ver>`)
     - toggle (`PLUME_PHP_EXT_ENABLE_*`, `PLUME_PHP_EXT_DISABLE_*`)
     - matrix (`PLUME_PHP_EXTENSIONS_GLOBAL`, `PLUME_PHP_EXTENSIONS_<ver>`)
-    - resolve komutu: `php ext resolve <version|all>`
-  - Native service contract yüzeyi tamamlandi:
-    - service group davranislari: `@core`, `@web`, `@db`, `@queue`
-    - site runtime resolve + `php_upstream` contract'i
-    - `horizon` / `supervisor` dependency guard ve lifecycle wrapper
-    - `PMA_DB_ENGINE` bazli `phpmyadmin` engine routing
-  - Native parity regression pack tamamladi:
+    - resolve command: `php ext resolve <version|all>`
+  - Native service contract surface completed:
+    - service group behaviors: `@core`, `@web`, `@db`, `@queue`
+    - site runtime resolve + `php_upstream` contract
+    - `horizon` / `supervisor` dependency guard and lifecycle wrapper
+    - `PMA_DB_ENGINE`-based `phpmyadmin` engine routing
+  - Native parity regression pack completed:
     - `tests/phase11_native_core_services_parity_smoke.sh`
     - `tests/phase11_native_adapter_contract_smoke.sh`
 - Open risks:
-  - Native gercek OS service manager farkliliklari (launchd/systemd) tek semantik altinda normalize edilirken edge-case riski.
-  - Horizon/supervisor lifecycle'inda process ownership/permission drift riski.
-  - Native ve laradock-bridge cikti kontrati farklari adapter parse katmaninda kirilma yaratabilir.
+  - Edge-case risk while normalizing real OS service manager differences (launchd/systemd) under a single semantic.
+  - Process ownership/permission drift risk in Horizon/supervisor lifecycle.
+  - Native vs laradock-bridge output contract differences can cause breakage in the adapter parse layer.

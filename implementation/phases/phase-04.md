@@ -2,7 +2,7 @@
 
 ## Objective
 
-- Site registry ve onboarding akışını başlat: `plume site` komut ailesi ile prompt destekli, deterministic, conflict-aware ekleme ve yönetim.
+- Start the site registry and onboarding flow: prompt-assisted, deterministic, conflict-aware add and management via the `plume site` command family.
 
 ## Scope Checklist
 
@@ -47,12 +47,13 @@
 - [x] Next-phase risks written
 - [x] Herd parity/beyond impact reviewed
 
+
 ## Notes
 
 - Date: 2026-03-06 -> 2026-03-07
 - Owner: @team
 - Related PR/Commit: phase-04-closeout
 - Open risks:
-  - `plume.yml` phase-04 baseline sadece `mode` alanini garanti eder; service/site detayli schema phase-6+ tasariminda genisletilecek.
-  - `project init` faz-04 kapsaminda local bootstrap adimlarini kapsar; production deploy lifecycle (rollback/health gates) phase-9+ kapsamina kalir.
-  - Herd parity etkisi: hizli local onboarding omurgasi kapatildi, webserver parity faz-5'e baglandi ve tamamlandi.
+  - The `plume.yml` phase-04 baseline only guarantees the `mode` field; a detailed service/site schema will be expanded in the phase-6+ design.
+  - `project init` covers local bootstrap steps within the phase-04 scope; the production deploy lifecycle (rollback/health gates) remains in phase-9+.
+  - Herd parity impact: the fast local onboarding spine is closed; webserver parity was linked to phase-5 and completed.

@@ -1,10 +1,10 @@
 # `deploy`
 
-## Amac
+## Purpose
 
-Deploy akisini planlamak, kontrollu apply calistirmak ve sorun durumunda rollback/failback komutlarini kullanmak.
+Plan the deploy flow, run a controlled apply, and use rollback/failback commands when something goes wrong.
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl deploy plan --mode=native
@@ -15,7 +15,7 @@ plumectl --yes deploy rollback latest --mode=native
 plumectl --yes deploy failback --mode=native
 ```
 
-## Parametreler
+## Parameters
 
 - `plan`
   - `--mode=<native|docker-lite|laradock-bridge>`
@@ -24,8 +24,8 @@ plumectl --yes deploy failback --mode=native
   - `--dry-run`
   - `--skip-backup`
   - `--skip-health`
-  - `--skip-reconcile` (macOS'ta root olmadan `services update` atlanabilir)
-  - `--yes` (kritik onay; dry-run haric zorunlu)
+  - `--skip-reconcile` (on macOS without root, `services update` can be skipped)
+  - `--yes` (critical approval; required except dry-run)
 - `rollback`
   - `<id|latest>`
   - `--mode=...`
@@ -34,20 +34,20 @@ plumectl --yes deploy failback --mode=native
   - `--mode=...`
   - `--dry-run`
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: basarili
-- `1`: genel hata
-- `2`: guard/parametre/backup yok, doctor/monitor gate fail
+- `0`: success
+- `1`: general error
+- `2`: guard/parameter/backup missing, doctor/monitor gate fail
 
-Apply adimlari (dry-run degil):
+Apply steps (not dry-run):
 
-1. Pre-deploy backup (`--scope=config`, `--name=pre-deploy`) — `--skip-backup` ile atlanir
-2. `doctor check --deep` — `--skip-health` ile atlanir
-3. `services update` — `--skip-reconcile` ile atlanir
+1. Pre-deploy backup (`--scope=config`, `--name=pre-deploy`) — skipped with `--skip-backup`
+2. `doctor check --deep` — skipped with `--skip-health`
+3. `services update` — skipped with `--skip-reconcile`
 4. `monitor summary --strict`
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl deploy plan --mode=laradock-bridge
@@ -56,9 +56,9 @@ plumectl --yes deploy rollback latest --mode=laradock-bridge
 plumectl --yes deploy failback --mode=laradock-bridge
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- `latest` icin backup yok
-- failback marker yok
-- `--yes` olmadan rollback/failback/apply cagrisi
-- `doctor check --deep` veya `monitor summary --strict` fail
+- No backup for `latest`
+- No failback marker
+- rollback/failback/apply called without `--yes`
+- `doctor check --deep` or `monitor summary --strict` fail

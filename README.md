@@ -1,10 +1,10 @@
 # Plume
 
-Plume, Laravel projeleri icin Linux/macOS uzerinde calisacak 3 modlu (`native`, `docker-lite`, `laradock-bridge`) bir operasyon util'idir.
+Plume is a 3-mode (`native`, `docker-lite`, `laradock-bridge`) operations utility for Laravel projects on Linux/macOS.
 
-**Guncel durum:** Faz 1–28 tamamlandi (Faz 7 docker-lite **beta-frozen**). P3 Release: Homebrew + Packagist hazir. Sonraki aday **P2 meilisearch/minio** (bkz. [implementation/future-roadmap.md](implementation/future-roadmap.md)).
+**Current status:** Phases 1–28 are complete (Phase 7 docker-lite is **beta-frozen**). P3 Release: Homebrew + Packagist ready. Next candidate: **P2 meilisearch/minio** (see [implementation/future-roadmap.md](implementation/future-roadmap.md)).
 
-Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker.md)
+Detailed progress: [implementation/phase-tracker.md](implementation/phase-tracker.md)
 
 ## Naming Policy
 
@@ -14,22 +14,22 @@ Detayli ilerleme: [implementation/phase-tracker.md](implementation/phase-tracker
 - Optional alias: `plume`
 - Repository: `plume` (GitHub); Packagist/formula alias: `laravel-plume`
 
-## Ozellik Ozeti
+## Feature Summary
 
-- Modular CLI (`bin/plumectl`, `lib/*`), global flag'ler (`--json`, `--yes`, `--quiet`, `--env-file`)
-- Modlar: `mode current`, `mode use`, `mode path` (laradock-bridge context)
-- Site registry ve lifecycle: `site add|list|check|update|publish|remove|modes`, nginx/apache2/caddy, TLS, hosts sync, strict publish
-- Servisler: `services supported|status|install|up|down|update|health|logs|use|url|credentials`, native laradock-benzeri alias contract (`php-fpm`, `workspace`, `@core/@web/@db/@cache/@queue`)
+- Modular CLI (`bin/plumectl`, `lib/*`), global flags (`--json`, `--yes`, `--quiet`, `--env-file`)
+- Modes: `mode current`, `mode use`, `mode path` (laradock-bridge context)
+- Site registry and lifecycle: `site add|list|check|update|publish|remove|modes`, nginx/apache2/caddy, TLS, hosts sync, strict publish
+- Services: `services supported|status|install|up|down|update|health|logs|use|url|credentials`, native Laradock-like alias contract (`php-fpm`, `workspace`, `@core/@web/@db/@cache/@queue`)
 - Native PHP: `php list|install|use|alias`, `php ext sync|resolve|doctor`, `php shim`, `init shell`, `env where|init`
-- Laradock-bridge: bootstrap, sync, runtime parity test paketi
+- Laradock-bridge: bootstrap, sync, runtime parity test package
 - Ops: `doctor`, `backup`, `deploy plan|apply|rollback|failback`, `security`, `monitor`, `project init`
 - OS prereq: `prereq check|explain` (`brew` / `apt` / `dnf`)
 
-Native modda **PHP** icin gercek host kurulumu (`brew`/`apt`) vardir. Diger servisler varsayilan olarak state/port orchestration kullanir; gercek host kurulumu icin `PLUME_NATIVE_HOST_PROVISION=true` (bkz. [docs/commands/services.md](docs/commands/services.md)). macOS'ta **Mailpit** native brew ile desteklenir (`services up mailpit`; D-109).
+In native mode, **PHP** gets real host installation (`brew`/`apt`). Other services default to state/port orchestration; for real host provisioning set `PLUME_NATIVE_HOST_PROVISION=true` (see [docs/commands/services.md](docs/commands/services.md)). On macOS, **Mailpit** is supported via native brew (`services up mailpit`; D-109).
 
 ## Local Run
 
-Repo kokunden:
+From the repo root:
 
 ```bash
 ./plume.sh --help
@@ -37,20 +37,20 @@ Repo kokunden:
 ./plume.sh mode current
 ```
 
-Global env varsayilani: `~/.config/plume/.env` (`env init` ile olusturulabilir). Native stack manifest (Laradock benzeri): `~/.config/plume/services.yml` — bkz. [docs/operations/services-manifest.md](docs/operations/services-manifest.md).
+Default global env: `~/.config/plume/.env` (can be created with `env init`). Native stack manifest (Laradock-like): `~/.config/plume/services.yml` — see [docs/operations/services-manifest.md](docs/operations/services-manifest.md).
 
-Ilk kurulum runbook: [docs/operations/first-run-onboarding.md](docs/operations/first-run-onboarding.md)
+First-run onboarding: [docs/operations/first-run-onboarding.md](docs/operations/first-run-onboarding.md)
 
 ```bash
 ./plume.sh env init
-./plume.sh init host          # otomatik de olusur (PLUME_AUTO_HOST_BOOTSTRAP)
+./plume.sh init host          # also created automatically (PLUME_AUTO_HOST_BOOTSTRAP)
 ./plume.sh init onboarding
 ./plume.sh doctor web
 ```
 
-## Kurulum (Release)
+## Installation (Release)
 
-Asamali rehber (Homebrew + Linux distrolari + Packagist): **[docs/operations/install.md](docs/operations/install.md)**
+Step-by-step guide (Homebrew + Linux distros + Packagist): **[docs/operations/install.md](docs/operations/install.md)**
 
 ```bash
 # macOS
@@ -63,14 +63,14 @@ curl -fsSL https://raw.githubusercontent.com/galaxous/plume/main/packaging/linux
 # Composer (macOS + Linux)
 composer global require galaxous/laravel-plume
 
-# Gelistirme clone
+# Development clone
 make install
 ```
 
-Maintainer yayin: [docs/operations/release.md](docs/operations/release.md)  
-Release oncesi smoke: [docs/operations/release-readiness.md](docs/operations/release-readiness.md)
+Maintainer release: [docs/operations/release.md](docs/operations/release.md)  
+Pre-release smoke: [docs/operations/release-readiness.md](docs/operations/release-readiness.md)
 
-## Ornek Komutlar
+## Example Commands
 
 ```bash
 ./plume.sh site add --path=/path/to/laravel/public --domain=myapp.test --server=nginx --publish
@@ -93,22 +93,22 @@ Release oncesi smoke: [docs/operations/release-readiness.md](docs/operations/rel
 
 ## Test (Release Matrix)
 
-Tek giris noktasi (CI ile ayni adimlar, onerilen yayin oncesi):
+Single entry point (same steps as CI; recommended before publish):
 
 ```bash
 ./tests/run_smoke_suite.sh              # default: --release
-./tests/run_smoke_suite.sh --ci         # .github/workflows/smoke-tests.yml ile birebir
+./tests/run_smoke_suite.sh --ci         # identical to .github/workflows/smoke-tests.yml
 ```
 
-Ek derinlik (opsiyonel):
+Extra depth (optional):
 
 ```bash
-./tests/run_smoke_suite.sh --phase11-full   # tum phase11 smoke scriptleri (matrix haric)
-PLUME_RUN_LINUX_TESTS=1 ./tests/run_smoke_suite.sh --all   # tum smoke scriptleri
+./tests/run_smoke_suite.sh --phase11-full   # all phase11 smoke scripts (except matrix)
+PLUME_RUN_LINUX_TESTS=1 ./tests/run_smoke_suite.sh --all   # all smoke scripts
 ./tests/run_smoke_suite.sh --all --linux    # --all + Linux prereq matrix (phase3)
 ```
 
-Manuel matrix (eski dokuman uyumu; `phase10_e2e_matrix` zaten `phase11_e2e_matrix` calistirir):
+Manual matrix (legacy doc compatibility; `phase10_e2e_matrix` already runs `phase11_e2e_matrix`):
 
 ```bash
 ./tests/phase10_e2e_matrix_smoke.sh
@@ -116,10 +116,10 @@ Manuel matrix (eski dokuman uyumu; `phase10_e2e_matrix` zaten `phase11_e2e_matri
 PLUME_RUN_LINUX_TESTS=1 tests/phase3_prereq_smoke.sh
 ```
 
-Integration (gercek host paket kurulumu, opsiyonel):
+Integration (real host package install, optional):
 
 ```bash
 PLUME_RUN_INTEGRATION=1 ./tests/phase12_native_host_provision_smoke.sh
 ```
 
-Detay: [docs/operations/release-readiness.md](docs/operations/release-readiness.md). AI/esli gelistirme ve smoke ogrenimleri: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).
+Details: [docs/operations/release-readiness.md](docs/operations/release-readiness.md). AI-assisted development and smoke lessons: [docs/operations/ai-assisted-development.md](docs/operations/ai-assisted-development.md).

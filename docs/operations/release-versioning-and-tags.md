@@ -1,13 +1,13 @@
 # Release Versioning and Tag Rules
 
-Phase-10 baseline icin Plume release politikasi:
+Plume release policy for the Phase-10 baseline:
 
 ## Versioning
 
-- SemVer kullanilir: `MAJOR.MINOR.PATCH`
-- `MAJOR`: CLI/contract breaking degisiklik
-- `MINOR`: geriye uyumlu yeni komut/ozellik
-- `PATCH`: bugfix, test/dokuman duzeltmeleri (contract degisikligi yok)
+- SemVer is used: `MAJOR.MINOR.PATCH`
+- `MAJOR`: CLI/contract breaking change
+- `MINOR`: backward-compatible new command/feature
+- `PATCH`: bug fix, test/doc corrections (no contract change)
 
 ## Tag Format
 
@@ -16,14 +16,14 @@ Phase-10 baseline icin Plume release politikasi:
 
 ## Branch and Release Flow
 
-1. Phase checklist ve quality gate raporu guncel olmali.
-2. `./tests/phase10_e2e_matrix_smoke.sh` basarili olmali.
-3. Decision log'a release/contract degisiklik kaydi yazilmali.
-4. Stable yayin icin `vX.Y.Z` tag atilir.
+1. Phase checklist and quality gate report must be current.
+2. `./tests/phase10_e2e_matrix_smoke.sh` must succeed.
+3. A release/contract change entry must be written to the Decision log.
+4. For a stable publish, tag `vX.Y.Z` is created.
 
 ## Contract Guardrail
 
-- `docs/contracts/cli-output-contract.md` guncellemesi olmadan contract degisimi merge edilmez.
-- Contract etkileyen degisikliklerde en az su testler zorunlu:
+- A contract change is not merged without updating `docs/contracts/cli-output-contract.md`.
+- On contract-affecting changes, at least these tests are required:
   - `tests/phase8_adapter_contract_normalization_smoke.sh`
   - `tests/phase10_e2e_matrix_smoke.sh`

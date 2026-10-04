@@ -2,7 +2,7 @@
 
 ## Objective
 
-Native modda Laradock seviyesinde stack servis lifecycle: DB, cache/broker ve web UI servisleri icin macOS/Linux host provision, health/logs/url/credentials CLI.
+Laradock-level stack service lifecycle in native mode: macOS/Linux host provision for DB, cache/broker, and web UI services, plus health/logs/url/credentials CLI.
 
 ## Status
 
@@ -12,21 +12,21 @@ Native modda Laradock seviyesinde stack servis lifecycle: DB, cache/broker ve we
 
 ## MVP Scope
 
-- [x] OS matrisi: AGENTS.md §9 + [native-stack-os-matrix.md](../../docs/operations/native-stack-os-matrix.md)
-- [x] Driver katmani: `lib/services/native_host_service_drivers.sh`
-- [x] Servisler: mariadb, mysql, postgres, phpmyadmin, redis, mongodb, rabbitmq, mongo_webui, redis_webui
-- [x] CLI: `services url`, `services credentials`; `@db` / `@cache` native gruplari; `--no-provision`
-- [x] Auto-provision: enabled servis + native `services up` (D-119)
-- [x] Hermetik smoke: phase17_* (mock brew/apt/systemctl)
+- [x] OS matrix: AGENTS.md §9 + [native-stack-os-matrix.md](../../docs/operations/native-stack-os-matrix.md)
+- [x] Driver layer: `lib/services/native_host_service_drivers.sh`
+- [x] Services: mariadb, mysql, postgres, phpmyadmin, redis, mongodb, rabbitmq, mongo_webui, redis_webui
+- [x] CLI: `services url`, `services credentials`; `@db` / `@cache` native groups; `--no-provision`
+- [x] Auto-provision: enabled service + native `services up` (D-119)
+- [x] Hermetic smoke: phase17_* (mock brew/apt/systemctl)
 
 ## Gate Checklist
 
 - [x] MVP scope complete
-- [x] `./tests/run_smoke_suite.sh --release` yesil
+- [x] `./tests/run_smoke_suite.sh --release` green
 - [x] Decision log D-120
 - [x] Tracker `done`
 
-## Referans
+## Reference
 
 - [lib/services/native_host_service_drivers.sh](../../lib/services/native_host_service_drivers.sh)
 - [docs/commands/services-url.md](../../docs/commands/services-url.md)

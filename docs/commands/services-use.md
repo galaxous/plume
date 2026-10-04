@@ -1,10 +1,10 @@
 # `services use`
 
-## Amac
+## Purpose
 
-Native modda tek veritabani engine secmek (Laradock’ta bir compose servisini acip digerini kapatmak gibi). XOR: `mariadb` | `mysql` | `postgres`. Eslesen UI: phpMyAdmin (mysql-family) veya pgAdmin (postgres).
+Select a single database engine in native mode (like enabling one Laradock compose service and disabling the other). XOR: `mariadb` | `mysql` | `postgres`. Matching UI: phpMyAdmin (mysql-family) or pgAdmin (postgres).
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh services use mariadb --mode=native
@@ -12,34 +12,34 @@ Native modda tek veritabani engine secmek (Laradock’ta bir compose servisini a
 ./plume.sh services use postgres --mode=native
 ```
 
-Sonra:
+Then:
 
 ```bash
 ./plume.sh services up @db --mode=native
-# veya
+# or
 ./plume.sh services up @core --mode=native
 ```
 
-## Parametreler
+## Parameters
 
 - `<engine>`: `mariadb` | `mysql` | `postgres`
-- `--mode=native` (zorunlu)
+- `--mode=native` (required)
 
-Davranis:
+Behavior:
 
-- Secilen engine `ENABLED=true`; diger iki engine `false`
-- `mariadb`/`mysql`: `services.yml` `database.engine` guncellenir (varsa)
+- Selected engine `ENABLED=true`; other two engines `false`
+- `mariadb`/`mysql`: `services.yml` `database.engine` is updated (if present)
 - `mariadb`/`mysql`: `PHPMYADMIN_ENABLED=true`, `PGADMIN_ENABLED=false`
 - `postgres`: `PGADMIN_ENABLED=true`, `PHPMYADMIN_ENABLED=false`
-- Degerler global `~/.config/plume/.env` icine yazilir (kisa + `PLUME_*` adlar)
+- Values are written into global `~/.config/plume/.env` (short + `PLUME_*` names)
 
-## Cikti / exit-code
+## Output / exit-code
 
-- `engine=<name>` ve `enabled_*=true|false` satirlari
-- `0`: basarili
-- `2`: native olmayan mode veya gecersiz engine
+- `engine=<name>` and `enabled_*=true|false` lines
+- `0`: success
+- `2`: non-native mode or invalid engine
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh services use mariadb --mode=native
@@ -47,7 +47,7 @@ Davranis:
 ./plume.sh services credentials mariadb --mode=native
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `services use mysql` native brew’de mariadb formula ile cakisir; once `services down mariadb`
-- phpMyAdmin `postgres` ile calismaz (D-127); `use postgres` phpmyadmin’i kapatir
+- `services use mysql` conflicts with the mariadb formula on native brew; first `services down mariadb`
+- phpMyAdmin does not work with `postgres` (D-127); `use postgres` disables phpmyadmin

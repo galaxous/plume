@@ -1,32 +1,32 @@
-# `project config` Komutu
+# `project config` Command
 
-## Amac
+## Purpose
 
-Proje kokundeki `plume.yml` dosyasindan Phase 16 MVP alanlarini okuyup insan-okunur cikti vermek (`project.mode`, `project.php_version`, `project.type`).
+Read Phase 16 MVP fields from the project-root `plume.yml` and print human-readable output (`project.mode`, `project.php_version`, `project.type`).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl project config show --path=/abs/project
 ```
 
-## Parametreler
+## Parameters
 
-- `--path=<abs_path>`: zorunlu; proje dizini (icinde `plume.yml` veya `PLUME_CONFIG_FILE` hedefi)
+- `--path=<abs_path>`: required; project directory (contains `plume.yml` or `PLUME_CONFIG_FILE` target)
 
-## Cikti / exit-code
+## Output / exit-code
 
-- Cikti: `key=value` satirlari (`manifest=`, `schema_version=`, `mode=`, `php_version=`, `project_type=` — bos alanlar atlanir)
-- `0`: basarili okuma
-- `2`: path/manifest yok, gecersiz `project.type` veya gecersiz mode
+- Output: `key=value` lines (`manifest=`, `schema_version=`, `mode=`, `php_version=`, `project_type=` — empty fields omitted)
+- `0`: successful read
+- `2`: path/manifest missing, invalid `project.type`, or invalid mode
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh project config show --path=/var/www/myapp
 ```
 
-Ornek cikti:
+Example output:
 
 ```text
 manifest=/var/www/myapp/plume.yml
@@ -36,10 +36,10 @@ php_version=8.2
 project_type=laravel
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `--path` verilmedi veya dizin yok
-- `plume.yml` bulunamadi
-- `project.type` veya `mode` gecersiz deger
+- `--path` not given or directory missing
+- `plume.yml` not found
+- Invalid `project.type` or `mode` value
 
-Merge kurallari: [docs/operations/project-plume-yml.md](../operations/project-plume-yml.md).
+Merge rules: [docs/operations/project-plume-yml.md](../operations/project-plume-yml.md).

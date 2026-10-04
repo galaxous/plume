@@ -1,19 +1,19 @@
 # Plume Adapter Onboarding (Baseline)
 
-Bu dokuman, gelecekteki `larasite-adapter`/`plume-adapter` paketinin Plume CLI ile entegrasyon baslangic sozlesmesini tanimlar.
+This document defines the starting integration contract between a future `larasite-adapter`/`plume-adapter` package and the Plume CLI.
 
-## 1) Adapter Tasarim Prensibi
+## 1) Adapter Design Principle
 
-- Adapter, sistem komutlarini dogrudan degil `./plume.sh ...` uzerinden calistirir.
-- Parse islemleri icin `--json` desteklenen komutlar tercih edilir.
-- Kritik komutlarda `--yes` gerekliligi adapter tarafinda explicit olmalidir.
+- The adapter runs system commands through `./plume.sh ...`, not directly.
+- For parse work, prefer commands that support `--json`.
+- On critical commands, the `--yes` requirement must be explicit on the adapter side.
 
-## 2) Minimum Komut Haritasi
+## 2) Minimum Command Map
 
 - Mode/context:
   - `./plume.sh mode current`
   - `./plume.sh mode context`
-  - `./plume.sh mode use native --force --yes --down-running` (laradock-bridge gecis guvenligi)
+  - `./plume.sh mode use native --force --yes --down-running` (laradock-bridge transition safety)
   - `./plume.sh mode path get <mode>`
 - Site lifecycle:
   - `./plume.sh site list --json`
@@ -27,32 +27,32 @@ Bu dokuman, gelecekteki `larasite-adapter`/`plume-adapter` paketinin Plume CLI i
   - `./plume.sh health --json`
   - `./plume.sh monitor summary --json`
 
-## 3) Exit Code Sozlesmesi
+## 3) Exit Code Contract
 
-- `0`: basarili
-- `1`: runtime/internal hata
-- `2`: validation/prereq/kullanici duzeltilebilir hata
+- `0`: success
+- `1`: runtime/internal error
+- `2`: validation/prereq/user-correctable error
 
-Adapter tarafinda `2` kodlari exception yerine kullaniciya duzeltme akisi olarak yansitilmalidir.
+On the adapter side, `2` codes should surface as a user correction flow rather than an exception.
 
 ## 4) Critical Command Guard
 
-Asagidaki komutlar `--yes` olmadan bloklanabilir:
+The following commands may be blocked without `--yes`:
 
 - `mode use --force`
 - `mode path set|clear --force`
 - `services update`
 - `services workspace reinit`
-- `deploy rollback|failback` (dry-run haric)
+- `deploy rollback|failback` (except dry-run)
 - `backup restore`
 
-Adapter UI/API seviyesinde "confirm" davranisi bu komutlara map edilmelidir.
+At the adapter UI/API level, "confirm" behavior should map to these commands.
 
-## 5) State & Audit Kaynaklari
+## 5) State & Audit Sources
 
 - State DB:
-  - `~/.config/plume/state/plume-state.db` (veya `PLUME_STATE_DIR`)
+  - `~/.config/plume/state/plume-state.db` (or `PLUME_STATE_DIR`)
 - Runtime events:
   - `./plume.sh monitor events --limit=100`
 
-Adapter, olay akisinda `critical.*`, `deploy.*`, `security.*`, `ops.*` event isimlerini filtreleyebilir.
+The adapter can filter `critical.*`, `deploy.*`, `security.*`, and `ops.*` event names in the event stream.

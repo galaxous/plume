@@ -2,7 +2,7 @@
 
 ## Objective
 
-`deploy apply` ile backup/health/reconcile/monitor zincirini tamamlamak.
+Complete the backup/health/reconcile/monitor chain with `deploy apply`.
 
 ## Status
 

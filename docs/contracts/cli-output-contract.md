@@ -1,21 +1,21 @@
 # CLI Output Contract (Adapter Readiness)
 
-Bu dokuman, gelecekteki `plume-adapter` entegrasyonu icin CLI parse kurallarini tanimlar.
+This document defines CLI parse rules for a future `plume-adapter` integration.
 
-## Genel Kurallar
+## General Rules
 
-- Birincil komut ciktilari `stdout` (site id, tablolar, JSON, key=value)
-- Ilerleme / log satirlari `stderr`: `[INFO]`, `[WARN]`, `[ERROR]` (D-157 — `site add` gibi parse edilen stdout kirlenmesin)
-- Exit-code semasi:
+- Primary command outputs go to `stdout` (site id, tables, JSON, key=value)
+- Progress / log lines go to `stderr`: `[INFO]`, `[WARN]`, `[ERROR]` (D-157 — so parsed stdout such as `site add` is not polluted)
+- Exit-code scheme:
   - `0`: success
   - `1`: runtime/internal error
   - `2`: validation/prereq/user-correctable error
 
-## JSON Modu
+## JSON Mode
 
-Global `--json` flag'i aktiflestirir.
+The global `--json` flag enables it.
 
-JSON desteklenen komutlar (minimum):
+JSON-supported commands (minimum):
 
 - `services supported`
 - `services status`
@@ -24,17 +24,17 @@ JSON desteklenen komutlar (minimum):
 - `site modes`
 - `site check`
 
-`site check --json` `data` alanlari (ek alanlar, geriye uyumlu):
+`site check --json` `data` fields (additional fields, backward compatible):
 
-- `effective_http_port`, `url_http`, `url_https` (cert varsa), `access_hint`, `tcc_risk` (boolean; macOS Desktop/Documents/Downloads path)
-- `access_hint` doluysa ayni metin `warnings` dizisinde de yer alir
-- `tcc_risk` true ise TCC metni `warnings` dizisinde de yer alir
+- `effective_http_port`, `url_http`, `url_https` (if cert exists), `access_hint`, `tcc_risk` (boolean; macOS Desktop/Documents/Downloads path)
+- If `access_hint` is non-empty, the same text also appears in the `warnings` array
+- If `tcc_risk` is true, the TCC text also appears in the `warnings` array
 
 - `status`
 - `health`
 - `monitor summary`
 
-JSON temel sema:
+JSON base schema:
 
 ```json
 {
@@ -46,7 +46,7 @@ JSON temel sema:
 }
 ```
 
-Hata semasi:
+Error schema:
 
 ```json
 {
@@ -62,7 +62,7 @@ Hata semasi:
 }
 ```
 
-`services supported --json` cikti semasi:
+`services supported --json` output schema:
 
 ```json
 {
@@ -80,7 +80,7 @@ Hata semasi:
 }
 ```
 
-`services status --json` cikti semasi:
+`services status --json` output schema:
 
 ```json
 {
@@ -109,37 +109,37 @@ Hata semasi:
 
 ## Native Adapter Contract Fields
 
-- `enabled`: mode icindeki calisma niyeti
+- `enabled`: intent to run within the mode
 - `running`: runtime state
 - `health`: `healthy|stopped|disabled|unknown`
-- `port`: aktif host portu veya `-`
-- `desired`: yalnizca `laradock-bridge` icin istenen service set'i
-- `resolved`: yalnizca `laradock-bridge` icin dependency graph ile genisletilmis set
-- `require_supervisor`: horizon icin supervisor bagimliligi gorunurlugu
+- `port`: active host port or `-`
+- `desired`: desired service set for `laradock-bridge` only
+- `resolved`: dependency-graph-expanded set for `laradock-bridge` only
+- `require_supervisor`: visibility of supervisor dependency for horizon
 
-Native modda `status` cikti formatinda:
+In native mode `status` output format:
 
-- `web` satiri aktif driver'a gore `nginx|apache2|caddy` olarak yazilir
-- `php-fpm` alias'i `php` satirina normalize edilir
-- `workspace` alias'i `composer` satirina normalize edilir
-- `laravel-horizon` alias'i `horizon` satirina normalize edilir
+- the `web` line is written as `nginx|apache2|caddy` according to the active driver
+- the `php-fpm` alias is normalized to the `php` line
+- the `workspace` alias is normalized to the `composer` line
+- the `laravel-horizon` alias is normalized to the `horizon` line
 
-## Sozlesme Degisikligi Kurali
+## Contract Change Rule
 
-- Breaking contract degisikligi yapildiginda:
-  - Bu dosya guncellenir
-  - Decision log'a yeni karar eklenir
-  - Migration notu yazilir
+- When a breaking contract change is made:
+  - This file is updated
+  - A new decision is added to the Decision log
+  - A migration note is written
 
 ## Text Table Stabilization (Phase-10 Baseline)
 
-`--json` disindaki parse-edilebilir text tablolarda:
+On parseable text tables outside `--json`:
 
-- Header isimleri degistirilmemelidir.
-- Kolon sirasi korunmalidir.
-- Bos degerler `-` olarak yazilmalidir.
+- Header names must not be changed.
+- Column order must be preserved.
+- Empty values must be written as `-`.
 
-Bu kural su komutlar icin zorunludur:
+This rule is mandatory for these commands:
 
 - `services status`
 - `status`
@@ -147,7 +147,7 @@ Bu kural su komutlar icin zorunludur:
 - `site list`
 - `monitor summary`
 
-`site list` kolon sirasi:
+`site list` column order:
 
 - `ID`
 - `SERVER`
@@ -159,9 +159,9 @@ Bu kural su komutlar icin zorunludur:
 - `DOMAINS`
 - `PATH`
 
-`PATH` kolonu her zaman son sutundadir; hizalama buyuk path degerlerinde de korunur.
+The `PATH` column is always the last column; alignment is preserved even for large path values.
 
-`site modes` text cikti semasi:
+`site modes` text output schema:
 
 - `ID`
 - `MODE`
@@ -172,19 +172,19 @@ Bu kural su komutlar icin zorunludur:
 
 ## Error Envelope
 
-Validation kaynakli hatalar exit code `2` ile doner ve metin ciktisi su kalipta olur:
+Validation errors return exit code `2` and text output in this pattern:
 
 ```text
 [ERROR] <message>
 ```
 
-Runtime/internal hatalar exit code `1` ile doner ve ayni on eki kullanir:
+Runtime/internal errors return exit code `1` and use the same prefix:
 
 ```text
 [ERROR] <message>
 ```
 
-Opsiyonel yonlendirme satirlari:
+Optional guidance lines:
 
 ```text
 [INFO] next: <command>
@@ -192,7 +192,7 @@ Opsiyonel yonlendirme satirlari:
 
 ## deploy apply (text)
 
-`deploy apply` basarili cikti sablonu:
+`deploy apply` successful output template:
 
 ```text
 MODE              <mode>
@@ -206,13 +206,13 @@ STEP               STATUS
 OVERALL            OK
 ```
 
-Dry-run modunda `OVERALL OK (dry-run)` satiri doner.
+In dry-run mode the line `OVERALL OK (dry-run)` is returned.
 
 ## project config show (text)
 
-`project config show --path=...` ciktisi `key=value` satirlari (stdout); `--json` desteklenmez ve `adapter.json_critical_commands` listesinde degildir (Faz 16 MVP).
+`project config show --path=...` output is `key=value` lines (stdout); `--json` is not supported and it is not in the `adapter.json_critical_commands` list (Phase 16 MVP).
 
-Ornek:
+Example:
 
 ```text
 manifest=/abs/project/plume.yml
@@ -222,7 +222,7 @@ php_version=8.3
 
 ## services url / credentials (text)
 
-Native-only key=value stdout; `--json` desteklenmez.
+Native-only key=value stdout; `--json` is not supported.
 
 ```text
 url=http://127.0.0.1:8083
@@ -230,11 +230,11 @@ host=127.0.0.1
 port=5432
 ```
 
-Bkz. [docs/commands/services-url.md](../commands/services-url.md).
+See [docs/commands/services-url.md](../commands/services-url.md).
 
 ## services use (text)
 
-Native-only key=value stdout; `--json` desteklenmez.
+Native-only key=value stdout; `--json` is not supported.
 
 ```text
 engine=mariadb
@@ -245,4 +245,4 @@ enabled_phpmyadmin=true
 enabled_pgadmin=false
 ```
 
-Bkz. [docs/commands/services-use.md](../commands/services-use.md).
+See [docs/commands/services-use.md](../commands/services-use.md).

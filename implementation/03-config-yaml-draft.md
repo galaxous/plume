@@ -1,6 +1,6 @@
 # Config YAML Draft
 
-Amaç: Lokal ve production ortamlari tek sozlesme ile yonetmek.
+Purpose: Manage local and production environments under a single contract.
 
 ```yaml
 version: 1
@@ -184,7 +184,7 @@ observability:
 
 security:
   firewall_checks: true
-  os_security_checks: true # selinux/apparmor vb.
+  os_security_checks: true # selinux/apparmor etc.
 
 secrets:
   enabled: true
@@ -205,7 +205,7 @@ rollback:
   keep_last: 5
 
 updates:
-  pinned_version: "" # ornek: 1.2.3
+  pinned_version: "" # example: 1.2.3
   auto_update: false
   channel: stable # stable | beta
 
@@ -251,19 +251,19 @@ versions:
   php_alias_policy: managed # managed | manual
 ```
 
-## Notlar
+## Notes
 
-- **Phase 16 MVP** (yukaridaki ornekte isaretli): `project.mode`, `project.php_version`, `project.type` + opsiyonel kok `version` / legacy kok `mode`. Yukleyici: `lib/common/plume_yml.sh`. Runbook: [docs/operations/project-plume-yml.md](../docs/operations/project-plume-yml.md).
-- `port` alanlari istege baglidir; verilmezse engine otomatik atar.
-- `mode` tek secimdir; feature flag'ler gecis asamasinda backward-compat icin kalir.
-- `prerequisites.policy=fail-fast` oldugunda eksik core paket varsa komut calismaz.
-- Runtime komutlari root olmadan calisacak sekilde tasarlanir; root sadece gerekli adimlarda zorunlu tutulur.
-- `adapter.json_critical_commands` disindaki komutlarda `--json` zorunlu degildir.
-- `horizon.enabled=true` oldugunda `supervisor.enabled=true` ve `supervisorctl` prereq kontrolu zorunludur.
-- `versions.allow_custom_versions=true` oldugunda servis bazli custom version secimi aktif olur.
-- PHP default alias ve versioned aliaslar (`php82`, `php83` vb.) configten yonetilir.
-- `project.type=laravel` oldugunda `laravel.bootstrap/runtime/deploy` adimlari aktif olarak yorumlanir.
-- `services.profile=minimal-default` icin default true seti: `nginx(web)`, `php`, `composer`, `mariadb`.
-- `services update` cagirildiginda `false -> true` olan servisler algilanir, otomatik kurulur ve baslatilir.
-- Tum degiskenler `.env` uzerinden akabilir; mode-ozel degiskenler ilgili prefix ile ayrilir.
-- Sonraki asamada JSON Schema/TOML mapping karari alinacak.
+- **Phase 16 MVP** (marked in the example above): `project.mode`, `project.php_version`, `project.type` + optional root `version` / legacy root `mode`. Loader: `lib/common/plume_yml.sh`. Runbook: [docs/operations/project-plume-yml.md](../docs/operations/project-plume-yml.md).
+- `port` fields are optional; if omitted, the engine assigns them automatically.
+- `mode` is a single choice; feature flags remain during transition for backward-compat.
+- When `prerequisites.policy=fail-fast`, the command does not run if a required core package is missing.
+- Runtime commands are designed to run without root; root is required only for necessary steps.
+- `--json` is not required for commands outside `adapter.json_critical_commands`.
+- When `horizon.enabled=true`, `supervisor.enabled=true` and the `supervisorctl` prereq check are required.
+- When `versions.allow_custom_versions=true`, per-service custom version selection is active.
+- PHP default alias and versioned aliases (`php82`, `php83`, etc.) are managed from config.
+- When `project.type=laravel`, `laravel.bootstrap/runtime/deploy` steps are interpreted as active.
+- Default true set for `services.profile=minimal-default`: `nginx(web)`, `php`, `composer`, `mariadb`.
+- When `services update` is called, services that flip `false -> true` are detected, installed, and started automatically.
+- All variables can flow through `.env`; mode-specific variables are separated by the related prefix.
+- In a later stage, a JSON Schema/TOML mapping decision will be made.

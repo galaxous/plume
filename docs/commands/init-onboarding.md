@@ -1,10 +1,10 @@
 # `init onboarding` Command
 
-## Amac
+## Purpose
 
-Ilk calistirmada kullanicinin TCC, nginx 8080, proje yolu ve php-fpm servislerini tek tek kesfetmesini onlemek icin kontrol listesi basmak. macOS'ta Full Disk Access icin **eklenecek nginx/php-fpm binary yollarini** net listeler (Plume veya `plume.sh` degil).
+Print a checklist on first run so the user does not have to discover TCC, nginx 8080, project path, and php-fpm services one by one. On macOS it clearly lists the **nginx/php-fpm binary paths to add** for Full Disk Access (not Plume or `plume.sh`).
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh init onboarding
@@ -14,45 +14,45 @@ Ilk calistirmada kullanicinin TCC, nginx 8080, proje yolu ve php-fpm servislerin
 ./plume.sh doctor onboarding --fix
 ```
 
-## Parametreler
+## Parameters
 
-- `--fix`: Guvenli host duzeltmeleri (macOS + Homebrew: `brew services start nginx` ve kurulu PHP formulune gore php/php@X). **System Settings acmaz.**
-- `--open-settings` (macOS): Full Disk Access gizlilik bolumunu acmayi dener; once binary listesi basilir. Basarisizsa exit `2`.
+- `--fix`: Safe host fixes (macOS + Homebrew: `brew services start nginx` and php/php@X for installed PHP formulas). **Does not open System Settings.**
+- `--open-settings` (macOS): Tries to open the Full Disk Access privacy pane; prints the binary list first. Exit `2` on failure.
 
-## Cikti / Exit code
+## Output / Exit code
 
-- `0`: bilgilendirme tamamlandi
-- `2`: bilinmeyen flag veya `--open-settings` ile Settings acilamadi
+- `0`: informational output complete
+- `2`: unknown flag or Settings could not be opened with `--open-settings`
 
-## Kontrol listesi (ozet)
+## Checklist (summary)
 
-| OS | Maddeler |
-|----|----------|
-| macOS | Dev/repo notu, TCC / Desktop-Documents uyarisi, `~/Sites` veya `~/Code`, nginx 80 vs 8080, FDA icin nginx/php-fpm yollari, `brew services` ipuclari |
-| linux | Proje yolu, nginx port, systemctl ipuclari |
-| windows | Sinirli native mod; WSL2/docker-lite onerisi |
+| OS | Items |
+|----|-------|
+| macOS | Dev/repo note, TCC / Desktop-Documents warning, `~/Sites` or `~/Code`, nginx 80 vs 8080, nginx/php-fpm paths for FDA, `brew services` hints |
+| linux | Project path, nginx port, systemctl hints |
+| windows | Limited native mode; WSL2/docker-lite recommendation |
 
-Repo kokunden `./plume.sh` ile calisiyorsaniz cikti **Dev / repo checkout** satirini vurgular; FDA cogu zaman opsiyoneldir (Desktop disi path).
+If you run via `./plume.sh` from the repo root, the output highlights the **Dev / repo checkout** line; FDA is often optional (path outside Desktop).
 
-Host profili yoksa onboarding once `init host` tespitini calistirir.
+If the host profile is missing, onboarding first runs `init host` detection.
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh env init
 ./plume.sh init onboarding
-./plume.sh init onboarding --fix              # brew nginx/php baslat
-./plume.sh init permissions --open            # FDA pane + binary listesi
-./plume.sh init permissions --open --reveal   # + Finder'da nginx bin dizini
+./plume.sh init onboarding --fix              # start brew nginx/php
+./plume.sh init permissions --open            # FDA pane + binary list
+./plume.sh init permissions --open --reveal   # + nginx bin directory in Finder
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `--fix` / `--open-settings` macOS disinda: liste yine basilir; macOS-only flag'ler bilgi satiri ile aciklanir
-- `--open-settings` deep link desteklenmeyen macOS: exit `2`, manuel GUI adimlari icin `init permissions` ciktisindaki yollar kullanilir
+- `--fix` / `--open-settings` outside macOS: the list is still printed; macOS-only flags are explained in an info line
+- `--open-settings` on macOS without deep-link support: exit `2`; use paths from `init permissions` output for manual GUI steps
 
-## Ilgili
+## Related
 
 - `init permissions`, `doctor web` (`macos-site-tcc`), `docs/commands/services-web.md`
 - `docs/operations/first-run-onboarding.md`
-- Karar: D-099
+- Decision: D-099

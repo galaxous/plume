@@ -1,10 +1,10 @@
 # `npm` Command
 
-## Amac
+## Purpose
 
-Proje dizininde npm calistirir. Detay: [workspace.md](./workspace.md) (D-154).
+Runs npm in the project directory. Details: [workspace.md](./workspace.md) (D-154).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl npm install
@@ -12,22 +12,22 @@ plumectl npm run build
 plumectl npm --path=/abs/app run dev
 ```
 
-## Parametreler
+## Parameters
 
-`--path=`, `--site=`, `--mode=` — bkz. [workspace.md](./workspace.md).
+`--path=`, `--site=`, `--mode=` — see [workspace.md](./workspace.md).
 
-## Cikti / exit-code
+## Output / exit-code
 
-npm exit kodu; Plume hata `2`.
+npm exit code; Plume error `2`.
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl npm -v
 plumectl npm ci
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `npm not found` — Node.js veya `PLUME_NPM_BIN`
-- Compose yok (docker mode) — workspace init
+- `npm not found` — Node.js or `PLUME_NPM_BIN`
+- Compose missing (docker mode) — workspace init

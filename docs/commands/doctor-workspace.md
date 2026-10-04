@@ -1,10 +1,10 @@
 # `doctor workspace`
 
-## Amac
+## Purpose
 
-Composer / npm / node host binary ve Plume workspace CLI hazirligini teşhis eder (D-154 / Faz 27).
+Diagnoses Composer / npm / node host binaries and Plume workspace CLI readiness (D-154 / Phase 27).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl doctor workspace
@@ -12,25 +12,25 @@ plumectl doctor workspace --strict
 plumectl doctor workspace --mode=native
 ```
 
-## Parametreler
+## Parameters
 
 - `--mode=native|docker-lite|laradock-bridge`
-- `--strict`: kritik FAIL varken exit 2
+- `--strict`: exit 2 when a critical FAIL is present
 
-## Cikti / exit-code
+## Output / exit-code
 
-- `0`: OVERALL OK (WARN olabilir)
-- `2`: `--strict` ve kritik FAIL
+- `0`: OVERALL OK (WARN allowed)
+- `2`: `--strict` and critical FAIL
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl doctor workspace
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `composer` / `npm` / `node` WARN — ilgili binary veya `PLUME_*_BIN`
-- docker mode: workspace container yolu; compose init gerekebilir
+- `composer` / `npm` / `node` WARN — related binary or `PLUME_*_BIN`
+- docker mode: workspace container path; compose init may be required
 
-Iliskili: [workspace.md](./workspace.md)
+Related: [workspace.md](./workspace.md)

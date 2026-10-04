@@ -1,10 +1,10 @@
 # `backup`
 
-## Amac
+## Purpose
 
-Plume state/config ve SQLite state verisini arsivleyip geri yuklemek.
+Archive and restore Plume state/config and SQLite state data.
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl backup create --mode=native --scope=all
@@ -14,7 +14,7 @@ plumectl backup restore <backup-id> --dry-run
 plumectl --yes backup restore <backup-id>
 ```
 
-## Parametreler
+## Parameters
 
 - `create`
   - `--mode=<native|docker-lite|laradock-bridge>`
@@ -31,13 +31,13 @@ plumectl --yes backup restore <backup-id>
   - `--mode=...`
   - `--dry-run`
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: basarili
-- `1`: genel hata
-- `2`: gecersiz parametre/guard blokaji
+- `0`: success
+- `1`: general error
+- `2`: invalid parameter/guard blocked
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl backup create --scope=config --name=pre-upgrade
@@ -47,8 +47,8 @@ plumectl backup restore backup-pre-upgrade-20260403-120000 --dry-run
 plumectl --yes backup restore backup-pre-upgrade-20260403-120000
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Backup dosyasi bulunamiyor
-- `--scope` gecersiz
-- Restore icin `--yes` verilmedi
+- Backup file not found
+- Invalid `--scope`
+- `--yes` not given for restore

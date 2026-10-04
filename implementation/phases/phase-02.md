@@ -46,5 +46,5 @@
 - Owner: @team
 - Related PR/Commit: local workspace changes
 - Open risks:
-  - Phase 3'te prereq profilleri (`brew/apt/dnf`) ve fail-fast matrix tamamlanmali.
-  - Command-level `--help` davranisi ve global/command flag precedence daha detayli standardize edilmeli.
+  - In Phase 3, prereq profiles (`brew/apt/dnf`) and the fail-fast matrix must be completed.
+  - Command-level `--help` behavior and global/command flag precedence should be standardized in more detail.

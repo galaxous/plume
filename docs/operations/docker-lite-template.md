@@ -1,18 +1,18 @@
 # Docker-Lite Template Runbook
 
-Bu dokuman, Laradock mantiginda ama daha hafif bir `docker-compose` template'inin nasil kullanilacagini aciklar.
+This document explains how to use a lighter `docker-compose` template in the Laradock style.
 
-Template dosyasi:
+Template file:
 
 - `templates/docker-lite/docker-compose.template.yml`
 
-## 1. Stub Uretimi (onerilen)
+## 1. Stub Generation (recommended)
 
 ```bash
 ./plume.sh services workspace init --mode=docker-lite --path=/abs/project
 ```
 
-Bu komut su dosyalari hedef dizinde olusturur:
+This command creates these files in the target directory:
 
 - `docker-compose.yml`
 - `conf/nginx.conf`
@@ -23,30 +23,30 @@ Bu komut su dosyalari hedef dizinde olusturur:
 - `phpmyadmin/`
 - `.env.docker-lite`
 
-Context yapisi Laradock benzeri olacak sekilde servis-bazli `Dockerfile` icerir:
+The context layout is Laradock-like and includes service-based `Dockerfile`s:
 
 - `workspace/Dockerfile`
-- `php-fpm/Dockerfile` (tum PHP-FPM varyantlari ortak)
+- `php-fpm/Dockerfile` (shared by all PHP-FPM variants)
 - `nginx|apache2|caddy/Dockerfile`
 - `mariadb|mysql|phpmyadmin|postgres|redis|laravel-horizon/Dockerfile`
 
-Not:
+Note:
 
-- `mode=docker-lite` ve `mode path` ayarliysa, plume komutlari `/.env.docker-lite` dosyasini otomatik yukler; manuel `source` gerekmez.
+- When `mode=docker-lite` and `mode path` are set, plume commands load the `/.env.docker-lite` file automatically; manual `source` is not required.
 
-## 2. Manuel Baslangic
+## 2. Manual Start
 
 ```bash
 cp templates/docker-lite/docker-compose.template.yml ./docker-compose.yml
 ```
 
-Opsiyonel web server config dosyalari:
+Optional web server config files:
 
 - `templates/docker-lite/conf/nginx.conf`
 - `templates/docker-lite/conf/apache2.conf`
 - `templates/docker-lite/conf/Caddyfile`
 
-## 3. Plume ile Entegrasyon
+## 3. Integration with Plume
 
 ```bash
 ./plume.sh mode use docker-lite
@@ -54,7 +54,7 @@ Opsiyonel web server config dosyalari:
 export PLUME_DOCKER_LITE_COMPOSE_REQUIRED=true
 ```
 
-Varsayilan servis esleme (gerektiginde override et):
+Default service mapping (override when needed):
 
 ```bash
 export PLUME_DOCKER_LITE_WEB_SERVICE=nginx
@@ -73,9 +73,9 @@ export PLUME_DOCKER_LITE_HORIZON_SERVICE=laravel-horizon
 ./plume.sh services logs php --mode=docker-lite --tail=50
 ```
 
-## 5. Shared Env Onceligi
+## 5. Shared Env Precedence
 
-Docker-lite template, native ile ortak `PLUME_*` degiskenlerini birincil kaynak olarak kullanir:
+The docker-lite template uses shared `PLUME_*` variables with native as the primary source:
 
 - `PLUME_PHP_VERSION`
 - `PLUME_WEB_SERVER_VERSION`
@@ -85,83 +85,83 @@ Docker-lite template, native ile ortak `PLUME_*` degiskenlerini birincil kaynak 
 - `PLUME_REDIS_VERSION`
 - `PLUME_PHPMYADMIN_VERSION`
 
-`PLUME_DOCKER_LITE_*` degiskenleri yalnizca override/mapping icindir.
+`PLUME_DOCKER_LITE_*` variables are only for override/mapping.
 
-phpMyAdmin secici sozlesmesi:
+phpMyAdmin selector contract:
 
 - `PMA_DB_ENGINE=mariadb|mysql`
 - `PMA_USER`, `PMA_PASSWORD`, `PMA_ROOT_PASSWORD`
-- `PMA_PORT` (host port, varsayilan `8081`)
+- `PMA_PORT` (host port, default `8081`)
 - `PMA_MAX_EXECUTION_TIME`, `PMA_MEMORY_LIMIT`, `PMA_UPLOAD_LIMIT`
 
-Workspace (lite Laradock davranisi):
+Workspace (lite Laradock behavior):
 
 - Non-root user: `WORKSPACE_USER`, `WORKSPACE_PUID`, `WORKSPACE_PGID`
-- Opsiyonel shell/tooling: `WORKSPACE_INSTALL_ZSH`, `WORKSPACE_INSTALL_NODE`
-- Opsiyonel Oh My Zsh: `WORKSPACE_INSTALL_OH_MY_ZSH` (`WORKSPACE_INSTALL_ZSH=true` gerektirir)
+- Optional shell/tooling: `WORKSPACE_INSTALL_ZSH`, `WORKSPACE_INSTALL_NODE`
+- Optional Oh My Zsh: `WORKSPACE_INSTALL_OH_MY_ZSH` (requires `WORKSPACE_INSTALL_ZSH=true`)
 - Node/NPM: `WORKSPACE_NODE_VERSION`, `WORKSPACE_NPM_REGISTRY`
-- Hazir alias dosyasi: `workspace/aliases.sh` (`c`, `ci`, `cu`, `art`, `pa`, `t`)
-- Workspace icinde coklu PHP: `PLUME_PHP_DEFAULT_VERSION` + `PLUME_PHP_INSTALLED_VERSIONS`
-- Komutlar: `php81`, `php82`, `php83`, `php84` ve aktif surumu degistirmek icin `phpuse 8.2`
-- Otomatik kural: `PLUME_PHP_DEFAULT_VERSION`, `PLUME_PHP_INSTALLED_VERSIONS` icinde yoksa plume listeye otomatik ekler.
+- Ready alias file: `workspace/aliases.sh` (`c`, `ci`, `cu`, `art`, `pa`, `t`)
+- Multiple PHP inside workspace: `PLUME_PHP_DEFAULT_VERSION` + `PLUME_PHP_INSTALLED_VERSIONS`
+- Commands: `php81`, `php82`, `php83`, `php84` and `phpuse 8.2` to change the active version
+- Automatic rule: if `PLUME_PHP_DEFAULT_VERSION` is not in `PLUME_PHP_INSTALLED_VERSIONS`, plume adds it to the list automatically.
 
-## 6. PHP-FPM Coklu Surum (Clone Model)
+## 6. PHP-FPM Multi-Version (Clone Model)
 
-Template icinde default + clone model:
+Default + clone model inside the template:
 
-- Default: `php-fpm` (`PLUME_PHP_VERSION` ile surum secilir)
-- Clone servisler:
+- Default: `php-fpm` (version selected with `PLUME_PHP_VERSION`)
+- Clone services:
 
 - `php81-fpm`
 - `php82-fpm`
 - `php83-fpm`
 - `php84-fpm`
 
-Not:
+Note:
 
-- `php81-fpm`, `php82-fpm`, `php83-fpm`, `php84-fpm` icin ayri context yoktur.
-- Tumu `php-fpm/Dockerfile` context'ini kullanir.
-- Surum secimi compose `build.args.PHP_VERSION` ile yapilir.
+- There is no separate context for `php81-fpm`, `php82-fpm`, `php83-fpm`, `php84-fpm`.
+- All use the `php-fpm/Dockerfile` context.
+- Version selection is done with compose `build.args.PHP_VERSION`.
 
-Aktif profil ile baslat:
+Start with an active profile:
 
 ```bash
 docker compose --profile core --profile php83 up -d
 ```
 
-Plume tarafinda hangi PHP servisine baglanilacagi:
+Which PHP service Plume connects to:
 
 ```bash
 export PLUME_PHP_VERSION=8.2
 export PLUME_DOCKER_LITE_PHP_SERVICE=php-fpm
 ```
 
-## 7. Image Yoksa Ne Olur
+## 7. What Happens If the Image Is Missing
 
-`services workspace up --mode=docker-lite` adiminda:
+In the `services workspace up --mode=docker-lite` step:
 
-1. compose image listesi okunur
-2. local image varligi kontrol edilir
-3. eksik image'lar tek tek pull edilir
-4. pull fail olursa benzer image onerileri yazdirilir ve komut fail olur
+1. the compose image list is read
+2. local image presence is checked
+3. missing images are pulled one by one
+4. if pull fails, similar image suggestions are printed and the command fails
 
-## 8. Web Server Secimi
+## 8. Web Server Selection
 
 - Nginx: `--profile web-nginx`
 - Apache2: `--profile web-apache2`
 - Caddy: `--profile web-caddy`
 
-Varsayilan davranis:
+Default behavior:
 
-- Ayni anda tek web server calistirilir (nginx veya apache2 veya caddy).
-- Varsayilan web host portlari `80/443`'dur (`PLUME_WEB_PORT`, `PLUME_WEB_HTTPS_PORT`).
-- Default `core` profile sadece `php-fpm` acilir; `php83-fpm` gibi clone servisler yalnizca explicit profile ile acilir.
-- `composer` islemleri `workspace` container icinde calistirilir (ayri composer service yoktur).
-- Queue tarafinda `supervisor` ve `horizon`, ortak `laravel-horizon` container davranisinda eslenir.
+- Only one web server runs at a time (nginx or apache2 or caddy).
+- Default web host ports are `80/443` (`PLUME_WEB_PORT`, `PLUME_WEB_HTTPS_PORT`).
+- The default `core` profile only starts `php-fpm`; clone services such as `php83-fpm` start only with an explicit profile.
+- `composer` work runs inside the `workspace` container (there is no separate composer service).
+- On the queue side, `supervisor` and `horizon` map to the shared `laravel-horizon` container behavior.
 
-Web server servisini plume ile esitle:
+Align the web server service with plume:
 
 ```bash
 export PLUME_DOCKER_LITE_WEB_SERVICE=nginx
-# veya apache2 / caddy
+# or apache2 / caddy
 ```

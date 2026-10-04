@@ -1,10 +1,10 @@
 # `composer` Command
 
-## Amac
+## Purpose
 
-Proje dizininde Composer calistirir (site PHP tercih edilir). Detay: [workspace.md](./workspace.md) (D-154).
+Runs Composer in the project directory (site PHP preferred). Details: [workspace.md](./workspace.md) (D-154).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl composer install
@@ -12,22 +12,22 @@ plumectl composer --path=/abs/app require laravel/horizon --no-interaction
 plumectl composer --site=site-xxx update
 ```
 
-## Parametreler
+## Parameters
 
-`--path=`, `--site=`, `--mode=` — bkz. [workspace.md](./workspace.md).
+`--path=`, `--site=`, `--mode=` — see [workspace.md](./workspace.md).
 
-## Cikti / exit-code
+## Output / exit-code
 
-Composer exit kodu; Plume hata `2`.
+Composer exit code; Plume error `2`.
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl composer --version
 plumectl composer install --no-dev
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `composer not found` — host Composer veya `PLUME_COMPOSER_BIN`
-- `could not resolve project path` — `--path=` / proje kok
+- `composer not found` — host Composer or `PLUME_COMPOSER_BIN`
+- `could not resolve project path` — `--path=` / project root

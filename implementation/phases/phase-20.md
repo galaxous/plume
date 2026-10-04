@@ -2,7 +2,7 @@
 
 ## Objective
 
-Laravel’de sik acilan cache/broker opsiyonelleri native service contract (D-144) ile ayni UX: enable → up → credentials/url.
+Common Laravel cache/broker optionals share the same UX via the native service contract (D-144): enable → up → credentials/url.
 
 ## Status
 
@@ -23,9 +23,9 @@ Laravel’de sik acilan cache/broker opsiyonelleri native service contract (D-14
 - [x] MVP scope complete
 - [x] `phase20_native_cache_broker_smoke.sh`
 - [x] Decision log D-145
-- [x] Tracker satiri
+- [x] Tracker row
 
-## Referans
+## Reference
 
 - [native-service-contract.md](../../docs/operations/native-service-contract.md)
 - [docs/commands/services-memcached.md](../../docs/commands/services-memcached.md)

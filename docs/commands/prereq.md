@@ -1,10 +1,10 @@
 # `prereq` Commands
 
-## Amac
+## Purpose
 
-Core bagimliliklari profile bazli fail-fast kontrol etmek.
+Fail-fast check of core dependencies by profile.
 
-## Kullanim
+## Usage
 
 ```bash
 ./plume.sh prereq check
@@ -14,18 +14,18 @@ Core bagimliliklari profile bazli fail-fast kontrol etmek.
 ./plume.sh --json prereq check --profile=git-ops
 ```
 
-## Parametreler
+## Parameters
 
-- `check`: profile bazli prereq kontrolu
+- `check`: profile-based prereq check
   - `--profile=base|native-install|git-ops|docker-lite|security-check|horizon-runtime|laravel-bootstrap|frontend-build`
-- `explain`: tum profilleri ve gerekcelerini listeler
+- `explain`: list all profiles and their rationale
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: tum zorunlu bagimliliklar mevcut
-- `2`: eksik bagimlilik veya gecersiz kullanim
+- `0`: all required dependencies present
+- `2`: missing dependency or invalid usage
 
-## Ornekler
+## Examples
 
 ```bash
 ./plume.sh prereq check --profile=base
@@ -34,14 +34,14 @@ Core bagimliliklari profile bazli fail-fast kontrol etmek.
 ./plume.sh prereq explain
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Bilinmeyen profil
-- Eksik core komut/paket (`brew/apt/dnf` dahil)
-- Gecersiz flag kullanimi
+- Unknown profile
+- Missing core command/package (including `brew/apt/dnf`)
+- Invalid flag usage
 
-## Notlar
+## Notes
 
-- macOS'ta package manager kontrolu `brew` uzerinden yapilir.
-- Linux'ta package manager kontrolu `apt` veya `dnf` uzerinden yapilir.
-- Service install/update gibi kurulum komutlari root/sudo gerektirir.
+- On macOS, package manager checks use `brew`.
+- On Linux, package manager checks use `apt` or `dnf`.
+- Install commands such as service install/update require root/sudo.

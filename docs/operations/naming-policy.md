@@ -1,23 +1,23 @@
 # Naming Policy
 
-Bu proje icin isimlendirme standardi:
+Naming standard for this project:
 
-## Brand ve CLI
+## Brand and CLI
 
-- Product adi: `Plume`
+- Product name: `Plume`
 - Official binary: `plumectl`
-- Opsiyonel kisa alias: `plume`
+- Optional short alias: `plume`
 
-Not: Linux ortaminda baska util'lerle cakisma riskini azaltmak icin resmi komut `plumectl` olarak kullanilir.
+Note: the official command is used as `plumectl` to reduce collision risk with other utils in Linux environments.
 
-## Repository ve Package
+## Repository and Package
 
-- GitHub repository: `plume` (ornek: `github.com/galaxous/plume`); alias `laravel-plume` Packagist/formula icin kullanilabilir
+- GitHub repository: `plume` (example: `github.com/galaxous/plume`); alias `laravel-plume` may be used for Packagist/formula
 - Packagist package: `<vendor>/laravel-plume`
-- Homebrew formula: `laravel-plume` veya `plumectl`
+- Homebrew formula: `laravel-plume` or `plumectl`
 
-## Kurallar
+## Rules
 
-1. Dokumantasyonda birincil komut olarak `plumectl` kullanilir.
-2. `plume` sadece alias/ornek olarak gecmelidir.
-3. Yeni paket/repo adlari bu policy ile uyumlu secilir.
+1. Documentation uses `plumectl` as the primary command.
+2. `plume` should appear only as an alias/example.
+3. New package/repo names are chosen to match this policy.

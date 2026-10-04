@@ -1,6 +1,6 @@
 # Incident Triage Runbook
 
-Bu runbook, `plumectl` komutlariyla hizli tespit ve toparlama akisini tanimlar.
+This runbook defines a fast detect-and-recover flow with `plumectl` commands.
 
 ## 1. Incident Snapshot
 
@@ -30,8 +30,8 @@ plumectl doctor ports --mode=<mode>
 plumectl sync state --mode=<mode>
 ```
 
-## Notlar
+## Notes
 
-- `monitor summary --strict` kritik issue varsa `exit code 2` dondurur.
-- `monitor events` ciktilari `runtime_events` tablosundan okunur.
-- Kritik guard gerektiren komutlarda `--yes` kullanilmalidir.
+- `monitor summary --strict` returns `exit code 2` if there is a critical issue.
+- `monitor events` output is read from the `runtime_events` table.
+- On commands that require a critical guard, `--yes` must be used.

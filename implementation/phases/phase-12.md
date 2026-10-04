@@ -2,7 +2,7 @@
 
 ## Objective
 
-Native modda PHP disi core servisler icin opt-in gercek host kurulum/start/stop.
+Opt-in real host install/start/stop for non-PHP core services in native mode.
 
 ## Status
 
@@ -12,7 +12,7 @@ Native modda PHP disi core servisler icin opt-in gercek host kurulum/start/stop.
 
 - [x] `PLUME_NATIVE_HOST_PROVISION` env contract
 - [x] web/nginx/apache2, mariadb, mysql, redis brew/apt/dnf drivers
-- [x] Default simulate (state) davranisi korundu
+- [x] Default simulate (state) behavior preserved
 
 ## Test Checklist
 

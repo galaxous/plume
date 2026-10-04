@@ -54,56 +54,56 @@
 - Owner:
 - Related PR/Commit:
 - Progress:
-  - `doctor` komutlari router/help zincirine baglandi (`check`, `services`, `ports`).
-  - `tests/phase9_doctor_smoke.sh` eklendi ve baseline tanisal testler gecti.
-  - `docs/commands/status-health-logs.md` doctor alt komutlariyla hizalandi.
-  - `status/health/logs/monitor` komut ailesi aktif edildi; `--watch` ve `monitor events` eklendi.
-  - `status/health/logs/monitor` cagrilari icin runtime audit event kaydi (`ops.*`) eklendi.
-  - `tests/phase9_status_monitor_smoke.sh` eklendi.
-  - Kritik komutlar icin `--yes` guard eklendi:
+  - `doctor` commands wired into the router/help chain (`check`, `services`, `ports`).
+  - `tests/phase9_doctor_smoke.sh` added and baseline diagnostic tests passed.
+  - `docs/commands/status-health-logs.md` aligned with doctor subcommands.
+  - `status/health/logs/monitor` command family activated; `--watch` and `monitor events` added.
+  - Runtime audit event recording (`ops.*`) added for `status/health/logs/monitor` calls.
+  - `tests/phase9_status_monitor_smoke.sh` added.
+  - `--yes` guard added for critical commands:
     - `mode use --force`
     - `mode path set|clear --force`
     - `services workspace reinit`
     - `services update`
-  - Guard kararlari `runtime_events` tablosuna `critical.*.(blocked|approved)` olarak audit ediliyor.
-  - `tests/phase9_critical_guard_smoke.sh` eklendi.
-  - `monitor runbook` alt komutu eklendi (`incident|recovery|ports-conflict`).
-  - `docs/operations/incident-triage-runbook.md` eklendi ve operasyon indeksine baglandi.
-  - `backup` komut ailesi baseline aktif edildi (`create|list|show|restore`).
-  - `docs/commands/backup.md`, `docs/operations/backup-restore-runbook.md`, `docs/operations/security-ops-baseline.md` eklendi.
-  - `tests/phase9_backup_smoke.sh` eklendi.
-  - `deploy` komut ailesine rollback/failback baseline eklendi (`plan|rollback|failback`).
-  - `docs/commands/deploy.md` ve `tests/phase9_deploy_rollback_smoke.sh` eklendi.
-  - `security` komut ailesi eklendi (`check`, `secrets list|get|set|unset|generate`).
-  - `docs/commands/security.md` ve `tests/phase9_security_smoke.sh` eklendi.
-  - `project env sync-secrets` eklendi; `secrets.env` keyleri Laravel proje `.env` dosyasina yazilabiliyor.
-  - `tests/phase9_project_env_sync_secrets_smoke.sh` eklendi.
-  - `security cert` komut ailesi eklendi (`issue|list|show|renew`) ve multi-domain local cert baseline saglandi.
-  - `tests/phase9_security_cert_smoke.sh` eklendi.
-  - `site add|update` komutlarina `--cert-id` ve `--https-port` destegi eklendi.
-  - Site publish snippetleri cert bagliyken HTTPS bloklariyla render ediliyor (nginx/apache2/caddy).
-  - `tests/phase9_site_tls_smoke.sh` eklendi.
+  - Guard decisions are audited to the `runtime_events` table as `critical.*.(blocked|approved)`.
+  - `tests/phase9_critical_guard_smoke.sh` added.
+  - `monitor runbook` subcommand added (`incident|recovery|ports-conflict`).
+  - `docs/operations/incident-triage-runbook.md` added and linked from the operations index.
+  - `backup` command family baseline activated (`create|list|show|restore`).
+  - `docs/commands/backup.md`, `docs/operations/backup-restore-runbook.md`, `docs/operations/security-ops-baseline.md` added.
+  - `tests/phase9_backup_smoke.sh` added.
+  - Rollback/failback baseline added to the `deploy` command family (`plan|rollback|failback`).
+  - `docs/commands/deploy.md` and `tests/phase9_deploy_rollback_smoke.sh` added.
+  - `security` command family added (`check`, `secrets list|get|set|unset|generate`).
+  - `docs/commands/security.md` and `tests/phase9_security_smoke.sh` added.
+  - `project env sync-secrets` added; `secrets.env` keys can be written to the Laravel project `.env` file.
+  - `tests/phase9_project_env_sync_secrets_smoke.sh` added.
+  - `security cert` command family added (`issue|list|show|renew`) and multi-domain local cert baseline delivered.
+  - `tests/phase9_security_cert_smoke.sh` added.
+  - `--cert-id` and `--https-port` support added to `site add|update` commands.
+  - Site publish snippets render with HTTPS blocks when a cert is bound (nginx/apache2/caddy).
+  - `tests/phase9_site_tls_smoke.sh` added.
 - Open risks:
-  - Watch/monitor komutlarinda uzun sureli terminal oturumlarinda kaynak tuketimi artis riski.
-  - Cert/secret islemlerinde root boundary ve audit izi dogru modellenmezse production riski yuksek.
-  - Backup/restore senaryolarinda mode/path context hatalari geri donusu zor veri kaybi riski tasir.
-  - Local TLS baseline self-signed oldugu icin production trust/ACME lifecycle ayrica Phase-10 scope'unda ele alinmali.
-  - Secret store state-file tabanli; KMS/Vault adapter entegrasyonu phase-10 adapter hazirlik calismasina aday.
+  - Resource consumption growth risk in long-lived terminal sessions for watch/monitor commands.
+  - Production risk is high if root boundary and audit trail are not modeled correctly for cert/secret operations.
+  - Mode/path context errors in backup/restore scenarios carry a hard-to-recover data-loss risk.
+  - Because the local TLS baseline is self-signed, production trust/ACME lifecycle must be handled separately in Phase-10 scope.
+  - Secret store is state-file based; KMS/Vault adapter integration is a candidate for phase-10 adapter readiness work.
 
 ## Herd Parity/Beyond Review
 
 - Herd parity:
-  - Site lifecycle (`add/update/publish/list/check/remove`) tamamlandi.
-  - PHP version/site-level routing + TLS site binding baseline mevcut.
-  - Health/doctor/monitor gorunurlugu ve tek-komut operasyon akislari mevcut.
+  - Site lifecycle (`add/update/publish/list/check/remove`) completed.
+  - PHP version/site-level routing + TLS site binding baseline present.
+  - Health/doctor/monitor visibility and single-command operation flows present.
 - Beyond Herd:
-  - `native` + `laradock-bridge` parity odakli tek komut yuzeyi.
-  - Rollback/failback + backup + security audit event zinciri.
+  - Single command surface focused on `native` + `laradock-bridge` parity.
+  - Rollback/failback + backup + security audit event chain.
   - Project `.env` secret sync bridge (`project env sync-secrets`).
 
 ## Active Delivery Slice
 
-- Ilk teslim dilimi:
-  - `doctor` komut ailesi baseline (`doctor check`, `doctor services`, `doctor ports`)
-  - `status/health/logs --watch` telemetry toplamasi icin temel monitor output kontrati
-  - Critical failures icin fail-fast + audit event kaydi
+- First delivery slice:
+  - `doctor` command family baseline (`doctor check`, `doctor services`, `doctor ports`)
+  - Basic monitor output contract for `status/health/logs --watch` telemetry collection
+  - Fail-fast + audit event recording for critical failures

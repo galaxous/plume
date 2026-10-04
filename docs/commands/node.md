@@ -1,30 +1,30 @@
 # `node` Command
 
-## Amac
+## Purpose
 
-Proje dizininde Node calistirir. Detay: [workspace.md](./workspace.md) (D-154).
+Runs Node in the project directory. Details: [workspace.md](./workspace.md) (D-154).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl node -v
 plumectl node --path=/abs/app script.js
 ```
 
-## Parametreler
+## Parameters
 
-`--path=`, `--site=`, `--mode=` — bkz. [workspace.md](./workspace.md).
+`--path=`, `--site=`, `--mode=` — see [workspace.md](./workspace.md).
 
-## Cikti / exit-code
+## Output / exit-code
 
-node exit kodu; Plume hata `2`.
+node exit code; Plume error `2`.
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl node -e 'console.log(1)'
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `node not found` — Node.js veya `PLUME_NODE_BIN`
+- `node not found` — Node.js or `PLUME_NODE_BIN`

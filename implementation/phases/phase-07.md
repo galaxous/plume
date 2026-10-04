@@ -2,12 +2,12 @@
 
 ## Objective
 
-- Docker-lite baseline'i beta seviyesinde stabilize etmek ve kalan lightweight hedeflerini backlog'a almak.
+- Stabilize the Docker-lite baseline at beta level and move remaining lightweight goals into the backlog.
 
 ## Status
 
 - `beta-frozen` (2026-03-10)
-- Not: aktif gelistirme odagi Phase-08 (laradock-bridge) ve native parity derinlestirmesine tasindi.
+- Note: active development focus moved to Phase-08 (laradock-bridge) and native parity deepening.
 
 ## Scope Checklist
 
@@ -40,7 +40,7 @@
 
 ## Gate Checklist (Mandatory)
 
-- [x] Feature scope beta seviyesinde complete
+- [x] Feature scope complete at beta level
 - [x] Tests pass
 - [x] Decision log updated
 - [x] Next-phase risks written
@@ -52,6 +52,6 @@
 - Owner: @team
 - Related PR/Commit: phase-07-docker-lite-runtime-parity + phase-07-beta-freeze
 - Open risks:
-  - Lightweight tek-cati local/prod deployment ergonomisi hedeflenen seviyede degil; backlog'a alindi.
-  - Compose/service mapping sadelemesi ve image boyut optimizasyonu sonraki docker-lite iterasyonuna ertelendi.
-  - Ana odak: laradock-bridge + native modlarda tek komut yuzeyi parity'si.
+  - Lightweight single-roof local/prod deployment ergonomics are not at the targeted level; moved to backlog.
+  - Compose/service mapping simplification and image size optimization deferred to a later docker-lite iteration.
+  - Primary focus: single command-surface parity in laradock-bridge + native modes.

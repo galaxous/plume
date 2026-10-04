@@ -1,15 +1,15 @@
 # Commands Documentation Index
 
-Komutlar tek tek dosyalanir. Her dosya su basliklari icermelidir:
+Commands are documented one file each. Every file should include these headings:
 
-1. Amac
-2. Kullanim
-3. Parametreler
-4. Cikti / Exit Codes
-5. Ornekler
-6. Hata Senaryolari
+1. Purpose
+2. Usage
+3. Parameters
+4. Output / Exit Codes
+5. Examples
+6. Error scenarios
 
-## Komut Dosyalari
+## Command files
 
 - `_TEMPLATE.md`
 - `backup.md`

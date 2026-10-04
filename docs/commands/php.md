@@ -1,10 +1,10 @@
 # `php` Commands
 
-## Amac
+## Purpose
 
-Birden fazla PHP surumunu yonetmek, default `php` alias'ini degistirmek ve surum bazli aliaslari kullanmak.
+Manage multiple PHP versions, change the default `php` alias, and use version-based aliases.
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl php list
@@ -26,10 +26,10 @@ plumectl doctor php
 plumectl doctor php --strict
 ```
 
-## Parametreler
+## Parameters
 
 - `install <version>`
-- `use <version>` (aktif/default surumu degistirir)
+- `use <version>` (changes active/default version)
 - `alias set <name> <version>`
 - `alias default <version>`
 - `ext sync <version|all> [--strict|--no-strict]`
@@ -37,52 +37,52 @@ plumectl doctor php --strict
 - `ext resolve <version|all>`
 - `shim install|env|list|remove`
 
-Native mode davranisi:
+Native mode behavior:
 
 - `php install <version>`:
-  - surumu `PLUME_PHP_INSTALLED_VERSIONS` listesine ekler
-  - otomatik canonical alias olusturur (`8.4 -> php84`)
+  - adds the version to the `PLUME_PHP_INSTALLED_VERSIONS` list
+  - creates a canonical alias automatically (`8.4 -> php84`)
 - `php use <version|alias>`:
-  - `PLUME_PHP_DEFAULT_VERSION` ve `PLUME_PHP_VERSION` degerlerini gunceller
-  - secilen surum listede yoksa otomatik ekler
-- Konfigurasyon kalici olarak `~/.config/plume/state/php.env` (veya `PLUME_STATE_DIR/php.env`) dosyasina yazilir.
+  - updates `PLUME_PHP_DEFAULT_VERSION` and `PLUME_PHP_VERSION`
+  - if the selected version is not in the list, adds it automatically
+- Configuration is persisted to `~/.config/plume/state/php.env` (or `PLUME_STATE_DIR/php.env`).
 - `php shim install`:
-  - `PLUME_PHP_INSTALLED_VERSIONS` listesinden host shim dosyalari olusturur
-  - ornek: `php8.4`, `php84`, `php-fpm-8.4`, `php-fpm84`
-  - varsayilan dizin: `~/.config/plume/shims`
+  - creates host shim files from the `PLUME_PHP_INSTALLED_VERSIONS` list
+  - examples: `php8.4`, `php84`, `php-fpm-8.4`, `php-fpm84`
+  - default directory: `~/.config/plume/shims`
 - `php shim env`:
-  - shim dizinini `PATH`'e eklemek icin export satiri basar
-  - ayrica default disi tum kurulu surumler icin shell aliaslari basar:
+  - prints an export line to add the shim directory to `PATH`
+  - also prints shell aliases for all installed versions except the default:
     - `php81 -> php8.1`
     - `phpfpm81 -> php-fpm-8.1`
-  - default `php` binary degismez; sadece `php8.4` gibi hedef komutlar aktif olur
+  - the default `php` binary is unchanged; only target commands like `php8.4` become active
 
 Extension contract (hybrid: preset + toggle + matrix):
 
-- Preset katmani:
+- Preset layer:
   - `PLUME_PHP_EXT_PRESET=none|laravel-core|queue|media|full`
-  - opsiyonel surum bazli preset override: `PLUME_PHP_EXT_PRESET_81`, `..._84`
-- Matrix katmani:
-  - `PLUME_PHP_EXTENSIONS_GLOBAL` tum surumlere uygulanir.
-  - `PLUME_PHP_EXTENSIONS_81`, `PLUME_PHP_EXTENSIONS_82`, ... surum-bazli ek extension seti tanimlar.
-- Toggle katmani:
+  - optional version-based preset override: `PLUME_PHP_EXT_PRESET_81`, `..._84`
+- Matrix layer:
+  - `PLUME_PHP_EXTENSIONS_GLOBAL` applies to all versions.
+  - `PLUME_PHP_EXTENSIONS_81`, `PLUME_PHP_EXTENSIONS_82`, ... define version-specific extra extension sets.
+- Toggle layer:
   - global enable: `PLUME_PHP_EXT_ENABLE_REDIS=true`
-  - surum bazli enable: `PLUME_PHP_EXT_ENABLE_84_XDEBUG=true`
-  - surum bazli disable: `PLUME_PHP_EXT_DISABLE_84_IMAGICK=true`
-- Cozumleme sirasi:
+  - version-based enable: `PLUME_PHP_EXT_ENABLE_84_XDEBUG=true`
+  - version-based disable: `PLUME_PHP_EXT_DISABLE_84_IMAGICK=true`
+- Resolution order:
   - `preset + matrix + enable toggles - disable toggles`
-  - disable toggle her zaman son soz sahibidir.
-- `php ext resolve` ilgili surum(ler) icin nihai extension listesini gosterir.
-- `php ext sync` ilgili surum(ler)de eksik extensionlari kurmayi dener ve verify eder.
-- `PLUME_PHP_EXTENSIONS_STRICT=true` ise verify edilemeyen extension oldugunda komut `exit 2` doner.
-- `services up php` sirasinda otomatik sync kapsamini `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix|target|default` belirler.
+  - disable toggle always has the final say.
+- `php ext resolve` shows the final extension list for the relevant version(s).
+- `php ext sync` tries to install missing extensions on the relevant version(s) and verifies them.
+- With `PLUME_PHP_EXTENSIONS_STRICT=true`, the command returns `exit 2` when an extension cannot be verified.
+- During `services up php`, auto-sync scope is set by `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE=matrix|target|default`.
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: basarili
-- `2`: validation/prereq/supported-version hatasi
+- `0`: success
+- `2`: validation/prereq/supported-version error
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl php install 8.2
@@ -96,19 +96,19 @@ php8.4 -v
 php-fpm-8.4 -v
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Desteklenmeyen PHP surumu
-- Alias adi cakismasi
-- Default alias degisimi icin gerekli izin yok
-- Host'ta hedef surum binary'si bulunamiyor (`doctor php --strict` ile fail-fast kontrol edilebilir)
+- Unsupported PHP version
+- Alias name conflict
+- Missing permission to change the default alias
+- Target version binary not found on host (can fail-fast with `doctor php --strict`)
 
-## Phase 6 Notu
+## Phase 6 note
 
-- `services install php --version=<alias|version>` ve `services up php --version=<alias|version>` komutlari:
-  - `php`, `default`, `php83` gibi aliaslari `PLUME_PHP_DEFAULT_VERSION` / `PLUME_PHP_ALIAS_*` ile cozumler.
-  - Cozumlenen surum `PLUME_PHP_INSTALLED_VERSIONS` listesinde yoksa komut `exit 2` ile fail olur.
+- `services install php --version=<alias|version>` and `services up php --version=<alias|version>`:
+  - resolve aliases such as `php`, `default`, `php83` via `PLUME_PHP_DEFAULT_VERSION` / `PLUME_PHP_ALIAS_*`.
+  - if the resolved version is not in `PLUME_PHP_INSTALLED_VERSIONS`, the command fails with `exit 2`.
 - Native host binary provisioning:
-  - `services install php --mode=native --version=<x.y>` komutu, hostta CLI/FPM binary kurulumunu dener ve dogrular.
-  - Basariliysa ilgili surumu php matrix state'ine (`php.env`) otomatik ekler.
-- Native FPM servis baslatma (`services up php82`, `--version=8.2`): macOS'ta `brew services start php@x.y`; baslatmadan once pool `listen` canonical unix socket (`/opt/homebrew/var/run/php@x.y-fpm.sock`) ile hizalanir (D-107); bkz. [services.md](./services.md).
+  - `services install php --mode=native --version=<x.y>` tries to install and verify the host CLI/FPM binary.
+  - On success, it automatically adds the version to php matrix state (`php.env`).
+- Native FPM service start (`services up php82`, `--version=8.2`): on macOS `brew services start php@x.y`; before start, pool `listen` is aligned to the canonical unix socket (`/opt/homebrew/var/run/php@x.y-fpm.sock`) (D-107); see [services.md](./services.md).

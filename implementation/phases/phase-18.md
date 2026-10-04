@@ -2,7 +2,7 @@
 
 ## Objective
 
-Laradock `pgadmin` parity: native modda PostgreSQL yonetimi icin web UI (`services install|up|url|credentials pgadmin`).
+Laradock `pgadmin` parity: web UI for PostgreSQL management in native mode (`services install|up|url|credentials pgadmin`).
 
 ## Status
 
@@ -12,10 +12,10 @@ Laradock `pgadmin` parity: native modda PostgreSQL yonetimi icin web UI (`servic
 
 ## MVP Scope
 
-- [x] Registry servisi: `pgadmin` (`PLUME_PGADMIN_ENABLED`, Laradock alias `PGADMIN_*`)
+- [x] Registry service: `pgadmin` (`PLUME_PGADMIN_ENABLED`, Laradock alias `PGADMIN_*`)
 - [x] Driver: state venv + `pip install pgadmin4`; mock install for hermetic smoke
 - [x] Dependency: `postgres` enabled
-- [x] `@db` grubuna dahil (postgres → pgadmin sirasi)
+- [x] Included in `@db` group (postgres → pgadmin order)
 - [x] CLI: `services url|credentials|restart pgadmin`
 - [x] Docs: `docs/commands/services-pgadmin.md` + OS matrix + manifest
 - [x] Smoke: `phase18_native_pgadmin_smoke.sh`
@@ -23,11 +23,11 @@ Laradock `pgadmin` parity: native modda PostgreSQL yonetimi icin web UI (`servic
 ## Gate Checklist
 
 - [x] MVP scope complete
-- [x] Targeted smoke yesil (`phase18_native_pgadmin_smoke.sh`)
+- [x] Targeted smoke green (`phase18_native_pgadmin_smoke.sh`)
 - [x] Decision log D-138
-- [x] Tracker satiri
+- [x] Tracker row
 
-## Referans
+## Reference
 
 - [lib/services/native_pgadmin.sh](../../lib/services/native_pgadmin.sh)
 - [docs/commands/services-pgadmin.md](../../docs/commands/services-pgadmin.md)

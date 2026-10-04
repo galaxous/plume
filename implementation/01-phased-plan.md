@@ -1,153 +1,153 @@
 # Phased Plan (10-Phase Gate Model)
 
-## Vizyon
+## Vision
 
-Plume, Linux/macOS icin 3 modlu tek utility:
+Plume is a single 3-mode utility for Linux/macOS:
 
 1. `native`
 2. `docker-lite`
 3. `laradock-bridge`
 
-Her fazda zorunlu cikti:
+Required output in every phase:
 
-- Calisan ozellik
-- Test kaniti
-- Dokumantasyon guncellemesi
-- Decision log kaydi
+- Working feature
+- Test evidence
+- Documentation update
+- Decision log entry
 
-## Faz 1 - Foundation & Repo Standards
+## Phase 1 - Foundation & Repo Standards
 
-- Moduler shell kurallari, klasor sozlesmesi, naming convention
-- 10 faz gate modelinin resmi kabul edilmesi
-- Dokumantasyon zorunlulugu kurallarinin repo icine alinmasi
+- Modular shell rules, directory contract, naming convention
+- Official adoption of the 10-phase gate model
+- Documentation requirements committed into the repo
 - Naming policy:
-  - Urun adi: `Plume`
-  - Resmi binary: `plumectl` (linux util cakismasini azaltmak icin)
-  - Opsiyonel kisa alias: `plume`
+  - Product name: `Plume`
+  - Official binary: `plumectl` (to reduce Linux util collision)
+  - Optional short alias: `plume`
   - GitHub repo: `laravel-plume`
 
-## Faz 2 - CLI Core & Router
+## Phase 2 - CLI Core & Router
 
-- Ince entrypoint + komut router
-- Global flags, help, exit-code standardi
-- Komut aileleri icin iskelet (`mode`, `site`, `services`, `prereq`, `status`, `project`, `deploy`, `backup`)
+- Thin entrypoint + command router
+- Global flags, help, exit-code standard
+- Skeleton for command families (`mode`, `site`, `services`, `prereq`, `status`, `project`, `deploy`, `backup`)
 - Unified `.env` contract:
-  - tum ortak degiskenler `.env.example` icinde
-  - mode-ozel degiskenler ayri prefix bloklariyla (`NATIVE`, `DOCKER_LITE`, `LARADOCK_BRIDGE`)
-- Yetki modeli iskeleti:
-  - Kurulum/guncelleme adimlari sudo/root gerektirir
-  - Runtime operasyonlari (up/down/logs/health) root olmadan calisabilir
+  - all shared variables in `.env.example`
+  - mode-specific variables in separate prefix blocks (`NATIVE`, `DOCKER_LITE`, `LARADOCK_BRIDGE`)
+- Privilege model skeleton:
+  - Install/update steps require sudo/root
+  - Runtime operations (up/down/logs/health) can run without root
 
-## Faz 3 - OS Detection & Core Prereq Guard
+## Phase 3 - OS Detection & Core Prereq Guard
 
-- macOS/Linux tespiti
-- Linux package manager tespiti (`apt`, `dnf`)
-- Fail-fast prereq kontrolu (`command -v`) ve install yonergesi
-- OS security preflight (`ufw/firewalld`, `selinux/apparmor`) kontrol taslagi
+- macOS/Linux detection
+- Linux package manager detection (`apt`, `dnf`)
+- Fail-fast prereq check (`command -v`) and install guidance
+- OS security preflight (`ufw/firewalld`, `selinux/apparmor`) check draft
 
-## Faz 4 - Site Registry & Onboarding (Nginx First)
+## Phase 4 - Site Registry & Onboarding (Nginx First)
 
-- Merkezi site registry (`index.yaml` + site yaml kayitlari)
+- Central site registry (`index.yaml` + site yaml records)
 - `plumectl site add/list/remove/check`
-- Interactive prompt ile path/domain alma
+- Interactive prompt for path/domain
 - Nginx config publish + hosts + reload
 - `plume.yml` (project-local site config manifest) not required in testing phases; schedule planned after phase-4 validation.
-- Laravel hizli onboarding:
-  - `project init` (composer install, `.env` hazirlama, `key:generate`, `storage:link`)
-  - opsiyonel `migrate`, `db:seed`, `npm install`, `npm run build/dev`
+- Fast Laravel onboarding:
+  - `project init` (composer install, `.env` prep, `key:generate`, `storage:link`)
+  - optional `migrate`, `db:seed`, `npm install`, `npm run build/dev`
 
-## Faz 5 - Multi-Webserver Parity (Apache2/Caddy)
+## Phase 5 - Multi-Webserver Parity (Apache2/Caddy)
 
-- Apache2/Caddy adaptorlerinin eklenmesi
-- Ortak registry modelinden config uretimi
-- Domain/path cakisma kurallari ve override akisi
+- Add Apache2/Caddy adapters
+- Config generation from the shared registry model
+- Domain/path conflict rules and override flow
 
-## Faz 6 - Native Service Orchestration
+## Phase 6 - Native Service Orchestration
 
-- Native mode servis adaptorleri
+- Native mode service adapters
 - Port intelligence (default -> fallback -> state)
-- Servis install/start/stop/status ilk versiyon
-- `services supported --mode=native` komutu ve dokumani
+- First version of service install/start/stop/status
+- `services supported --mode=native` command and docs
 - Minimal default profile:
   - default true: php, composer, mariadb, nginx
-  - diger tum servisler default false
+  - all other services default false
 - `services update` reconcile:
-  - configte sonradan true olan servisleri algila
-  - otomatik install + start et
-- Servis versiyon yonetimi:
+  - detect services flipped to true later in config
+  - auto install + start them
+- Service version management:
   - `services install <name> --version=<x.y.z>`
-  - service bazli pinned version kaydi
+  - per-service pinned version record
 - PHP multi-version:
-  - birden fazla php surumu yuklenebilir/yonetilebilir
-  - default `php` alias'i secilen surume baglanir
-  - alternatif aliaslar (`php82`, `php83` vb.) tanimlanir
-- Laravel runtime servisleri:
+  - multiple PHP versions can be installed/managed
+  - default `php` alias points to the selected version
+  - alternative aliases (`php82`, `php83`, etc.) are defined
+- Laravel runtime services:
   - scheduler (cron/systemd timer)
   - queue worker
   - horizon (+ supervisor)
-  - opsiyonel reverb/websocket ve octane process yonetimi
-- Non-root operasyonlar:
-  - logs, health, status, service up/down icin root zorunlu degil
-- Horizon process yonetimi:
-  - `supervisor` kurulum ve config publish
-  - Horizon icin supervisor program template ve health check
+  - optional reverb/websocket and octane process management
+- Non-root operations:
+  - root not required for logs, health, status, service up/down
+- Horizon process management:
+  - `supervisor` install and config publish
+  - supervisor program template and health check for Horizon
 
-## Faz 7 - Docker-Lite Mode
+## Phase 7 - Docker-Lite Mode
 
-- Minimal compose/workspace modeli
-- `compose up/down/status` ve health-check
-- Registry ile docker-lite site publish uyumu
-- `services supported --mode=docker-lite` cikti parity
-- Hedef: native'deki cogunluk servis icin docker-lite parity
-- Horizon calisma modeli:
-  - docker-lite icinde supervisor veya esdeger process manager stratejisi
-- Versiyon parity:
-  - docker-lite image tag'leri ile service version secimi
-  - php surum ve alias davranisinda native ile uyum
-- Durum notu (2026-03-10):
-  - Faz `beta-frozen` olarak kilitlendi.
-  - Kalan lightweight/local+production ergonomi backlog'a alindi.
+- Minimal compose/workspace model
+- `compose up/down/status` and health-check
+- Registry alignment with docker-lite site publish
+- `services supported --mode=docker-lite` output parity
+- Goal: docker-lite parity for most native services
+- Horizon runtime model:
+  - supervisor or equivalent process manager strategy inside docker-lite
+- Version parity:
+  - service version selection via docker-lite image tags
+  - PHP version and alias behavior aligned with native
+- Status note (2026-03-10):
+  - Phase locked as `beta-frozen`.
+  - Remaining lightweight/local+production ergonomics moved to backlog.
 
-## Faz 8 - Laradock Bridge Mode
+## Phase 8 - Laradock Bridge Mode
 
 - Laradock auto-discovery
 - Bridge inspect/sync
-- Var olan laradock stack ile guvenli entegrasyon
-- Oncelik notu (2026-03-10):
-  - Aktif gelistirme odagi bu faza tasindi.
-  - Hedef: native + laradock-bridge tek komut yuzeyi parity.
+- Safe integration with an existing laradock stack
+- Priority note (2026-03-10):
+  - Active development focus moved to this phase.
+  - Goal: native + laradock-bridge single command surface parity.
 
-## Faz 9 - Observability, Ops, Production
+## Phase 9 - Observability, Ops, Production
 
 - `doctor`, `health`, `logs`, `monitor summary`
-- Log rotasyonu, durum raporu, backup/restore (site registry)
-- Server install/update/upgrade operasyonlari
-- TLS/certificate otomasyonu (native + docker-lite uyumlu script)
-- Secrets yonetimi (env/file tabanli + policy)
-- Rollback/failback mekanizmasi (config apply fail olursa geri al)
-- Optional backup kapsam genisletme: config + db dump
-- Pinned version + optional auto-update stratejisi
-- DNS yonetimi: bu fazda degil, ileri faz icin backlog
-- Production deploy akisi:
-  - maintenance/zero-downtime stratejisi
-  - migration safety adimlari
+- Log rotation, status report, backup/restore (site registry)
+- Server install/update/upgrade operations
+- TLS/certificate automation (native + docker-lite compatible script)
+- Secrets management (env/file based + policy)
+- Rollback/failback mechanism (revert if config apply fails)
+- Optional backup scope expansion: config + db dump
+- Pinned version + optional auto-update strategy
+- DNS management: not in this phase; backlog for a later phase
+- Production deploy flow:
+  - maintenance/zero-downtime strategy
+  - migration safety steps
   - queue/horizon recycle (`queue:restart`, `horizon:terminate`)
-  - post-deploy health gate ve otomatik rollback
+  - post-deploy health gate and automatic rollback
 
-## Faz 10 - Stabilization, Release, Adapter-Readiness
+## Phase 10 - Stabilization, Release, Adapter-Readiness
 
-- E2E/regression matrisi (3 mod x ana senaryolar)
-- CLI output contract stabilizasyonu
-- `plume-adapter` projesinin hizli entegrasyonu icin full dokumantasyon tamamlama
-- Full E2E zorunlulugu (smoke yeterli degil)
-- Herd parity checklist + beyond feature checklist kapanis raporu
+- E2E/regression matrix (3 modes x main scenarios)
+- CLI output contract stabilization
+- Complete full documentation for fast `plume-adapter` project integration
+- Full E2E requirement (smoke is not enough)
+- Herd parity checklist + beyond feature checklist closure report
 
-## Faz Gate Kurali
+## Phase Gate Rule
 
-Bir fazin tamamlanma kriteri:
+Completion criteria for a phase:
 
-1. Testler gecti
-2. Komut dokumanlari guncellendi
-3. `implementation/05-decision-log.md` guncellendi
-4. Sonraki faz riskleri yazildi
-5. Ilgili faz icin Laravel project lifecycle senaryosu dogrulandi
+1. Tests passed
+2. Command docs updated
+3. `implementation/05-decision-log.md` updated
+4. Next-phase risks written
+5. Laravel project lifecycle scenario verified for the related phase

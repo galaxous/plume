@@ -1,59 +1,59 @@
 # Release Readiness Runbook (Phase-10+ Baseline)
 
-Bu dokuman, `plume` yayin oncesi minimum kontrol zincirini tanimlar.
+This document defines the minimum pre-publish check chain for `plume`.
 
-## 0) Unified smoke runner (onerilen)
+## 0) Unified smoke runner (recommended)
 
-Yerel pre-release ve CI ile ayni adimlar:
+Same steps for local pre-release and CI:
 
 ```bash
 ./tests/run_smoke_suite.sh              # default --release
-./tests/run_smoke_suite.sh --ci         # GitHub Actions smoke-tests.yml ile birebir
+./tests/run_smoke_suite.sh --ci         # identical to GitHub Actions smoke-tests.yml
 ```
 
-`--release` / `--ci` zinciri:
+`--release` / `--ci` chain:
 
-1. `phase10_e2e_matrix_smoke.sh` (icinde `phase11_e2e_matrix_smoke.sh` dahil)
+1. `phase10_e2e_matrix_smoke.sh` (includes `phase11_e2e_matrix_smoke.sh`)
 2. `phase14_golden_json_smoke.sh`
 3. `phase12_native_host_provision_smoke.sh`
 4. `phase12_site_publish_auto_provision_web_smoke.sh`
 5. `phase13_deploy_apply_smoke.sh`
-6. `phase15_scheduler_queue_smoke.sh` (Faz 15 scheduler / queue ops)
-7. `phase16_plume_yml_v2_smoke.sh` (Faz 16 project `plume.yml` MVP)
-8. `phase17_native_stack_db_smoke.sh` (Faz 17 native DB/phpmyadmin)
-9. `phase17_native_stack_broker_smoke.sh` (Faz 17 redis/mongodb/rabbitmq)
-10. `phase17_native_stack_webui_smoke.sh` (Faz 17 web UI + url)
-11. `phase18_native_pgadmin_smoke.sh` (Faz 18 native pgAdmin)
-12. `phase19_native_service_contract_smoke.sh` (Faz 19 `@core` / `services use` / status truth)
-13. `phase20_native_cache_broker_smoke.sh` (Faz 20 memcached + webuis)
-14. `phase21_queue_honesty_smoke.sh` (Faz 21 meilisearch/minio toggle-only)
-15. `phase22_native_horizon_smoke.sh` (Faz 22 native Horizon)
-16. `phase23_supervisor_doctor_smoke.sh` (Faz 23 supervisor doctor/upgrade)
+6. `phase15_scheduler_queue_smoke.sh` (Phase 15 scheduler / queue ops)
+7. `phase16_plume_yml_v2_smoke.sh` (Phase 16 project `plume.yml` MVP)
+8. `phase17_native_stack_db_smoke.sh` (Phase 17 native DB/phpmyadmin)
+9. `phase17_native_stack_broker_smoke.sh` (Phase 17 redis/mongodb/rabbitmq)
+10. `phase17_native_stack_webui_smoke.sh` (Phase 17 web UI + url)
+11. `phase18_native_pgadmin_smoke.sh` (Phase 18 native pgAdmin)
+12. `phase19_native_service_contract_smoke.sh` (Phase 19 `@core` / `services use` / status truth)
+13. `phase20_native_cache_broker_smoke.sh` (Phase 20 memcached + webuis)
+14. `phase21_queue_honesty_smoke.sh` (Phase 21 meilisearch/minio toggle-only)
+15. `phase22_native_horizon_smoke.sh` (Phase 22 native Horizon)
+16. `phase23_supervisor_doctor_smoke.sh` (Phase 23 supervisor doctor/upgrade)
 17. `phase24_per_site_horizon_smoke.sh` (D-150 per-site Horizon programs)
 
-Beklenen sonuc:
+Expected result:
 
-- Her adim `[RUN]` / `[PASS]` verir; suite sonu `run-smoke-suite:ok`.
-- Ilk hata `[FAIL]` ile fail-fast; ozet `run-smoke-suite:fail`.
+- Each step prints `[RUN]` / `[PASS]`; suite ends with `run-smoke-suite:ok`.
+- First error fail-fasts with `[FAIL]`; summary `run-smoke-suite:fail`.
 
-Ek kapsam:
+Extra coverage:
 
 ```bash
 ./tests/run_smoke_suite.sh --phase11-full
 PLUME_RUN_LINUX_TESTS=1 ./tests/run_smoke_suite.sh --all
 ```
 
-README release matrix’teki ayri `phase3` Linux kontrolu icin `--all --linux` veya `PLUME_RUN_LINUX_TESTS=1` kullanin.
+For the separate `phase3` Linux check in the README release matrix, use `--all --linux` or `PLUME_RUN_LINUX_TESTS=1`.
 
-## 1) Baseline Matrix (manuel)
+## 1) Baseline Matrix (manual)
 
-Asagidaki komut tek seferde native + laradock-bridge + docker-lite(beta-frozen) regresyon kontrolunu yapar (phase 11 ozet runner dahil):
+The following command runs native + laradock-bridge + docker-lite(beta-frozen) regression in one shot (including the phase 11 summary runner):
 
 ```bash
 ./tests/phase10_e2e_matrix_smoke.sh
 ```
 
-Phase 11 native adapter derinligi (ayrica veya matrix icinde):
+Phase 11 native adapter depth (separately or inside the matrix):
 
 ```bash
 ./tests/phase11_e2e_matrix_smoke.sh
@@ -65,14 +65,14 @@ Golden JSON contract (phase 14):
 ./tests/phase14_golden_json_smoke.sh
 ```
 
-Beklenen sonuc:
+Expected result:
 
-- Komut `phase10-e2e-matrix-smoke:ok` ile biter.
-- Her alt adim `[PASS]` satiri verir.
+- The command ends with `phase10-e2e-matrix-smoke:ok`.
+- Each sub-step prints a `[PASS]` line.
 
 ## 2) Critical Ops Regression
 
-Release oncesi kritik operasyonlar:
+Critical operations before release:
 
 ```bash
 ./tests/phase10_install_to_operate_smoke.sh
@@ -86,25 +86,25 @@ Release oncesi kritik operasyonlar:
 
 ## 3) Adapter Contract Baseline
 
-CLI parse kontratini etkileyen degisikliklerde:
+On changes that affect the CLI parse contract:
 
 ```bash
 ./tests/phase8_adapter_contract_normalization_smoke.sh
 ```
 
-ve `docs/contracts/cli-output-contract.md` dosyasi guncellenmelidir.
+and `docs/contracts/cli-output-contract.md` must be updated.
 
 ## 4) Release Evidence
 
-Asagidaki kanitlar toplanmis olmali:
+The following evidence should be collected:
 
-- Matrix komut ciktilari (`[PASS]` zinciri)
-- Phase checklist guncellemeleri (`implementation/phases/phase-10.md`, `phase-15.md` vb.)
-- Tracker satiri (`implementation/phase-tracker.md`)
-- Decision log kaydi (`implementation/05-decision-log.md`)
+- Matrix command outputs (`[PASS]` chain)
+- Phase checklist updates (`implementation/phases/phase-10.md`, `phase-15.md`, etc.)
+- Tracker row (`implementation/phase-tracker.md`)
+- Decision log entry (`implementation/05-decision-log.md`)
 
 ## 5) Stop/No-Go Rules
 
-- Herhangi bir smoke script fail olursa release durdurulur.
-- `critical guard`, `rollback`, `security cert` testlerinden biri fail ise no-go.
-- CLI contract degisimi dokumante edilmediyse no-go.
+- If any smoke script fails, the release is stopped.
+- If any of `critical guard`, `rollback`, or `security cert` fails, it is a no-go.
+- If a CLI contract change is not documented, it is a no-go.

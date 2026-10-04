@@ -1,33 +1,33 @@
 # Documentation Strategy (Full Set)
 
-## Hedef
+## Goal
 
-Plume'in tum komutlarini tane tane aciklayan, server operasyonunda referans alinabilen ve gelecekteki `plume-adapter` paketine hizli onboarding saglayan bir dokumantasyon seti.
+A documentation set that explains every Plume command in detail, can be used as a server operations reference, and provides fast onboarding for the future `plume-adapter` package.
 
-## Yapı
+## Structure
 
-- `docs/commands/`: Komut bazli kullanim
-- `docs/contracts/`: Parse-edilebilir cikti sozlesmeleri
-- `docs/operations/`: Runbook ve faz-gate checklist
-- `docs/operations/naming-policy.md`: brand/cli/repo/package isimlendirme standardi
+- `docs/commands/`: Command-based usage
+- `docs/contracts/`: Parseable output contracts
+- `docs/operations/`: Runbooks and phase-gate checklists
+- `docs/operations/naming-policy.md`: brand/cli/repo/package naming standard
 
-## Command Doc Zorunlu Basliklari
+## Required Command Doc Headings
 
-1. Amac
-2. Kullanim
-3. Parametreler
-4. Cikti / Exit Codes
-5. Ornekler
-6. Hata Senaryolari
+1. Purpose
+2. Usage
+3. Parameters
+4. Output / Exit Codes
+5. Examples
+6. Error Scenarios
 
-## Guncelleme Kurali
+## Update Rule
 
-- Kod degisince dokuman da degisir (tek degisiklik seti)
-- Yeni komut eklendiginde ayni anda `docs/commands/<command>.md` eklenir
-- Cikti semasi degisirse `docs/contracts/cli-output-contract.md` guncellenir
+- When code changes, docs change too (same change set)
+- When a new command is added, `docs/commands/<command>.md` is added at the same time
+- When the output schema changes, `docs/contracts/cli-output-contract.md` is updated
 
-## Adapter Hazirligi (Out of Scope ama planli)
+## Adapter Readiness (Out of Scope but Planned)
 
-- Komutlarin deterministic output vermesi
-- Exit code standardizasyonu
-- `--json` modunun sema stabilitesi
+- Commands produce deterministic output
+- Exit code standardization
+- Schema stability of `--json` mode

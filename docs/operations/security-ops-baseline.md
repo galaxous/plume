@@ -2,7 +2,7 @@
 
 ## Guard Policy
 
-Asagidaki kritik komutlar icin `--yes` zorunludur:
+`--yes` is required for the following critical commands:
 
 - `mode use --force`
 - `mode path set|clear --force`
@@ -12,10 +12,10 @@ Asagidaki kritik komutlar icin `--yes` zorunludur:
 
 ## Audit Trail
 
-Runtime olaylari SQLite `runtime_events` tablosuna yazilir:
+Runtime events are written to the SQLite `runtime_events` table:
 
 - `ops.*` (status/health/logs/monitor)
-- `critical.*.(blocked|approved)` (guard kararlari)
+- `critical.*.(blocked|approved)` (guard decisions)
 - `backup.*` (create/restore)
 
 ## Incident Hygiene
@@ -39,4 +39,4 @@ Runtime olaylari SQLite `runtime_events` tablosuna yazilir:
 - `plumectl security cert show <cert-id>`
 - `plumectl security cert renew <cert-id> --days=30`
 
-Bu komutlari incident snapshot zincirinin parcasi olarak calistirin.
+Run these commands as part of the incident snapshot chain.

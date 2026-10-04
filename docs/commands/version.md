@@ -1,10 +1,10 @@
 # `version` Command
 
-## Amac
+## Purpose
 
-CLI surumunu gosterir. Kaynak: repo `VERSION` (D-155).
+Shows the CLI version. Source: repo `VERSION` (D-155).
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl version
@@ -13,24 +13,24 @@ plumectl -v
 plumectl --json version
 ```
 
-## Parametreler
+## Parameters
 
-Yok (global `--json` desteklenir).
+None (global `--json` is supported).
 
-## Cikti / exit-code
+## Output / exit-code
 
 - Text: `plumectl <semver>`
 - JSON: `{"ok":true,"command":"version","data":{"name":"plumectl","version":"<semver>"}}`
 - Exit `0`
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl version
 ```
 
-## Hata senaryolari
+## Error scenarios
 
-- `VERSION` yoksa `0.0.0-dev` basilir
+- If `VERSION` is missing, `0.0.0-dev` is printed
 
-Iliskili: [release.md](../operations/release.md)
+Related: [release.md](../operations/release.md)

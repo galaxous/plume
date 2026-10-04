@@ -1,43 +1,43 @@
-# Release (pinned version) — Faz 28 / D-155
+# Release (pinned version) — Phase 28 / D-155
 
-## Amac
+## Purpose
 
-Plume CLI surumunu tek kaynaktan (`VERSION`) okumak; GitHub Release + **Homebrew** + **Packagist** dagitim yuzeylerini hazir tutmak.
+Read the Plume CLI version from a single source (`VERSION`); keep GitHub Release + **Homebrew** + **Packagist** distribution surfaces ready.
 
-## Surum
+## Version
 
-- Dosya: repo kokunde [`VERSION`](../../VERSION) (semver, orn. `0.3.0`)
-- CLI: `plumectl version` veya `plumectl --version`
+- File: [`VERSION`](../../VERSION) at the repo root (semver, e.g. `0.3.0`)
+- CLI: `plumectl version` or `plumectl --version`
 - JSON: `plumectl --json version` → `{"ok":true,"command":"version","data":{"name":"plumectl","version":"…"}}`
 
-## Kurulum (kullanici) — asamali
+## Install (user) — staged
 
-Tam checklist (Homebrew + Debian/Ubuntu + RHEL/Fedora + genel Linux + maintainer):
+Full checklist (Homebrew + Debian/Ubuntu + RHEL/Fedora + general Linux + maintainer):
 
 → **[install.md](./install.md)**
 
-Kisa:
+Short:
 
-| Platform | Komut |
+| Platform | Command |
 |----------|--------|
 | macOS | `brew tap galaxous/plume https://github.com/galaxous/plume && brew install plumectl` |
 | Linux | `curl -fsSL …/packaging/linux/install.sh \| env PLUME_REF=v0.3.0 PREFIX=/usr/local sudo -E bash` |
-| Her yer | `composer global require galaxous/laravel-plume` |
+| Anywhere | `composer global require galaxous/laravel-plume` |
 
-## Yayin adimlari (maintainer)
+## Publish steps (maintainer)
 
-1. Yerel: `./tests/run_smoke_suite.sh --release` (opsiyonel; CI de calistirir)
+1. Local: `./tests/run_smoke_suite.sh --release` (optional; CI also runs it)
 2. GitHub Actions → **Manual Release** (`workflow_dispatch`)
    - Smoke gate (`--release`)
-   - `autonomous-tag` → tag adi
-   - **`packaging/homebrew/sync-release-version.sh`**: `VERSION` + `Formula/plumectl.rb` + `packaging/homebrew/plumectl.rb` icinde `version` / `url` (aynı commit; `sha256` dokunulmaz)
-   - Tag bu commit’e force-move → GitHub Release
-3. Release sonrasi (opsiyonel / brew audit):
-   - Tag tarball sha256 hesapla → formula `sha256` alanini `main`’e yaz (**retag yok**)
-   - Packagist (`galaxous/laravel-plume`): webhook / “Update” (ilk kez [submit](https://packagist.org/packages/submit))
-4. `update-changelog.yml` CHANGELOG.md gunceller
+   - `autonomous-tag` → tag name
+   - **`packaging/homebrew/sync-release-version.sh`**: `VERSION` + `Formula/plumectl.rb` + `packaging/homebrew/plumectl.rb` `version` / `url` (same commit; `sha256` untouched)
+   - Tag force-moved to this commit → GitHub Release
+3. After release (optional / brew audit):
+   - Compute tag tarball sha256 → write formula `sha256` on `main` (**no retag**)
+   - Packagist (`galaxous/laravel-plume`): webhook / “Update” (first time: [submit](https://packagist.org/packages/submit))
+4. `update-changelog.yml` updates CHANGELOG.md
 
-Elle `VERSION` / formula `version`+`url` senkronu **gerekmez** — Manual Release CI yapar. Yerel deneme:
+Manual sync of `VERSION` / formula `version`+`url` is **not required** — Manual Release CI does it. Local trial:
 
 ```bash
 ./packaging/homebrew/sync-release-version.sh v0.3.1
@@ -47,9 +47,9 @@ Elle `VERSION` / formula `version`+`url` senkronu **gerekmez** — Manual Releas
 
 - Homebrew: `brew upgrade plumectl`
 - Composer: `composer global update galaxous/laravel-plume`
-- Ayrica `plumectl self-update` yok (bilinçli; paket yoneticileri yeterli)
+- There is also no `plumectl self-update` (intentional; package managers are enough)
 
-## Iliskili
+## Related
 
 - [install.md](./install.md)
 - [release-readiness.md](./release-readiness.md)

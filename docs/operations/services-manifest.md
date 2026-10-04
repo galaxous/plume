@@ -1,56 +1,56 @@
 # Native services manifest (`services.yml`)
 
-Laradock’taki `docker-compose.yml` benzeri merkezi manifest: native modda hangi stack bileşenlerinin hedeflendiğini yapılandırır. **`.env` ortam katmanı olarak kalır**; aynı anahtar hem YAML’de hem `.env`’de tanımlıysa **`.env` kazanır**.
+Central manifest similar to Laradock’s `docker-compose.yml`: configures which stack components are targeted in native mode. **`.env` remains the environment layer**; if the same key is defined in both YAML and `.env`, **`.env` wins**.
 
-## Dosya konumu
+## File location
 
-| Dosya | Amaç |
+| File | Purpose |
 |-------|------|
-| `~/.config/plume/services.yml` | Kalıcı kullanıcı manifest (varsayılan) |
-| `templates/services.yml.example` | Repodaki şablon (tüm registry servisleri) |
-| `PLUME_SERVICES_MANIFEST_FILE` | Manifest yolu override |
+| `~/.config/plume/services.yml` | Persistent user manifest (default) |
+| `templates/services.yml.example` | In-repo template (all registry services) |
+| `PLUME_SERVICES_MANIFEST_FILE` | Manifest path override |
 
-`plumectl init host` manifest yoksa şablonu `~/.config/plume/services.yml` konumuna kopyalar (mevcut dosyanın üzerine yazmaz).
+If the manifest is missing, `plumectl init host` copies the template to `~/.config/plume/services.yml` (does not overwrite an existing file).
 
-## Birleştirme sırası
+## Merge order
 
-1. `lib/config/defaults.sh` (gömülü varsayılanlar; dahili `PLUME_*`)
-2. `plume_env_apply_laradock_aliases` (kisa isim ↔ `PLUME_*` senkron)
-3. `services.yml` (yapılandırılmış servis tanımları; `${REDIS_ENABLED}` vb. placeholder’ları bu adımda defaults ortamından çözülür)
-4. `~/.config/plume/.env` (son söz; `plume_load_env` + alias yeniden uygulanır)
+1. `lib/config/defaults.sh` (embedded defaults; internal `PLUME_*`)
+2. `plume_env_apply_laradock_aliases` (short name ↔ `PLUME_*` sync)
+3. `services.yml` (configured service definitions; `${REDIS_ENABLED}` etc. placeholders are resolved from the defaults environment in this step)
+4. `~/.config/plume/.env` (last word; `plume_load_env` + aliases reapplied)
 
-`${VAR}` interpolation: Laradock `docker-compose` benzeri — manifest değerlerinde `${PHPMYADMIN_ENABLED}` gibi referanslar, manifest apply sırasında (defaults + alias sonrası) mevcut ortamdan çözülür. Aynı anahtar `.env`’de tanımlıysa **`.env` kazanır** (manifest yalnızca bağlantı/discoverability sağlar). Eski `${PLUME_*_ENABLED}` placeholder’ları geriye uyumlu calisir.
+`${VAR}` interpolation: Laradock `docker-compose`-like — references such as `${PHPMYADMIN_ENABLED}` in manifest values are resolved from the current environment during manifest apply (after defaults + aliases). If the same key is defined in `.env`, **`.env` wins** (the manifest only provides wiring/discoverability). Old `${PLUME_*_ENABLED}` placeholders still work for backward compatibility.
 
-`host.env` makine tespiti içindir; servis toggle’ları için **değildir** (bkz. D-098).
+`host.env` is for machine detection; it is **not** for service toggles (see D-098).
 
-## Şema (sürüm `version: 1`)
+## Schema (version `version: 1`)
 
-Özel bloklar (`web`, `php`, `database`, `provision`) + registry servisleri (blok YAML; `${PLUME_*}` değerleri tırnaklı yazılır).
+Special blocks (`web`, `php`, `database`, `provision`) + registry services (block YAML; `${PLUME_*}` values are written quoted).
 
-Tam örnek: `templates/services.yml.example`.
+Full example: `templates/services.yml.example`.
 
-### YAML → ortam eşlemesi (özet)
+### YAML → environment mapping (summary)
 
-| YAML bölümü | Alan | Ortam değişkeni |
+| YAML section | Field | Environment variable |
 |-------------|------|-----------------|
 | `web` | `engine` | `PLUME_WEB_SERVER_DRIVER` |
 | `web` | `manage_main_config` | `PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG` |
 | `web` | `http_port` | `PLUME_NATIVE_NGINX_HTTP_PORT`, `PLUME_WEB_PORT` |
-| `web` | `auto_provision` | `PLUME_SITE_AUTO_PROVISION_WEB`; `true` ise `PLUME_NATIVE_HOST_PROVISION=true` |
+| `web` | `auto_provision` | `PLUME_SITE_AUTO_PROVISION_WEB`; if `true` then `PLUME_NATIVE_HOST_PROVISION=true` |
 | `web` | `enabled` | `PLUME_WEB_SERVER_ENABLED` |
 | `php` | `enabled` | `PLUME_PHP_ENABLED` |
 | `php` | `default_version` | `PLUME_PHP_DEFAULT_VERSION`, `PLUME_PHP_VERSION` |
-| `php` | `versions[]` | `PLUME_PHP_INSTALLED_VERSIONS` (virgülle) |
+| `php` | `versions[]` | `PLUME_PHP_INSTALLED_VERSIONS` (comma-separated) |
 | `php` | `extensions_profile` | `PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE` |
-| `database` | `engine` | `PLUME_MARIADB_ENABLED` / `PLUME_MYSQL_ENABLED` (tek engine; native brew’de ikisi birden yasak — D-128) |
-| `database` | `version` | `PLUME_MARIADB_VERSION` veya `PLUME_MYSQL_VERSION` |
-| `database` | `auto_start` | Provision sırasında DB start (manifest okuma; env değil) |
+| `database` | `engine` | `PLUME_MARIADB_ENABLED` / `PLUME_MYSQL_ENABLED` (single engine; both forbidden on native brew — D-128) |
+| `database` | `version` | `PLUME_MARIADB_VERSION` or `PLUME_MYSQL_VERSION` |
+| `database` | `auto_start` | DB start during provision (manifest read; not env) |
 | `provision` | `interactive: false` | `PLUME_NONINTERACTIVE=true` |
-| `provision` | `on_first_run: true` | İlk native bootstrap’ta (veya `init host`) bir kez `services provision --from-manifest`; tamamlanınca `state/on_first_run_provision.done` |
+| `provision` | `on_first_run: true` | Once on first native bootstrap (or `init host`): `services provision --from-manifest`; when done, `state/on_first_run_provision.done` |
 
-### Registry servisleri (tek tablo — D-104)
+### Registry services (single table — D-104)
 
-Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `version` → `PLUME_*_VERSION`. Kaynak: `plume_services_manifest_env_mapping_rows` + `lib/services/registry.sh` (`plume_service_env_key`).
+Each row: `services.<name>.enabled` → `PLUME_*_ENABLED`, optional `version` → `PLUME_*_VERSION`. Source: `plume_services_manifest_env_mapping_rows` + `lib/services/registry.sh` (`plume_service_env_key`).
 
 | YAML `services.<name>` | Enabled env | Version env |
 |------------------------|-------------|-------------|
@@ -73,9 +73,9 @@ Her satır: `services.<name>.enabled` → `PLUME_*_ENABLED`, isteğe bağlı `ve
 | `horizon` | `PLUME_HORIZON_ENABLED` | `PLUME_HORIZON_VERSION` |
 | `php_worker` | `PLUME_PHP_WORKER_ENABLED` | `PLUME_PHP_WORKER_VERSION` |
 
-`database.engine` ile `mariadb`/`mysql` bölümleri birlikte kullanılabilir; **native Homebrew’de yalnızca bir engine etkin olmalıdır** (`database.engine: mariadb` veya `mysql`). İkisi birden `true` ise manifest load uyarısı, `services start`/`provision` hata verir (D-128). phpMyAdmin yalnızca operasyonel (health geçen) engine’leri listeler.
+`database.engine` can be used together with `mariadb`/`mysql` sections; **on native Homebrew only one engine must be active** (`database.engine: mariadb` or `mysql`). If both are `true`, manifest load warns and `services start`/`provision` errors (D-128). phpMyAdmin lists only operational (health-passing) engines.
 
-Registry satırlarında `${REDIS_ENABLED}` placeholder'ları tırnaklı block YAML kullanın (bkz. `templates/services.yml.example`). Eski `${PLUME_REDIS_ENABLED}` geriye uyumludur.
+On registry rows, use quoted block YAML for `${REDIS_ENABLED}` placeholders (see `templates/services.yml.example`). Old `${PLUME_REDIS_ENABLED}` remains backward compatible.
 
 ```yaml
 redis:
@@ -87,78 +87,78 @@ postgres:
   version: "16"
 ```
 
-### Native host provision vs yalnızca enable
+### Native host provision vs enable-only
 
-| Servis | Manifest `enabled` | `provision --from-manifest` (native) |
+| Service | Manifest `enabled` | `provision --from-manifest` (native) |
 |--------|-------------------|--------------------------------------|
-| web (nginx/apache2) | Evet | Kurulum + start |
-| mariadb, mysql, redis | Evet | Kurulum + start (`database.auto_start` DB için) |
-| postgres, mongodb, rabbitmq, memcached, phpmyadmin, pgadmin, mongo_webui, redis_webui | Evet (Phase 17–20) | Kurulum + start; OS matrisi bkz. [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
-| mailpit | Evet (env) | macOS Homebrew: kurulum + start; Linux: uyarı (docker-lite / manuel) |
-| php (`versions[]`) | Evet | Best-effort brew/apt PHP kurulumu + matrix kaydı |
-| meilisearch, minio | Evet (env) | Native toggle-only (`health=registry`, D-146); driver backlog |
-| phpmyadmin, composer, horizon, … | Evet (env) | **horizon/supervisor:** native host worker (D-147); php_worker registry-only |
+| web (nginx/apache2) | Yes | Install + start |
+| mariadb, mysql, redis | Yes | Install + start (`database.auto_start` for DB) |
+| postgres, mongodb, rabbitmq, memcached, phpmyadmin, pgadmin, mongo_webui, redis_webui | Yes (Phase 17–20) | Install + start; OS matrix see [native-stack-os-matrix.md](./native-stack-os-matrix.md) |
+| mailpit | Yes (env) | macOS Homebrew: install + start; Linux: warning (docker-lite / manual) |
+| php (`versions[]`) | Yes | Best-effort brew/apt PHP install + matrix registration |
+| meilisearch, minio | Yes (env) | Native toggle-only (`health=registry`, D-146); driver backlog |
+| phpmyadmin, composer, horizon, … | Yes (env) | **horizon/supervisor:** native host worker (D-147); php_worker registry-only |
 
-Laradock-bridge’e özgü compose adları (`workspace`, `php-fpm`) şablonda yorum olarak dokümante edilir; native loader bu satırları okumaz.
+Laradock-bridge-specific compose names (`workspace`, `php-fpm`) are documented as comments in the template; the native loader does not read those rows.
 
 ### Queue: `horizon`, `php_worker`, `supervisor` (D-113)
 
-| Servis | `services.yml` | Native host provision | Calistirma |
+| Service | `services.yml` | Native host provision | Runtime |
 |--------|----------------|----------------------|------------|
 | `horizon` | `enabled` → `PLUME_HORIZON_ENABLED` | brew/apt `supervisor` + program | `services up horizon` — supervisor gate; native `php artisan horizon` (D-147) |
-| `php_worker` | `enabled` → `PLUME_PHP_WORKER_ENABLED` | **Yok** | Genelde docker-lite / laradock **php-worker** container veya manuel `queue:work` |
+| `php_worker` | `enabled` → `PLUME_PHP_WORKER_ENABLED` | **No** | Usually docker-lite / laradock **php-worker** container or manual `queue:work` |
 | `supervisor` | `enabled` → `PLUME_SUPERVISOR_ENABLED` | brew/apt `supervisor` + system unit | Plume program registry + OS conf.d (D-149) |
 
-**Docker-lite:** Compose alias `laravel-horizon` ↔ Plume servis adi `horizon` (ve `supervisor` ayni container’a map edilebilir). Bkz. [services.md](../commands/services.md).
+**Docker-lite:** Compose alias `laravel-horizon` ↔ Plume service name `horizon` (and `supervisor` can map to the same container). See [services.md](../commands/services.md).
 
-**Laradock-bridge:** `laravel-horizon`, `php-worker` compose servisleri; manifest yalnizca env toggle yukler, compose’u degistirmez.
+**Laradock-bridge:** `laravel-horizon`, `php-worker` compose services; the manifest only loads env toggles and does not change compose.
 
-**Operasyonel CLI:** `plume queue status`, `plume queue list`; Horizon acikken `services status horizon`. `PLUME_HORIZON_PATH` veya kayitli site artisan yolu gerekir.
+**Operational CLI:** `plume queue status`, `plume queue list`; when Horizon is on, `services status horizon`. `PLUME_HORIZON_PATH` or a registered site artisan path is required.
 
-## Komutlar
+## Commands
 
-Etkin yapılandırmayı görmek (`effective_*` satırları, adapter-parse):
+To see effective configuration (`effective_*` lines, adapter-parse):
 
 ```bash
-./plume.sh init onboarding          # checklist + effective_* satırları
+./plume.sh init onboarding          # checklist + effective_* lines
 ./plume.sh services manifest show
 ```
 
-Greenfield host (Homebrew / apt / dnf — mock smoke’larda brew shim):
+Greenfield host (Homebrew / apt / dnf — brew shim in mock smokes):
 
 ```bash
 ./plume.sh env init
 ./plume.sh init host                  # host.env + services.yml bootstrap
-./plume.sh init host --apply          # manifest’e göre native provision
-# İlk CLI oturumu (manifest’te provision.on_first_run: true): otomatik provision (bir kez)
-# veya
+./plume.sh init host --apply          # native provision from manifest
+# First CLI session (provision.on_first_run: true in manifest): automatic provision (once)
+# or
 ./plume.sh services provision --from-manifest
 ./plume.sh services provision --from-manifest --dry-run
 ```
 
-Ek PHP sürümü manifest’te yoksa:
+If an extra PHP version is not in the manifest:
 
 ```bash
 ./plume.sh php install 8.4
 ./plume.sh init onboarding --fix      # brew services nginx/php
 ```
 
-## macOS: otomatik olmayan adımlar
+## macOS: steps that are not automatic
 
-- **Full Disk Access**: `nginx` ve `php-fpm` binary’leri (Plume veya plume.sh değil). Bkz. [macos-permissions.md](./macos-permissions.md).
-- **Desktop / Documents / Downloads** altında proje kökü: TCC; tercih `~/Sites` veya `~/Code`.
-- **Port 80**: Homebrew nginx varsayılan 8080; `manage_main_config: true` + `services web sync-config --reload` veya 8080’de kalın.
+- **Full Disk Access**: `nginx` and `php-fpm` binaries (not Plume or plume.sh). See [macos-permissions.md](./macos-permissions.md).
+- **Project root under Desktop / Documents / Downloads**: TCC; prefer `~/Sites` or `~/Code`.
+- **Port 80**: Homebrew nginx defaults to 8080; use `manage_main_config: true` + `services web sync-config --reload`, or stay on 8080.
 
-## Geriye uyumluluk
+## Backward compatibility
 
-Manifest dosyası yoksa loader no-op’tur; yalnızca `.env` + defaults davranışı sürer. Eksik YAML anahtarları mevcut env/defaults değerini değiştirmez.
+If the manifest file is missing, the loader is a no-op; only `.env` + defaults behavior continues. Missing YAML keys do not change existing env/defaults values.
 
-## İlgili kararlar
+## Related decisions
 
 - D-130 — Laradock-style env names in config; alias layer `plume_env_apply_laradock_aliases`
 - D-128 — manifest `${VAR}` interpolation, native DB status health probe, brew dual-engine guard
-- D-108 — `provision.on_first_run` otomatik manifest provision
-- D-104 — tam registry manifest eşlemesi
+- D-108 — `provision.on_first_run` automatic manifest provision
+- D-104 — full registry manifest mapping
 - D-103 — `services.yml` native manifest MVP
 - D-098 — `host.env`
-- D-100 — interaktif kurulum promptları
+- D-100 — interactive install prompts

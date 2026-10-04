@@ -1,10 +1,10 @@
 # `security`
 
-## Amac
+## Purpose
 
-OS/firewall preflight kontrolu, lokal secret yonetimi ve multi-domain local cert uretimi.
+OS/firewall preflight check, local secret management, and multi-domain local cert generation.
 
-## Kullanim
+## Usage
 
 ```bash
 plumectl security check --mode=native
@@ -20,7 +20,7 @@ plumectl security cert show <cert-id>
 plumectl security cert renew <cert-id> --days=30
 ```
 
-## Parametreler
+## Parameters
 
 - `check`
   - `--mode=<native|docker-lite|laradock-bridge>`
@@ -37,20 +37,20 @@ plumectl security cert renew <cert-id> --days=30
   - `show <id>`
   - `renew <id> [--days=30]`
 
-Sertifika depolama (state):
+Certificate storage (state):
 
-- Dizin: `$(plume state dir)/certs/<cert-id>/` (varsayılan: `~/.config/plume/certs/<cert-id>/`, `PLUME_STATE_DIR` ile override)
-- Dosyalar: `cert.crt`, `cert.key`, `san.ext`, `meta.env` (id ve domain listesi)
-- Site bağlama: `plumectl site add|update ... --cert-id=<cert-id> [--https-port=443] --publish`
-- Site TLS kapatma (redirect kaldırma): `plumectl site update <id> --clear-cert --publish` (`docs/commands/site.md`)
+- Directory: `$(plume state dir)/certs/<cert-id>/` (default: `~/.config/plume/certs/<cert-id>/`, override with `PLUME_STATE_DIR`)
+- Files: `cert.crt`, `cert.key`, `san.ext`, `meta.env` (id and domain list)
+- Site binding: `plumectl site add|update ... --cert-id=<cert-id> [--https-port=443] --publish`
+- Disable site TLS (remove redirect): `plumectl site update <id> --clear-cert --publish` (`docs/commands/site.md`)
 
-## Cikti / Exit Codes
+## Output / Exit Codes
 
-- `0`: basarili
-- `1`: genel hata
-- `2`: prereq/parametre hatasi
+- `0`: success
+- `1`: general error
+- `2`: prereq/parameter error
 
-## Ornekler
+## Examples
 
 ```bash
 plumectl security check --mode=laradock-bridge
@@ -60,9 +60,9 @@ plumectl security cert issue --domains=api.test,admin.api.test --days=15
 plumectl site add --path=/var/www/myapp --domain=myapp.test --server=nginx --cert-id=<cert-id> --https-port=443 --publish
 ```
 
-## Hata Senaryolari
+## Error scenarios
 
-- Geçersiz key formati (`[A-Z0-9_]` disi)
-- Secret bulunamiyor
+- Invalid key format (outside `[A-Z0-9_]`)
+- Secret not found
 - Security prereq profile fail
-- `openssl` yoksa cert issue/renew calismaz
+- Without `openssl`, cert issue/renew will not run

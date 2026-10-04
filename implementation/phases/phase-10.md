@@ -51,21 +51,21 @@
 - Owner:
 - Related PR/Commit:
 - Progress:
-  - `tests/phase10_e2e_matrix_smoke.sh` eklendi; native + laradock-bridge baseline regression zinciri tek komutla calisiyor.
-  - `docs/operations/release-readiness.md` eklendi; release-oncesi kontrol ve kanit toplama akisi netlesti.
-  - `docs/contracts/cli-output-contract.md` phase-10 baseline kapsami genisletildi.
-  - `implementation/12-quality-gate-report-2026-04-03.md` ile matrix pass kaniti raporlandi.
-  - `tests/phase10_install_to_operate_smoke.sh` eklendi.
-  - `tests/phase10_rollback_regression_smoke.sh` eklendi.
-  - `docs/operations/plume-adapter-onboarding.md` eklendi.
-  - `docs/operations/release-versioning-and-tags.md` eklendi.
+  - `tests/phase10_e2e_matrix_smoke.sh` added; native + laradock-bridge baseline regression chain runs in a single command.
+  - `docs/operations/release-readiness.md` added; pre-release control and evidence collection flow clarified.
+  - `docs/contracts/cli-output-contract.md` phase-10 baseline scope expanded.
+  - Matrix pass evidence reported via `implementation/12-quality-gate-report-2026-04-03.md`.
+  - `tests/phase10_install_to_operate_smoke.sh` added.
+  - `tests/phase10_rollback_regression_smoke.sh` added.
+  - `docs/operations/plume-adapter-onboarding.md` added.
+  - `docs/operations/release-versioning-and-tags.md` added.
 - Open risks:
-  - Full matrix halen local environment bagimliliklarina (docker/compose/openssl) duyarlı; CI matrix pipeline gereksinimi devam ediyor.
-  - Adapter-ready set icin command-level JSON schema snapshot testleri (golden output) sonraki roadmap adayidir.
+  - The full matrix is still sensitive to local environment dependencies (docker/compose/openssl); the CI matrix pipeline need remains.
+  - Command-level JSON schema snapshot tests (golden output) for the adapter-ready set are a candidate for the next roadmap step.
 
 ## Active Delivery Slice
 
-- Bu dilimde hedef:
-  - Matrix runner komutu tek noktada toplansin.
-  - Release readiness checklist operasyonel hale gelsin.
-  - CLI output contract phase-10 beklentileri dokumante edilsin.
+- Goals in this slice:
+  - Consolidate the matrix runner command at a single point.
+  - Make the release readiness checklist operational.
+  - Document CLI output contract phase-10 expectations.

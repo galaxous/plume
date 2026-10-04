@@ -1,6 +1,6 @@
 # Laradock Bridge Workflows
 
-Bu runbook, `laradock-bridge` modunda guvenli ve tekrar edilebilir operasyon akisini tanimlar.
+This runbook defines a safe, repeatable operations flow in `laradock-bridge` mode.
 
 ## 1. Bootstrap
 
@@ -10,11 +10,11 @@ plumectl mode path set laradock-bridge /abs/laradock --force
 plumectl services laradock check
 ```
 
-Beklenen:
+Expected:
 
-- path/compose/.env strict validation gecer
-- `APP_CODE_PATH_CONTAINER=/var/www` dogrulanir
-- desteklenen servis map'i compose icinden discover edilir
+- path/compose/.env strict validation passes
+- `APP_CODE_PATH_CONTAINER=/var/www` is verified
+- the supported service map is discovered from compose
 
 ## 2. Desired Service Set
 
@@ -25,10 +25,10 @@ plumectl services config add redis
 plumectl services config show
 ```
 
-Kurallar:
+Rules:
 
-- `up/down all` sadece desired/resolved set uzerinden calisir.
-- desired disi compose servisleri default olarak etkilenmez.
+- `up/down all` only runs over the desired/resolved set.
+- Compose services outside desired are not affected by default.
 
 ## 3. Lifecycle
 
@@ -46,7 +46,7 @@ Safe-order:
 
 Failure rollback:
 
-- `up all` sirasinda start hatasi olursa, bu komutta daha once baslatilan servisler ters sirada rollback stop edilir.
+- If a start error happens during `up all`, services started earlier in that command are stopped in reverse order (rollback).
 
 ## 4. State Sync
 
@@ -54,11 +54,11 @@ Failure rollback:
 plumectl sync state --mode=laradock-bridge
 ```
 
-Notlar:
+Notes:
 
-- source-of-truth canli compose/container durumudur
-- runtime + port state env dosyalari ve SQLite cache guncellenir
-- coklu host portlar snapshot'a yazilir (`workspace=2222,3000`, `nginx=80,443`)
+- source-of-truth is the live compose/container state
+- runtime + port state env files and the SQLite cache are updated
+- multi host ports are written to the snapshot (`workspace=2222,3000`, `nginx=80,443`)
 
 ## 5. Logs/Exec/Containers
 
@@ -69,7 +69,7 @@ plumectl services exec workspace bash
 plumectl services containers
 ```
 
-Not:
+Note:
 
-- `logs --watch` = `--follow` alias'i
-- `status/health --watch[=N]` periyodik yenileme + timestamp basar
+- `logs --watch` = `--follow` alias
+- `status/health --watch[=N]` prints periodic refresh + timestamp

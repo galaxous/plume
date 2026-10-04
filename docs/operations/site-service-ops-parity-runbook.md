@@ -1,8 +1,8 @@
 # Site/Service Ops Parity Runbook
 
-Bu runbook, `native`, `docker-lite` ve `laradock-bridge` modlarinda ayni komut yuzeyi ile operasyon yapma adimlarini ozetler.
+This runbook summarizes the steps for operating with the same command surface in `native`, `docker-lite`, and `laradock-bridge` modes.
 
-## 1. Mode Secimi
+## 1. Mode Selection
 
 ```bash
 plumectl mode current
@@ -11,7 +11,7 @@ plumectl mode use docker-lite
 plumectl mode use laradock-bridge
 ```
 
-## 2. Site Lifecycle (Ayni Komut Yuzeyi)
+## 2. Site Lifecycle (Same Command Surface)
 
 ```bash
 plumectl site add --path=/abs/project --domain=app.test --server=nginx --publish
@@ -30,7 +30,7 @@ plumectl site publish <site-id> --dry-run
 plumectl site remove <site-id> --dry-run
 ```
 
-## 3. Service Ops (Ayni Komut Yuzeyi)
+## 3. Service Ops (Same Command Surface)
 
 ```bash
 plumectl services supported --mode=native
@@ -42,37 +42,37 @@ plumectl services up --mode=native php
 plumectl services down --mode=native php
 ```
 
-## 4. Docker-Lite Compose Kurali
+## 4. Docker-Lite Compose Rule
 
-- `PLUME_DOCKER_LITE_COMPOSE_REQUIRED=true` ise compose dosyasi zorunludur.
-- Kaynak:
-  - `mode path` ile kayitli docker-lite workspace path
-  - veya calisma dizinindeki `docker-compose.yml` / `compose.yml`
+- If `PLUME_DOCKER_LITE_COMPOSE_REQUIRED=true`, a compose file is required.
+- Sources:
+  - docker-lite workspace path registered via `mode path`
+  - or `docker-compose.yml` / `compose.yml` in the working directory
 
-## 5. Laradock Strict Kurali
+## 5. Laradock Strict Rule
 
-- `PLUME_LARADOCK_STRICT=true` ise publish/reload oncesi su kontroller fail-fast yapar:
-  - `PLUME_LARADOCK_PATH` var mi
-  - compose dosyasi var mi (`PLUME_LARADOCK_COMPOSE_FILE` veya `<path>/docker-compose.yml`)
-  - hedef container var ve running mi
+- If `PLUME_LARADOCK_STRICT=true`, these checks fail-fast before publish/reload:
+  - whether `PLUME_LARADOCK_PATH` exists
+  - whether the compose file exists (`PLUME_LARADOCK_COMPOSE_FILE` or `<path>/docker-compose.yml`)
+  - whether the target container exists and is running
 
 ## 6. Reload Semantics
 
-- `site publish --reload` hedef servere gore reload dener (`nginx|apache2|caddy`).
-- `PLUME_SITE_RELOAD_REQUIRED=true` ise reload basarisizligi komutu fail eder (`exit 2`).
+- `site publish --reload` attempts reload for the target server (`nginx|apache2|caddy`).
+- If `PLUME_SITE_RELOAD_REQUIRED=true`, reload failure fails the command (`exit 2`).
 
 ## 7. Hosts Sync Semantics
 
-- `PLUME_SITE_HOSTS_SYNC=true` ise hosts kaydi guncellenir.
-- `PLUME_SITE_HOSTS_REQUIRED=true` ise hosts yazma basarisizsa publish/update fail olur.
+- If `PLUME_SITE_HOSTS_SYNC=true`, the hosts entry is updated.
+- If `PLUME_SITE_HOSTS_REQUIRED=true`, publish/update fails when hosts write fails.
 
 ## 8. Mode Visibility
 
-- `plumectl site modes` bir sitenin hangi mode'da kayitli oldugunu toplu listeler.
-- Bu gorunum, mode degisimi sonrasi drift kontrolu icin kullanilir.
-- Bir site `site update --mode=<mode>` ile tasindiginda eski mode'a ait snippet/cache artefact'lari temizlenir.
+- `plumectl site modes` lists which mode each site is registered in.
+- This view is used for drift checks after a mode change.
+- When a site is moved with `site update --mode=<mode>`, snippet/cache artefacts from the old mode are cleaned up.
 
 ## 9. Rollback Semantics
 
-- `site update --publish` adiminda publish basarisiz olursa record rollback edilir.
-- Dry-run adimlari dosya/registry degisikligi yapmaz.
+- If publish fails during `site update --publish`, the record is rolled back.
+- Dry-run steps do not change files/registry.

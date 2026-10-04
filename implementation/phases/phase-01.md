@@ -46,5 +46,5 @@
 - Owner: @team
 - Related PR/Commit: local workspace changes
 - Open risks:
-  - Phase 2'de global flag standardi (`--json`, `--quiet`, `--env-file`) devreye alinmali.
-  - `services install/up/down` su an phase1 stub; gercek orchestration Phase 6'da tamamlanacak.
+  - In Phase 2, the global flag standard (`--json`, `--quiet`, `--env-file`) must be brought online.
+  - `services install/up/down` is currently a phase1 stub; real orchestration will be completed in Phase 6.
