@@ -38,9 +38,16 @@ BASE_ENV=(
   "PLUME_SITE_HOSTS_SYNC=false"
   "PLUME_SITE_NGINX_STRICT=false"
   "PLUME_SITE_NGINX_STRICT_ON_RELOAD=false"
+  # Hermetic: do not touch host brew nginx / sudo (D-151 ensure) — D-157.
+  "PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false"
+  "PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=false"
+  "PLUME_SITE_AUTO_PROVISION_WEB=false"
   "PLUME_SITE_RELOAD_REQUIRED=true"
   "PLUME_SITE_RELOAD_VALIDATE=true"
-  "PATH=${FAKE_BIN}:${PATH}"
+  "PLUME_NONINTERACTIVE=1"
+  "PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true"
+  # Prefer fake nginx only; do not prepend real Homebrew PATH (phase12).
+  "PATH=${FAKE_BIN}:/usr/bin:/bin"
 )
 
 SITE_ID="$(env "${BASE_ENV[@]}" ./plume.sh site add --mode=native --path="${PROJECT_DIR}" --domain="reload-validate.test" --server=nginx --publish | tail -n 1)"
@@ -48,6 +55,9 @@ SITE_ID="$(env "${BASE_ENV[@]}" ./plume.sh site add --mode=native --path="${PROJ
   echo "[FAIL] site add should return id" >&2
   exit 1
 }
+
+# Only assert nginx invocations from the --reload publish under test.
+: > "${LOG_FILE}"
 
 set +e
 env "${BASE_ENV[@]}" ./plume.sh site publish --mode=native "${SITE_ID}" --reload >/tmp/plume-phase11-site-reload-validate.out 2>&1

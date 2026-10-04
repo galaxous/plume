@@ -76,7 +76,7 @@ assert_ok "services supported json includes version" bash -lc "cd '${ROOT_DIR}' 
 assert_ok "services status json includes runtime+health+port" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} ./plume.sh --json services status --mode=native | grep -q '\"name\":\"php\".*\"running\".*\"health\".*\"port\"'"
 assert_ok "services health json works" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} ./plume.sh --json services health php --mode=native | grep -q '\"health\"'"
 
-assert_ok "services up php with alias" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_ALLOW_NON_ROOT_INSTALL=true PLUME_PHP_NATIVE_INSTALL_DRIVER=mock PLUME_PHP_SHIM_SEARCH_PATH='${PHASE6_FAKE_BIN}' PLUME_PHP_AUTOPROVISION_ALL_ON_UP=false PLUME_PHP_INSTALLED_VERSIONS=8.3 PLUME_PHP_DEFAULT_VERSION=8.3 PLUME_PHP_EXTENSIONS_AUTO_SYNC=false PLUME_MODE=native ./plume.sh services up php --mode=native --version=php83 >/tmp/plume-phase6-output.txt && grep -q 'start hook: php (native) \[version=8.3\]' /tmp/plume-phase6-output.txt"
+assert_ok "services up php with alias" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_ALLOW_NON_ROOT_INSTALL=true PLUME_PHP_NATIVE_INSTALL_DRIVER=mock PLUME_PHP_SHIM_SEARCH_PATH='${PHASE6_FAKE_BIN}' PLUME_PHP_AUTOPROVISION_ALL_ON_UP=false PLUME_PHP_INSTALLED_VERSIONS=8.3 PLUME_PHP_DEFAULT_VERSION=8.3 PLUME_PHP_EXTENSIONS_AUTO_SYNC=false PLUME_MODE=native ./plume.sh services up php --mode=native --version=php83 >/tmp/plume-phase6-output.txt 2>&1 && grep -q 'start hook: php (native) \[version=8.3\]' /tmp/plume-phase6-output.txt"
 assert_fail_code 2 "invalid php version alias" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native ./plume.sh services up php --mode=native --version=php99"
 
 assert_fail_code 2 "horizon requires supervisor" bash -lc "cd '${ROOT_DIR}' && ${PHASE6_RUN[*]} PLUME_MODE=native PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=false ./plume.sh services up horizon --mode=native"
@@ -87,7 +87,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
   TMP_STATE_DIR="$(mktemp -d)"
   assert_ok "services update writes state" bash -lc "PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true PLUME_STATE_DIR='${TMP_STATE_DIR}' ./plume.sh services update"
   assert_ok "services state file includes service enabled and version keys" bash -lc "test -f '${TMP_STATE_DIR}/services_enabled.env' && grep -q '^php.enabled=' '${TMP_STATE_DIR}/services_enabled.env' && grep -q '^php.version=' '${TMP_STATE_DIR}/services_enabled.env'"
-  assert_ok "services update reconcile false->true installs redis" bash -lc "PLUME_STATE_DIR='${TMP_STATE_DIR}' PLUME_REDIS_ENABLED=false ./plume.sh services update >/dev/null && PLUME_STATE_DIR='${TMP_STATE_DIR}' PLUME_REDIS_ENABLED=true ./plume.sh services update >/tmp/plume-phase6-output.txt && grep -q 'reconcile enable detected: redis' /tmp/plume-phase6-output.txt"
+  assert_ok "services update reconcile false->true installs redis" bash -lc "PLUME_STATE_DIR='${TMP_STATE_DIR}' PLUME_REDIS_ENABLED=false ./plume.sh services update >/dev/null && PLUME_STATE_DIR='${TMP_STATE_DIR}' PLUME_REDIS_ENABLED=true ./plume.sh services update >/tmp/plume-phase6-output.txt 2>&1 && grep -q 'reconcile enable detected: redis' /tmp/plume-phase6-output.txt"
 else
   assert_fail_code 2 "root guard services update" ./plume.sh services update
 fi

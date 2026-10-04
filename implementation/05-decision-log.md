@@ -2,6 +2,35 @@
 
 Bu dosya, fazlar boyunca alinan teknik kararlarin kaydidir.
 
+## 2026-10-03 - D-158 - No interactive sudo password in noninteractive / smoke
+
+- Durum: accepted
+- Karar:
+  - `plume_sites_nginx_run_elevated`: once `sudo -n`; noninteractive’te password prompt **yok** (fail-soft return 1).
+  - Interactive confirm sonrasi tek seferlik password sudo serbest.
+  - `PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true`: hermetik/fake nginx smoke’ta host root nginx elevated algisini atla.
+  - Smoke suite `PLUME_NONINTERACTIVE=1` + `PLUME_INTERACTIVE=false` (`run_smoke_suite.sh`).
+  - Reload/sync-config smoke: temp `HOME` (gercek `~/.config/plume/.env` icindeki bos `PLUME_NATIVE_NGINX_MAIN_CONF=` override’i ezmesin).
+- Gerekce:
+  - `confirm_sudo` noninteractive’te `0` donuyordu; ardindan interaktif `sudo` Password: ile suite’i blokluyordu.
+  - Bos `MAIN_CONF=` .env satiri smoke override’ini source sonrasi siliyordu → host `/opt/homebrew/etc/nginx/nginx.conf` patch.
+- Etki:
+  - `lib/common/sites.sh`; phase11/12 hermetik HOME/PATH/ENSURE/FORCE_UNPRIVILEGED flag’leri.
+
+## 2026-10-03 - D-157 - plume_info on stderr (parseable stdout)
+
+- Durum: accepted
+- Karar:
+  - `plume_info` → `stderr` (`plume_warn` / `plume_err` ile ayni).
+  - `stdout` yalnizca birincil payload (orn. `site add` site id).
+  - Contract: [cli-output-contract.md](../docs/contracts/cli-output-contract.md).
+  - Hermetik site smoke: `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false`; phase4 `site publish` without `--reload` (host brew/sudo yok).
+  - INFO/hook assert eden smoke’lar `2>&1` ile capture eder (`start hook: … [version=…]` stderr’de).
+- Gerekce:
+  - D-151 ensure `[INFO]` satirlari `site add` stdout’una karisti; `SITE_ID="$(…)"` + awk multiline kirildi; release smoke `phase4-site` fail.
+- Etki:
+  - `lib/common/log.sh`, phase4/phase6/phase11 INFO-grep smokes, cli-output-contract, ai-assisted-development.
+
 ## 2026-10-02 - D-156 - Manual Release pre-tag VERSION + Formula version/url sync
 
 - Durum: accepted

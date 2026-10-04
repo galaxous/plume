@@ -41,7 +41,7 @@ env \
   PLUME_PHP_INSTALLED_VERSIONS="8.4" \
   PLUME_PHP_EXTENSIONS_GLOBAL="imagick" \
   PLUME_PHP_EXT_DISABLE_84_IMAGICK="true" \
-  ./plume.sh php ext sync 8.4 --strict > "${OUT_FILE}"
+  ./plume.sh php ext sync 8.4 --strict > "${OUT_FILE}" 2>&1
 
 if grep -q 'ext=imagick' "${OUT_FILE}"; then
   echo "[FAIL] imagick should not be processed when disabled by toggle" >&2

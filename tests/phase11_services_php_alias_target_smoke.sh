@@ -38,7 +38,7 @@ assert_ok() {
 env "${BASE_ENV[@]}" ./plume.sh mode use native --force --yes >/dev/null
 
 assert_ok "services up php84 targets php@8.4" \
-  bash -lc "env HOME='${HOME_DIR}' PLUME_STATE_DIR='${STATE_DIR}' PLUME_SITE_REGISTRY_DIR='${SITE_REGISTRY}' PLUME_PHP_INSTALLED_VERSIONS='8.3,8.4' PLUME_PHP_DEFAULT_VERSION='8.3' PLUME_PHP_ALIAS_PHP84='8.4' ./plume.sh services up php84 --mode=native | grep -q 'version=8.4'"
+  bash -lc "OUT=\$(env HOME='${HOME_DIR}' PLUME_STATE_DIR='${STATE_DIR}' PLUME_SITE_REGISTRY_DIR='${SITE_REGISTRY}' PLUME_PHP_INSTALLED_VERSIONS='8.3,8.4' PLUME_PHP_DEFAULT_VERSION='8.3' PLUME_PHP_ALIAS_PHP84='8.4' ./plume.sh services up php84 --mode=native 2>&1) && printf '%s\n' \"\${OUT}\" | grep -q 'version=8.4'"
 
 assert_ok "services status php84 resolves to php row" \
   bash -lc "env HOME='${HOME_DIR}' PLUME_STATE_DIR='${STATE_DIR}' PLUME_SITE_REGISTRY_DIR='${SITE_REGISTRY}' PLUME_PHP_INSTALLED_VERSIONS='8.3,8.4' PLUME_PHP_DEFAULT_VERSION='8.3' PLUME_PHP_ALIAS_PHP84='8.4' ./plume.sh services status php84 --mode=native | grep -q '^php[[:space:]]'"

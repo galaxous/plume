@@ -44,7 +44,7 @@ env \
   PLUME_PHP_EXTENSIONS_AUTO_SYNC="true" \
   PLUME_PHP_EXTENSIONS_AUTO_SYNC_PROFILE="target" \
   PLUME_PHP_EXT_INSTALL_DRIVER="mock" \
-  ./plume.sh services up php --mode=native --version=8.4 >/tmp/plume-phase11-up-php-ext-profile-target.out
+  ./plume.sh services up php --mode=native --version=8.4 >/tmp/plume-phase11-up-php-ext-profile-target.out 2>&1
 
 grep -q 'native php extension auto-sync profile=target version=8.4' /tmp/plume-phase11-up-php-ext-profile-target.out || {
   echo "[FAIL] expected target profile log line" >&2

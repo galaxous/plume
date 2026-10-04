@@ -67,6 +67,8 @@ fi
 # Avoid real-host manifest on_first_run during aggregated smokes (see D-108; phase11 covers it).
 export PLUME_SKIP_ON_FIRST_RUN_PROVISION="${PLUME_SKIP_ON_FIRST_RUN_PROVISION:-true}"
 export PLUME_NONINTERACTIVE="${PLUME_NONINTERACTIVE:-1}"
+# Never prompt for sudo password during suite (D-158); elevated ops use sudo -n only.
+export PLUME_INTERACTIVE="${PLUME_INTERACTIVE:-false}"
 # Host brew FPM listen path may differ from canonical socket until pool sync; contract smokes check health only.
 export PLUME_PHP_FPM_VERIFY_AFTER_START="${PLUME_PHP_FPM_VERIFY_AFTER_START:-false}"
 

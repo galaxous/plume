@@ -249,7 +249,7 @@ else
   exit 1
 fi
 
-run_base_env ./plume.sh services up php --mode=docker-lite --version=php83 >/tmp/plume-phase7-docker-lite.out
+run_base_env ./plume.sh services up php --mode=docker-lite --version=php83 >/tmp/plume-phase7-docker-lite.out 2>&1
 assert_ok "docker-lite php alias version parity" grep -q "version=8.3" /tmp/plume-phase7-docker-lite.out
 assert_fail_code 2 "workspace command rejects native mode" env "${BASE_ENV[@]}" ./plume.sh services workspace up --mode=native
 

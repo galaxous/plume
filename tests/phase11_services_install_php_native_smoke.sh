@@ -37,7 +37,7 @@ BASE_ENV=(
   "PLUME_PHP_DEFAULT_VERSION=8.3"
 )
 
-env "${BASE_ENV[@]}" ./plume.sh services install php --mode=native --version=8.4 >/tmp/plume-phase11-install-php.out
+env "${BASE_ENV[@]}" ./plume.sh services install php --mode=native --version=8.4 >/tmp/plume-phase11-install-php.out 2>&1
 
 grep -q 'install hook: php (native) \[version=8.4\]' /tmp/plume-phase11-install-php.out || {
   echo "[FAIL] services install php should run native install hook with version=8.4" >&2

@@ -15,9 +15,11 @@ if grep -q 'plume_sites_reload_native_server' "${ROOT_DIR}/lib/services/native_w
 fi
 
 TMP_ROOT="$(mktemp -d)"
+HOME_DIR="${TMP_ROOT}/home"
 NGINX_ETC="${TMP_ROOT}/nginx"
 FAKE_BIN="${TMP_ROOT}/fake-bin"
-mkdir -p "${NGINX_ETC}/servers" "${FAKE_BIN}"
+mkdir -p "${HOME_DIR}/.config/plume" "${NGINX_ETC}/servers" "${FAKE_BIN}"
+: > "${HOME_DIR}/.config/plume/.env"
 
 cleanup() {
   rm -rf "${TMP_ROOT}"
@@ -56,12 +58,18 @@ EOF
 chmod +x "${FAKE_BIN}/brew"
 
 BASE_ENV=(
+  "HOME=${HOME_DIR}"
+  "PLUME_SKIP_ON_FIRST_RUN_PROVISION=true"
   "PLUME_NATIVE_NGINX_MAIN_CONF=${NGINX_ETC}/nginx.conf"
   "PLUME_NATIVE_NGINX_MANAGE_MAIN_CONFIG=true"
   "PLUME_NATIVE_NGINX_HTTP_PORT=8080"
   "PLUME_WEB_SERVER_DRIVER=nginx"
-  "PATH=${FAKE_BIN}:${PATH}"
+  "PATH=${FAKE_BIN}:/usr/bin:/bin"
   "PLUME_SITE_RELOAD_VALIDATE=false"
+  "PLUME_NONINTERACTIVE=1"
+  "PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false"
+  # Host may run root nginx; do not require sudo for fake binary reload (D-158).
+  "PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true"
 )
 
 set +e
@@ -76,6 +84,11 @@ if [[ "${rc}" -ne 0 ]]; then
 fi
 if grep -q 'nginx reload helper unavailable' /tmp/plume-reload-smoke.out; then
   echo "[FAIL] must not emit stale reload helper error" >&2
+  cat /tmp/plume-reload-smoke.out >&2
+  exit 1
+fi
+if grep -q '/opt/homebrew/etc/nginx' /tmp/plume-reload-smoke.out; then
+  echo "[FAIL] smoke must not touch host Homebrew nginx.conf" >&2
   cat /tmp/plume-reload-smoke.out >&2
   exit 1
 fi

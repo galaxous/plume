@@ -21,6 +21,9 @@ BASE_ENV=(
   "PLUME_STATE_DIR=${STATE_DIR}"
   "PLUME_SITE_REGISTRY_DIR=${SITE_REGISTRY}"
   "PLUME_SITE_HOSTS_SYNC=false"
+  "PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false"
+  "PLUME_SITE_NGINX_STRICT=false"
+  "PLUME_SITE_NGINX_STRICT_ON_RELOAD=false"
 )
 
 env "${BASE_ENV[@]}" ./plume.sh mode use native --force --yes >/dev/null

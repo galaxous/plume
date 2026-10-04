@@ -26,7 +26,9 @@ Baslangic okuma: implementation/phase-tracker.md, implementation/future-roadmap.
 Smoke (PR oncesi varsayilan): ./tests/run_smoke_suite.sh --release  (CI ile ayni: --ci)
 Hermetic testler: gecici HOME + PLUME_STATE_DIR; mock brew PATH = MOCK_BIN:/usr/bin:/bin only (Homebrew PATH'e ekleme).
 pipefail: ./plume.sh ... | grep -q KULLANMA — once OUT="$(...)" sonra grep.
-Nginx reload testleri: PLUME_SITE_NGINX_STRICT=false ve PLUME_SITE_NGINX_STRICT_ON_RELOAD=false (izole reload-validate).
+Nginx reload testleri: PLUME_SITE_NGINX_STRICT=false ve PLUME_SITE_NGINX_STRICT_ON_RELOAD=false (izole reload-validate); `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false` + fake `PATH=MOCK:/usr/bin:/bin` (host brew/sudo yok). Assert oncesi mock nginx log’unu truncate et.
+Site registry smoke (phase4): `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false`; host `site publish --reload` / brew sudo kullanma (D-157). `[INFO]` stderr’dedir — `SITE_ID="$(site add …)"` stdout-only kalir. INFO/hook satiri assert eden testler: `>/tmp/out 2>&1` (yalnizca stdout capture kirilir).
+Suite: `PLUME_NONINTERACTIVE=1` + elevated nginx **asla** interaktif sudo password istemez (`sudo -n` only, D-158). Hermetik fake-nginx smoke: `PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true` + temp `HOME` (gercek `.env` bos `PLUME_NATIVE_NGINX_MAIN_CONF=` override etmesin).
 Phase6 tarzi servis smoke: PLUME_PHP_EXTENSIONS_AUTO_SYNC=false.
 Redis smoke: PLUME_NATIVE_REDIS_MAIN_CONF=temp dosya — host `/opt/homebrew/etc/redis.conf` asla patch edilmez.
 macOS: Desktop/Documents/Downloads TCC; FDA nginx + php-fpm binary'leri (plume.sh degil); init permissions --interactive.

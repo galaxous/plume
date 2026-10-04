@@ -1389,6 +1389,10 @@ plume_sites_native_nginx_bin() {
 
 # True when nginx master/pid is root-owned (port-80 brew/sudo path).
 plume_sites_nginx_needs_elevated() {
+  # Hermetic smokes / fake nginx: never require interactive sudo (D-158).
+  if [[ "$(plume_bool "${PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD:-false}")" == "true" ]]; then
+    return 1
+  fi
   local pid_file="" prefix=""
   if command -v brew >/dev/null 2>&1; then
     prefix="$(HOMEBREW_NO_AUTO_UPDATE=1 brew --prefix 2>/dev/null || true)"
@@ -1408,16 +1412,22 @@ plume_sites_nginx_needs_elevated() {
 }
 
 # Run nginx (or brew services) with sudo when root-owned daemon requires it.
-# Keeps brew out of user-facing remediation — Plume prompts once.
+# Keeps brew out of user-facing remediation — Plume prompts once when interactive.
+# Never blocks CI/smoke on a password prompt (D-157 / D-158).
 plume_sites_nginx_run_elevated() {
   local reason="${1:-nginx is managed as root (often port 80); Plume needs administrator privileges.}"
   shift || true
   if ! command -v sudo >/dev/null 2>&1; then
     return 1
   fi
+  # Passwordless sudo only — never open an interactive password prompt here.
   if sudo -n true 2>/dev/null; then
-    sudo "$@" >/dev/null
+    sudo -n "$@" >/dev/null
     return $?
+  fi
+  if declare -F plume_interactive_is_noninteractive >/dev/null 2>&1 \
+    && plume_interactive_is_noninteractive; then
+    return 1
   fi
   if declare -F plume_macos_permissions_confirm_sudo >/dev/null 2>&1; then
     if ! plume_macos_permissions_confirm_sudo "sudo $*" "${reason}"; then
@@ -1426,6 +1436,7 @@ plume_sites_nginx_run_elevated() {
   elif [[ ! -t 0 ]]; then
     return 1
   fi
+  # After explicit interactive confirm, allow a one-shot password prompt.
   sudo "$@" >/dev/null
 }
 

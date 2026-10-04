@@ -115,7 +115,7 @@ echo "${run_out}" | grep -q 'stub schedule:run' || {
   exit 1
 }
 
-queue_out="$(env "${BASE_ENV[@]}" PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true "${ROOT_DIR}/plume.sh" queue status --mode=native --path="${PROJECT_DIR}")"
+queue_out="$(env "${BASE_ENV[@]}" PLUME_HORIZON_ENABLED=true PLUME_SUPERVISOR_ENABLED=true "${ROOT_DIR}/plume.sh" queue status --mode=native --path="${PROJECT_DIR}" 2>&1)"
 echo "${queue_out}" | grep -q 'HORIZON.*env=true' || {
   echo "[FAIL] queue status should show horizon env enabled" >&2
   printf '%s\n' "${queue_out}" >&2
@@ -123,6 +123,7 @@ echo "${queue_out}" | grep -q 'HORIZON.*env=true' || {
 }
 echo "${queue_out}" | grep -q 'services up horizon' || {
   echo "[FAIL] queue status should hint services up horizon" >&2
+  printf '%s\n' "${queue_out}" >&2
   exit 1
 }
 

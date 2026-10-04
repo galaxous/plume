@@ -69,13 +69,17 @@ HOSTS_FILE="${TMP_ROOT}/hosts"
 printf '%s\n' '127.0.0.1 localhost' > "${HOSTS_FILE}"
 export PLUME_SITE_REGISTRY_DIR="${SITE_REGISTRY_DIR}"
 export PLUME_SITE_HOSTS_REQUIRED=true
+export PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false
+export PLUME_SITE_NGINX_STRICT=false
+export PLUME_SITE_NGINX_STRICT_ON_RELOAD=false
 
 SITE_ROOT_1="${TMP_ROOT}/project-one"
 SITE_ROOT_2="${TMP_ROOT}/project-two"
 mkdir -p "${SITE_ROOT_1}/public" "${SITE_ROOT_2}/public"
 SITE_SNIPPET_CACHE_DIR="${PLUME_SITE_REGISTRY_DIR}"
 
-SITE_ID="$(PLUME_HOSTS_FILE="${HOSTS_FILE}" PLUME_SITE_HOSTS_SYNC=true ./plume.sh site add --path="${SITE_ROOT_1}" --domain=hostedone.test --port=8080 --publish)"
+SITE_ADD_OUT="$(PLUME_HOSTS_FILE="${HOSTS_FILE}" PLUME_SITE_HOSTS_SYNC=true ./plume.sh site add --path="${SITE_ROOT_1}" --domain=hostedone.test --port=8080 --publish)"
+SITE_ID="$(printf '%s\n' "${SITE_ADD_OUT}" | awk '/^site-[0-9]+-[0-9]+$/ { print; exit }')"
 SITE_MODE="$(awk '/^mode:/ {print $2; exit}' "${PLUME_SITE_REGISTRY_DIR}/${SITE_ID}.yml")"
 case "${SITE_MODE}" in
   native) SITE_SNIPPET_CACHE_DIR="${PLUME_SITE_REGISTRY_DIR}" ;;

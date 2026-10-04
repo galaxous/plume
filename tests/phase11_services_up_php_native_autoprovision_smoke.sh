@@ -38,7 +38,7 @@ BASE_ENV=(
 )
 
 OUT_FILE="/tmp/plume-phase11-up-php-autoprovision.out"
-env "${BASE_ENV[@]}" ./plume.sh services up php --mode=native --version=8.4 > "${OUT_FILE}"
+env "${BASE_ENV[@]}" ./plume.sh services up php --mode=native --version=8.4 > "${OUT_FILE}" 2>&1
 
 grep -q 'native php 8.4 auto-provision: triggered by services up php' "${OUT_FILE}" || {
   echo "[FAIL] services up php should auto-provision missing version" >&2

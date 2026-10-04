@@ -4,7 +4,8 @@ Bu dokuman, gelecekteki `plume-adapter` entegrasyonu icin CLI parse kurallarini 
 
 ## Genel Kurallar
 
-- Hata ciktilari `stderr`, bilgi ciktilari `stdout`
+- Birincil komut ciktilari `stdout` (site id, tablolar, JSON, key=value)
+- Ilerleme / log satirlari `stderr`: `[INFO]`, `[WARN]`, `[ERROR]` (D-157 — `site add` gibi parse edilen stdout kirlenmesin)
 - Exit-code semasi:
   - `0`: success
   - `1`: runtime/internal error

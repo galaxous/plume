@@ -6,6 +6,10 @@ cd "${ROOT_DIR}"
 SITE_REGISTRY_DIR="${TMPDIR:-/tmp}/plume-test-site-registry-${RANDOM}-${RANDOM}"
 
 export PLUME_SITE_REGISTRY_DIR="${SITE_REGISTRY_DIR}"
+# Hermetic: do not touch host nginx / sudo (D-151 ensure) during registry smoke (D-157).
+export PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false
+export PLUME_SITE_NGINX_STRICT=false
+export PLUME_SITE_NGINX_STRICT_ON_RELOAD=false
 
 assert_ok() {
   local name="$1"
@@ -90,10 +94,16 @@ EOF
 
 site_domain="plume-site-$(date +%s)-${RANDOM}.test"
 
-SITE_ID="$(./plume.sh site add --path="${project}" --domain="${site_domain}" --server=nginx --server-config="${custom_conf1}" --publish)"
+if ! SITE_ADD_OUT="$(./plume.sh site add --path="${project}" --domain="${site_domain}" --server=nginx --server-config="${custom_conf1}" --publish)"; then
+  echo "[FAIL] site add failed" >&2
+  printf '%s\n' "${SITE_ADD_OUT}" >&2
+  exit 1
+fi
+SITE_ID="$(printf '%s\n' "${SITE_ADD_OUT}" | awk '/^site-[0-9]+-[0-9]+$/ { print; exit }')"
 
 if [[ -z "${SITE_ID}" ]]; then
   echo "[FAIL] site add returned empty id" >&2
+  printf '%s\n' "${SITE_ADD_OUT}" >&2
   exit 1
 fi
 
@@ -148,7 +158,8 @@ assert_ok "publish snippet created" test -f "${SITE_SNIPPET_CACHE_DIR}/nginx/${S
 
 ./plume.sh site update "${SITE_ID}" --server-config="${custom_conf2}" --publish
 assert_ok "custom nginx config applied on update" grep -Fq -- '# plume custom site config v2' "${SITE_SNIPPET_CACHE_DIR}/nginx/${SITE_ID}.conf"
-./plume.sh site publish "${SITE_ID}" --reload
+# No --reload: hermetic registry smoke must not call host brew/sudo nginx (D-157).
+./plume.sh site publish "${SITE_ID}"
 
 ./plume.sh site remove "${SITE_ID}"
 assert_not_contains_id "${SITE_ID}" "./plume.sh site list"

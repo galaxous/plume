@@ -44,7 +44,7 @@ env \
   PLUME_PHP_EXTENSIONS_84="imagick" \
   PLUME_PHP_EXT_INSTALL_DRIVER="mock" \
   PLUME_PHP_EXTENSIONS_AUTO_SYNC="true" \
-  ./plume.sh services up php --mode=native --version=8.4 >/tmp/plume-phase11-up-php-ext-autosync.out
+  ./plume.sh services up php --mode=native --version=8.4 >/tmp/plume-phase11-up-php-ext-autosync.out 2>&1
 
 grep -q 'php extension ready: php=8.4 ext=redis' /tmp/plume-phase11-up-php-ext-autosync.out || {
   echo "[FAIL] services up php should auto-sync redis extension" >&2

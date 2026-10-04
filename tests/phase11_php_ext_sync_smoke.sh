@@ -41,7 +41,7 @@ env \
   PLUME_PHP_EXTENSIONS_GLOBAL="redis" \
   PLUME_PHP_EXTENSIONS_84="imagick" \
   PLUME_PHP_EXT_INSTALL_DRIVER="mock" \
-  ./plume.sh php ext sync 8.4 >/tmp/plume-phase11-ext-sync.out
+  ./plume.sh php ext sync 8.4 >/tmp/plume-phase11-ext-sync.out 2>&1
 
 grep -q 'php extension ready: php=8.4 ext=redis' /tmp/plume-phase11-ext-sync.out || {
   echo "[FAIL] expected redis extension ready log" >&2
