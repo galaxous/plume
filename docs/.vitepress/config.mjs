@@ -138,6 +138,7 @@ export default defineConfig({
             { text: 'Adapter onboarding', link: '/operations/plume-adapter-onboarding' },
             { text: 'Phase-gate checklist', link: '/operations/phase-gate-checklist' },
             { text: 'AI-assisted development', link: '/operations/ai-assisted-development' },
+            { text: 'GitHub Pages + custom domain', link: '/operations/github-pages-org-and-custom-domain' },
           ],
         },
       ],

@@ -25,6 +25,8 @@ Published: [https://galaxous.github.io/plume/](https://galaxous.github.io/plume/
 
 CI: `.github/workflows/docs.yml` builds on PRs; deploys on `main` / `workflow_dispatch` (Pages source: **GitHub Actions**).
 
+Org landing + GoDaddy custom domain: [operations/github-pages-org-and-custom-domain.md](./operations/github-pages-org-and-custom-domain.md).
+
 Local preview:
 
 ```bash

@@ -21,6 +21,7 @@
 - `macos-permissions.md`: macOS TCC/FDA automation limits and interactive flow
 - `native-service-contract.md`: native service = Laradock container UX (D-144)
 - `native-stack-os-matrix.md`: brew/apt/dnf native service matrix
+- `github-pages-org-and-custom-domain.md`: galaxous.org site + GoDaddy DNS + Plume Pages custom domain checklist
 
 Future docs:
 
