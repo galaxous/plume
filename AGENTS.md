@@ -5,7 +5,7 @@ AI/agent working rules for this project:
 1. Documentation is mandatory.
 - Every code change must update related documentation files in the same PR/change.
 - A code change without matching docs is considered incomplete.
-- Public docs site: VitePress in `docs/` (`cd docs && npm run docs:dev`). Keep `docs/commands|operations|contracts` paths stable for smokes/AGENTS.
+- Public docs site: VitePress in `docs/` (`cd docs && npm run docs:dev`; Pages: https://galaxous.github.io/plume/). Keep `docs/commands|operations|contracts` paths stable for smokes/AGENTS.
 
 2. Commands must be documented.
 - Every new `plumectl` command needs a separate doc under `docs/commands/`.

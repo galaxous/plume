@@ -21,10 +21,17 @@ Source markdown for Plume (commands, operations, contracts) **and** the public d
 
 ## Docs site (VitePress)
 
+Published (GitHub Pages): [https://galaxous.github.io/plume/](https://galaxous.github.io/plume/)  
+CI: `.github/workflows/docs.yml` builds on PRs; deploys on `main` when `docs/` changes.
+
+Repo → Settings → Pages → Source: **GitHub Actions** (one-time).
+
 ```bash
 cd docs
 npm install
-npm run docs:dev      # http://localhost:5173
+npm run docs:dev      # http://localhost:5173/plume/  (base=/plume/)
+# root-relative local preview:
+VITEPRESS_BASE=/ npm run docs:dev
 npm run docs:build
 npm run docs:preview
 ```

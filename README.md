@@ -84,7 +84,7 @@ plumectl --yes deploy apply --mode=native --skip-backup
 
 ## Documentation Map
 
-- **Docs site (VitePress):** `cd docs && npm install && npm run docs:dev`
+- **Docs site (VitePress):** [galaxous.github.io/plume](https://galaxous.github.io/plume/) — local: `cd docs && npm install && npm run docs:dev`
 - Guide: `docs/guide/`
 - Commands: `docs/commands/`
 - Operations: `docs/operations/`

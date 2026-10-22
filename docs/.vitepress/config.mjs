@@ -3,9 +3,14 @@ import { defineConfig } from 'vitepress'
 // Plume docs site — content stays under docs/{guide,commands,operations,contracts}
 // so AGENTS.md / smoke paths keep working.
 
+// GitHub Pages project site: https://galaxous.github.io/plume/
+// Override locally: VITEPRESS_BASE=/ npm run docs:dev
+const base = process.env.VITEPRESS_BASE || '/plume/'
+
 export default defineConfig({
   title: 'Plume',
   description: 'Laravel local ops CLI — native, docker-lite, laradock-bridge',
+  base,
   cleanUrls: true,
   lastUpdated: true,
   // Markdown still links to repo-root paths (VERSION, AGENTS, implementation/, packaging/).
@@ -132,6 +137,7 @@ export default defineConfig({
             { text: 'Preflight security', link: '/operations/preflight-security' },
             { text: 'Adapter onboarding', link: '/operations/plume-adapter-onboarding' },
             { text: 'Phase-gate checklist', link: '/operations/phase-gate-checklist' },
+            { text: 'AI-assisted development', link: '/operations/ai-assisted-development' },
           ],
         },
       ],
