@@ -48,15 +48,12 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
-    # Private repos on free plan cannot use GitHub Pages (API 422 / deploy 404).
-    # Enable Pages (public repo or eligible plan), then re-run this workflow.
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    continue-on-error: true
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4

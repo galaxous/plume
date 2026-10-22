@@ -84,7 +84,7 @@ plumectl --yes deploy apply --mode=native --skip-backup
 
 ## Documentation Map
 
-- **Docs site (VitePress):** local `cd docs && npm install && npm run docs:dev`. GitHub Pages (`galaxous.github.io/plume`) needs a public repo or a paid plan that includes Pages for private repos — see [docs/README.md](docs/README.md).
+- **Docs site (VitePress):** [galaxous.github.io/plume](https://galaxous.github.io/plume/) — local: `cd docs && npm install && npm run docs:dev`
 - Guide: `docs/guide/`
 - Commands: `docs/commands/`
 - Operations: `docs/operations/`

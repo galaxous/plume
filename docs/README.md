@@ -21,17 +21,15 @@ Source markdown for Plume (commands, operations, contracts) **and** the public d
 
 ## Docs site (VitePress)
 
-Published URL (when Pages is available): [https://galaxous.github.io/plume/](https://galaxous.github.io/plume/)
+Published: [https://galaxous.github.io/plume/](https://galaxous.github.io/plume/)
 
-CI: `.github/workflows/docs.yml` always **builds** docs. **Deploy** runs only if GitHub Pages is enabled for the repo.
+CI: `.github/workflows/docs.yml` builds on PRs; deploys on `main` / `workflow_dispatch` (Pages source: **GitHub Actions**).
 
-**Requirement:** GitHub Pages needs a **public** repository, or a plan that includes Pages for private repos (GitHub Pro / Team / Enterprise). A private free-plan repo cannot serve `*.github.io` — local preview still works:
+Local preview:
 
 ```bash
-cd docs && npm run docs:dev
+cd docs && npm run docs:dev   # http://localhost:5173/plume/
 ```
-
-One-time (after the repo is eligible): Settings → Pages → Source: **GitHub Actions**.
 
 ```bash
 cd docs
