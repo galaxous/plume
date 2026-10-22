@@ -10,7 +10,7 @@ Detailed progress: [implementation/phase-tracker.md](implementation/phase-tracke
 
 - Product: `Plume`
 - Official CLI binary: `plumectl`
-- Local test wrapper: `./plume.sh`
+- Local test wrapper: `./plume.sh` (repo checkout; same CLI as `plumectl`)
 - Optional alias: `plume`
 - Repository: `plume` (GitHub); Packagist/formula alias: `laravel-plume`
 
@@ -32,9 +32,9 @@ In native mode, **PHP** gets real host installation (`brew`/`apt`). Other servic
 From the repo root:
 
 ```bash
-./plume.sh --help
-./plume.sh version
-./plume.sh mode current
+plumectl --help
+plumectl version
+plumectl mode current
 ```
 
 Default global env: `~/.config/plume/.env` (can be created with `env init`). Native stack manifest (Laradock-like): `~/.config/plume/services.yml` — see [docs/operations/services-manifest.md](docs/operations/services-manifest.md).
@@ -42,10 +42,10 @@ Default global env: `~/.config/plume/.env` (can be created with `env init`). Nat
 First-run onboarding: [docs/operations/first-run-onboarding.md](docs/operations/first-run-onboarding.md)
 
 ```bash
-./plume.sh env init
-./plume.sh init host          # also created automatically (PLUME_AUTO_HOST_BOOTSTRAP)
-./plume.sh init onboarding
-./plume.sh doctor web
+plumectl env init
+plumectl init host          # also created automatically (PLUME_AUTO_HOST_BOOTSTRAP)
+plumectl init onboarding
+plumectl doctor web
 ```
 
 ## Installation (Release)
@@ -73,24 +73,23 @@ Pre-release smoke: [docs/operations/release-readiness.md](docs/operations/releas
 ## Example Commands
 
 ```bash
-./plume.sh site add --path=/path/to/laravel/public --domain=myapp.test --server=nginx --publish
-./plume.sh services use mariadb --mode=native
-./plume.sh services up @core --mode=native
-./plume.sh php use 8.3
-./plume.sh doctor check --mode=native --deep
-./plume.sh deploy plan --mode=native
-./plume.sh --yes deploy apply --mode=native --skip-backup
+plumectl site add --path=/path/to/laravel/public --domain=myapp.test --server=nginx --publish
+plumectl services use mariadb --mode=native
+plumectl services up @core --mode=native
+plumectl php use 8.3
+plumectl doctor check --mode=native --deep
+plumectl deploy plan --mode=native
+plumectl --yes deploy apply --mode=native --skip-backup
 ```
 
 ## Documentation Map
 
-- Implementation context: `implementation/`
-- Phase tracker: `implementation/phase-tracker.md`
-- Per-phase checklists: `implementation/phases/`
-- Commands docs: `docs/commands/`
-- Operations docs: `docs/operations/`
+- **Docs site (VitePress):** `cd docs && npm install && npm run docs:dev`
+- Guide: `docs/guide/`
+- Commands: `docs/commands/`
+- Operations: `docs/operations/`
 - Contracts: `docs/contracts/`
-
+- Implementation context: `implementation/` (phase tracker, ADRs — not part of the public site)
 ## Test (Release Matrix)
 
 Single entry point (same steps as CI; recommended before publish):

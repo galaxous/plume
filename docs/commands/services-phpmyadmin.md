@@ -13,8 +13,8 @@ PLUME_PHPMYADMIN_PORT=8081
 PMA_ARBITRARY=1
 PMA_AUTH_TYPE=cookie
 
-./plume.sh services install phpmyadmin --mode=native
-./plume.sh services up phpmyadmin --mode=native
+plumectl services install phpmyadmin --mode=native
+plumectl services up phpmyadmin --mode=native
 # Login form: Server + user + password (like Laradock)
 # native: dropdown label mariadb|mysql; TCP host always 127.0.0.1 (port PLUME_*_PORT)
 # docker-lite: Server = mariadb or mysql (container hostname)
@@ -53,7 +53,7 @@ Writing `127.0.0.1 mariadb mysql` into `/etc/hosts` is optional (`PLUME_NATIVE_D
 
 ```bash
 open http://127.0.0.1:8081
-./plume.sh services credentials phpmyadmin --mode=native
+plumectl services credentials phpmyadmin --mode=native
 ```
 
 ## Error scenarios

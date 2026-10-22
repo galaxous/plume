@@ -1,3 +1,8 @@
+---
+search: false
+sidebar: false
+---
+
 # `<command>` Commands
 
 ## Purpose

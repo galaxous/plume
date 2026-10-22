@@ -7,18 +7,18 @@ Change and validate the working mode.
 ## Usage
 
 ```bash
-./plume.sh mode use native
-./plume.sh mode use native --force --yes --down-running
-./plume.sh mode use docker-lite
-./plume.sh mode use laradock-bridge
-./plume.sh mode current
-./plume.sh mode path set /abs/project
-./plume.sh mode path get
-./plume.sh mode path clear
-./plume.sh mode path set docker-lite /abs/project
-./plume.sh mode path get docker-lite
-./plume.sh mode path list
-./plume.sh mode path clear docker-lite
+plumectl mode use native
+plumectl mode use native --force --yes --down-running
+plumectl mode use docker-lite
+plumectl mode use laradock-bridge
+plumectl mode current
+plumectl mode path set /abs/project
+plumectl mode path get
+plumectl mode path clear
+plumectl mode path set docker-lite /abs/project
+plumectl mode path get docker-lite
+plumectl mode path list
+plumectl mode path clear docker-lite
 ```
 
 ## Parameters
@@ -54,10 +54,10 @@ Lock behavior:
 - If the lock is stale (no live workload), it is cleared automatically.
 - While the lock is active, `mode use` and `mode path set/clear` do not change state without `--force`.
 - If containers are running on the active `docker-lite` path, `mode/path` changes are blocked even with `--force`.
-- In that case run `./plume.sh services workspace down --mode=docker-lite` first.
+- In that case run `plumectl services workspace down --mode=docker-lite` first.
 - Switching to `mode use native` is blocked while active `laradock-bridge` containers exist.
   - For automatic shutdown:
-    - `./plume.sh mode use native --force --yes --down-running`
+    - `plumectl mode use native --force --yes --down-running`
   - Manual shutdown alternative:
     - `cd <laradock-path> && docker compose down`
 - During `docker-lite` path change (`mode path set ... --force`):
@@ -72,8 +72,8 @@ Lock behavior:
 ## Examples
 
 ```bash
-./plume.sh mode use native
-./plume.sh mode current
+plumectl mode use native
+plumectl mode current
 ```
 
 ## Error scenarios

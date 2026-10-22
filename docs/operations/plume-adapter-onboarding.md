@@ -4,28 +4,28 @@ This document defines the starting integration contract between a future `larasi
 
 ## 1) Adapter Design Principle
 
-- The adapter runs system commands through `./plume.sh ...`, not directly.
+- The adapter runs system commands through `plumectl ...`, not directly.
 - For parse work, prefer commands that support `--json`.
 - On critical commands, the `--yes` requirement must be explicit on the adapter side.
 
 ## 2) Minimum Command Map
 
 - Mode/context:
-  - `./plume.sh mode current`
-  - `./plume.sh mode context`
-  - `./plume.sh mode use native --force --yes --down-running` (laradock-bridge transition safety)
-  - `./plume.sh mode path get <mode>`
+  - `plumectl mode current`
+  - `plumectl mode context`
+  - `plumectl mode use native --force --yes --down-running` (laradock-bridge transition safety)
+  - `plumectl mode path get <mode>`
 - Site lifecycle:
-  - `./plume.sh site list --json`
-  - `./plume.sh site check <id> --json`
-  - `./plume.sh site add ...`
-  - `./plume.sh site update ...`
-  - `./plume.sh site remove <id>`
+  - `plumectl site list --json`
+  - `plumectl site check <id> --json`
+  - `plumectl site add ...`
+  - `plumectl site update ...`
+  - `plumectl site remove <id>`
 - Service/ops:
-  - `./plume.sh services status --json`
-  - `./plume.sh status --json`
-  - `./plume.sh health --json`
-  - `./plume.sh monitor summary --json`
+  - `plumectl services status --json`
+  - `plumectl status --json`
+  - `plumectl health --json`
+  - `plumectl monitor summary --json`
 
 ## 3) Exit Code Contract
 
@@ -53,6 +53,6 @@ At the adapter UI/API level, "confirm" behavior should map to these commands.
 - State DB:
   - `~/.config/plume/state/plume-state.db` (or `PLUME_STATE_DIR`)
 - Runtime events:
-  - `./plume.sh monitor events --limit=100`
+  - `plumectl monitor events --limit=100`
 
 The adapter can filter `critical.*`, `deploy.*`, `security.*`, and `ops.*` event names in the event stream.

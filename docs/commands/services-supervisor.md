@@ -7,14 +7,14 @@ System-primary native supervisor (brew services / systemd): package upgrade + co
 ## Usage
 
 ```bash
-./plume.sh doctor supervisor
-./plume.sh services supervisor upgrade --force --yes
-./plume.sh services supervisor upgrade --force --yes --dry-run
-./plume.sh services supervisor program add
-./plume.sh services supervisor program add --template=horizon --non-interactive
-./plume.sh services up supervisor
-./plume.sh services up horizon
-./plume.sh services up horizon --site=<site-id>
+plumectl doctor supervisor
+plumectl services supervisor upgrade --force --yes
+plumectl services supervisor upgrade --force --yes --dry-run
+plumectl services supervisor program add
+plumectl services supervisor program add --template=horizon --non-interactive
+plumectl services up supervisor
+plumectl services up horizon
+plumectl services up horizon --site=<site-id>
 ```
 
 Preferred path for Horizon: `site update <id> --horizon` + `services up horizon` (D-150, per-site `plume-horizon-<site-id>`). Manual `program add --template=horizon` is for custom workers.
@@ -55,14 +55,14 @@ Registry: `$(plume_state_dir)/native/supervisor/programs-registry.env`
 
 ```bash
 # Legacy D-147 -> system-primary migration
-./plume.sh services supervisor upgrade --force --yes
+plumectl services supervisor upgrade --force --yes
 
 # Horizon worker (tunnelion)
 PLUME_HORIZON_PATH=/path/to/laravel
-./plume.sh services supervisor program add --template=horizon --non-interactive
+plumectl services supervisor program add --template=horizon --non-interactive
 
 # Generic queue worker
-./plume.sh services supervisor program add --template=generic
+plumectl services supervisor program add --template=generic
 ```
 
 ## Error scenarios

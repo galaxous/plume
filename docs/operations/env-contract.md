@@ -59,7 +59,7 @@ Note:
   - `PLUME_NATIVE_PHP_FPM_UPSTREAM` (default php)
   - `PLUME_NATIVE_PHP_FPM_UPSTREAM_81`, `..._82`, `..._84`
 - `PLUME_NATIVE_HOST_PROVISION=true|false`: real host package install/start/stop for `web`, `mariadb`, `mysql`, `redis` (and apache2 driver) in native mode. Default `false` (state simulate).
-- `PLUME_NONINTERACTIVE=true|false`: skip macOS permission menu and TTY brew/sudo confirmations (CI; compatible with global `--yes`). Native MariaDB/MySQL root password bootstrap does not attempt passwordless TCP (no tty `Password:` prompt; D-134). Hosts sync uses `sudo -n` (no interactive sudo Password; D-136).
+- `PLUME_NONINTERACTIVE=true|false`: skip macOS permission menu and TTY brew/sudo confirmations (CI; compatible with global `--yes`). Native MariaDB/MySQL root password bootstrap does not attempt passwordless TCP (no tty `Password:` prompt; D-134). Hosts sync: CI uses `sudo -n` only (D-136); interactive terminals may prompt via `/dev/tty` (D-159 `plume_fs_copy_elevated`).
 - `PLUME_NATIVE_DB_HOSTS_SYNC=true|false`: `/etc/hosts` alias sync after native mariadb/mysql up (default `true`; smoke/CI: `false`).
 - `PLUME_INTERACTIVE=true|false`: interactive prompt behavior outside or inside a TTY (see `docs/operations/macos-permissions.md`).
 - `PLUME_SITE_AUTO_PROVISION_WEB=true|false`: automatic host install/start when the web server is missing during native `site publish --reload`. Default `true`.
@@ -166,4 +166,4 @@ Native DB/broker config (`PLUME_NATIVE_MARIADB_MANAGE_CONFIG`, `PLUME_NATIVE_POS
 | `MYSQL_ROOT_PASSWORD` | `PLUME_MYSQL_ROOT_PASSWORD` | `root` |
 | `MYSQL_PORT` | `PLUME_MYSQL_PORT` | `3307` |
 
-After changes: `./plume.sh services restart <svc> --mode=native` (config sync is automatic).
+After changes: `plumectl services restart <svc> --mode=native` (config sync is automatic).

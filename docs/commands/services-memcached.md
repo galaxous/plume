@@ -8,9 +8,9 @@ Native cache like the Laradock `memcached` container: enable → up → credenti
 
 ```bash
 MEMCACHED_ENABLED=true
-./plume.sh services up memcached --mode=native
-./plume.sh services credentials memcached --mode=native
-./plume.sh services status memcached --mode=native
+plumectl services up memcached --mode=native
+plumectl services credentials memcached --mode=native
+plumectl services status memcached --mode=native
 ```
 
 ## Parameters
@@ -27,8 +27,8 @@ MEMCACHED_ENABLED=true
 ## Examples
 
 ```bash
-./plume.sh services up @cache --mode=native
-./plume.sh services env show memcached --mode=native
+plumectl services up @cache --mode=native
+plumectl services env show memcached --mode=native
 ```
 
 ## Error scenarios

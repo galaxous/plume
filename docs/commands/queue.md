@@ -7,19 +7,19 @@ Laravel queue operations: worker/Horizon status (`status`) and failed job list (
 ## Usage
 
 ```bash
-./plume.sh queue status
-./plume.sh queue status --mode=native
-./plume.sh queue status --path=/abs/laravel-app
-./plume.sh --json queue status --mode=native
+plumectl queue status
+plumectl queue status --mode=native
+plumectl queue status --path=/abs/laravel-app
+plumectl --json queue status --mode=native
 
-./plume.sh queue list --path=/abs/laravel-app
-./plume.sh queue list --mode=native --path=/abs/laravel-app
+plumectl queue list --path=/abs/laravel-app
+plumectl queue list --mode=native --path=/abs/laravel-app
 ```
 
 ## Parameters
 
 - `status` (default subcommand): Queue/Horizon summary.
-- `list`: Runs `php artisan queue:failed` in the project directory. If `PLUME_HORIZON_ENABLED=true`, extra INFO: `horizon:status` and suggestion to run `./plume.sh services status horizon`.
+- `list`: Runs `php artisan queue:failed` in the project directory. If `PLUME_HORIZON_ENABLED=true`, extra INFO: `horizon:status` and suggestion to run `plumectl services status horizon`.
 - `--mode=native|docker-lite|laradock-bridge`: Service runtime source (for `status` and Horizon hint).
 - `--path=/abs/project`: Force Laravel project root (resolution same as `schedule status`).
 - Global `--json`: JSON output for `status` only.
@@ -30,7 +30,7 @@ Laravel queue operations: worker/Horizon status (`status`) and failed job list (
 - `1`: Artisan `queue:failed` failed (Laravel exit code is forwarded).
 - `2`: Invalid argument, project path unresolved, `artisan` missing, or `php` not found.
 
-Text `status` output: `QUEUE_CONNECTION`, `HORIZON` / `SUPERVISOR` / `PHP_WORKER` lines. In native mode, if Horizon is enabled but not running, hint: `./plume.sh services up horizon --mode=native`.
+Text `status` output: `QUEUE_CONNECTION`, `HORIZON` / `SUPERVISOR` / `PHP_WORKER` lines. In native mode, if Horizon is enabled but not running, hint: `plumectl services up horizon --mode=native`.
 
 For detailed Horizon status, use `php artisan horizon:status` directly (or `services status horizon`) instead of plume `queue list`.
 
@@ -38,10 +38,10 @@ For detailed Horizon status, use `php artisan horizon:status` directly (or `serv
 
 ```bash
 # tunnelion + Horizon env
-PLUME_HORIZON_ENABLED=true ./plume.sh queue status --mode=native --path=/Users/me/Desktop/Projects.nosync/tunnelion
-./plume.sh queue list --path=/Users/me/Desktop/Projects.nosync/tunnelion
+PLUME_HORIZON_ENABLED=true plumectl queue status --mode=native --path=/Users/me/Desktop/Projects.nosync/tunnelion
+plumectl queue list --path=/Users/me/Desktop/Projects.nosync/tunnelion
 
-./plume.sh queue status --path=/var/www/myapp --mode=docker-lite
+plumectl queue status --path=/var/www/myapp --mode=docker-lite
 ```
 
 ## Error scenarios

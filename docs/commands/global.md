@@ -7,11 +7,11 @@ Definition of behaviors common to all commands.
 ## Usage
 
 ```bash
-./plume.sh --help
-./plume.sh --version
-./plume.sh --json services supported
-./plume.sh --quiet services update
-./plume.sh --env-file /path/to/custom.env services status
+plumectl --help
+plumectl --version
+plumectl --json services supported
+plumectl --quiet services update
+plumectl --env-file /path/to/custom.env services status
 ```
 
 ## Parameters
@@ -47,8 +47,8 @@ For macOS permission menu and host install approvals, `PLUME_NONINTERACTIVE=1` c
 ## Examples
 
 ```bash
-./plume.sh --json services status
-./plume.sh --env-file /tmp/plume.env prereq check
+plumectl --json services status
+plumectl --env-file /tmp/plume.env prereq check
 ```
 
 ## Error scenarios
@@ -60,5 +60,5 @@ For macOS permission menu and host install approvals, `PLUME_NONINTERACTIVE=1` c
 ## Naming note
 
 - Official binary: `plumectl`
-- Test-stage runner: `./plume.sh`
+- Test-stage / repo wrapper: `./plume.sh`
 - Optional alias: `plume`

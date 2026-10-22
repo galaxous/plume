@@ -49,14 +49,14 @@ Notes:
 
 - If `--mode` is omitted, `project.mode` or `mode` is looked up in project-folder `plume.yml` first (`project.mode` wins).
 - If `--php` / `--php-version` is omitted, `project.php_version` is used as a hint (installed-version validation still applies).
-- If not found, the active mode (`plume mode current`) is used.
+- If not found, the active mode (`plumectl mode current`) is used.
 - If the site record has `mode`, `site update/publish/remove` prefer that mode.
 - With `PLUME_SITE_RELOAD_REQUIRED=true`, if `--reload` fails the command returns `exit 2`.
 - `PLUME_SITE_AUTO_PROVISION_WEB=true` (default): in native mode during `--reload`, if nginx/apache2 is not installed, automatic install and service start via `brew`/`apt` is attempted (`PLUME_NATIVE_HOST_PROVISION` not required; the publish flow temporarily enables host provision).
 - With `PLUME_SITE_AUTO_PROVISION_WEB=false` you must install the web server manually: `PLUME_NATIVE_HOST_PROVISION=true plumectl services install web && services up web`.
 - `PLUME_SITE_NGINX_STRICT_ON_RELOAD=true` (default): native `site publish --reload` writes the snippet under Homebrew `/opt/homebrew/etc/nginx/servers/` (or `PLUME_NGINX_INCLUDE_DIR`); otherwise config stays only in the `~/.config/plume/sites/nginx/` cache and nginx does not see it.
 - macOS Homebrew nginx listens on **8080** in most installs (the formula intentionally maps 80→8080; no root required). Even if the site record has `port: 80`, render reads listen from the main config; if it is 8080 the snippet also becomes 8080 (can be forced with `PLUME_NATIVE_HOMEBREW_HTTP_PORT=8080`).
-- Port **80** (portless `http://myapp.test`): `plumectl services web ensure` (or `site publish <id> --reload` auto-ensure). Details: [services-web.md](services-web.md).
+- Port **80** (portless `http://myapp.test`): `site publish <id> --reload` auto-ensures listen (no privileged reload during ensure when already on 80 — D-159); or run `plumectl services web ensure`. Details: [services-web.md](services-web.md). On macOS with root nginx, sudo may prompt once via `/dev/tty`.
 - With `PLUME_SITE_RELOAD_VALIDATE=true` (default), a config test is required before reload in native mode:
   - nginx: `nginx -t`
   - apache2: `apachectl -t` or `httpd -t`
@@ -90,7 +90,7 @@ Notes:
     - `PLUME_NATIVE_PHP_FPM_UPSTREAM_81`, `..._82`, `..._84`
   - without override, plume tries native socket discovery (`unix:/run/php/php8.2-fpm.sock`, `unix:/opt/homebrew/var/run/php@8.2-fpm.sock`, etc.)
   - if the socket is missing and Homebrew `php@X.Y` is installed, non-default versions do not fall into the shared `127.0.0.1:9000` pool; the canonical unix path (`php@8.2-fpm.sock`) is used. For the default PHP version, if the Homebrew pool has `listen = 127.0.0.1:9000`, that TCP upstream is used.
-  - **Homebrew FPM socket:** the nginx snippet uses the canonical `unix:/opt/homebrew/var/run/php@8.2-fpm.sock`; the FPM pool must listen on the same path. `./plume.sh services up php82` (native) aligns the `www.conf` `listen` line (D-107). Manual check: `grep listen /opt/homebrew/etc/php/8.2/php-fpm.d/www.conf` and `ls -l /opt/homebrew/var/run/php@8.2-fpm.sock`.
+  - **Homebrew FPM socket:** the nginx snippet uses the canonical `unix:/opt/homebrew/var/run/php@8.2-fpm.sock`; the FPM pool must listen on the same path. `plumectl services up php82` (native) aligns the `www.conf` `listen` line (D-107). Manual check: `grep listen /opt/homebrew/etc/php/8.2/php-fpm.d/www.conf` and `ls -l /opt/homebrew/var/run/php@8.2-fpm.sock`.
   - `site update --php=... --publish` regenerates the snippet (header + `fastcgi_pass`); if only the yml record is updated without publish, the cache/nginx target stays old.
 - When `cert_id` is given, snippet generation adds HTTPS blocks:
   - nginx: `listen <https-port> ssl` + `ssl_certificate`
@@ -112,7 +112,9 @@ Notes:
   - docker-lite: `~/.config/plume/docker-lite/sites/<server>/<site-id>.conf`
   - laradock-bridge: `~/.config/plume/laradock-bridge/sites/<server>/<site-id>.conf`
 - Hosts sync target file: `PLUME_HOSTS_FILE` (default `/etc/hosts`)
-- Even if configuration fails (no permission), publish can be stopped with `PLUME_SITE_HOSTS_REQUIRED=true`.
+- With `PLUME_SITE_HOSTS_SYNC=true` (recommended), publish/update rewrites the site’s `/etc/hosts` lines (interactive sudo when needed — D-159). If sync is `false`, publish still updates nginx but warns that the browser may show `NXDOMAIN`.
+- Even if hosts write fails (no permission), publish can be stopped with `PLUME_SITE_HOSTS_REQUIRED=true`.
+- Prefer `plumectl site update <id> --domain=tunnelion.test --publish --reload` over hand-editing the YAML alone (same end state; clearer intent).
 
 The file given with `--server-config` is copied directly into the snippet file.
 `plumectl site publish <site-id> --reload` rewrites the current snippet and tries to reload the active web server (`nginx|apache2|caddy`).
@@ -146,7 +148,7 @@ Symptoms:
 Fix (apply one):
 
 1. **Move the project** — e.g. `~/Sites/...` or `~/Code/...` (outside Desktop/Documents/Downloads), then `plumectl site update <id> --path=... --publish --reload`
-2. **Full Disk Access** — `./plume.sh init permissions --interactive` or `--open --reveal`; System Settings → Privacy & Security → Full Disk Access: add Homebrew **nginx** and **php-fpm** binaries; restart the services
+2. **Full Disk Access** — `plumectl init permissions --interactive` or `--open --reveal`; System Settings → Privacy & Security → Full Disk Access: add Homebrew **nginx** and **php-fpm** binaries; restart the services
 3. **Diagnose** — `plumectl doctor web --mode=native` line `macos-site-tcc`; `plumectl doctor php` line `MACOS_TCC` (output suggests `init permissions --interactive`)
 
 After `site add` and a successful `site update`, a **WARN** is printed for those folders (suggests `~/Sites/<project-name>`). Details: [local-dev-macos.md](../operations/local-dev-macos.md).

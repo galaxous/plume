@@ -7,11 +7,11 @@ Print a checklist on first run so the user does not have to discover TCC, nginx 
 ## Usage
 
 ```bash
-./plume.sh init onboarding
-./plume.sh init onboarding --fix
-./plume.sh init onboarding --open-settings
-./plume.sh doctor onboarding
-./plume.sh doctor onboarding --fix
+plumectl init onboarding
+plumectl init onboarding --fix
+plumectl init onboarding --open-settings
+plumectl doctor onboarding
+plumectl doctor onboarding --fix
 ```
 
 ## Parameters
@@ -39,11 +39,11 @@ If the host profile is missing, onboarding first runs `init host` detection.
 ## Examples
 
 ```bash
-./plume.sh env init
-./plume.sh init onboarding
-./plume.sh init onboarding --fix              # start brew nginx/php
-./plume.sh init permissions --open            # FDA pane + binary list
-./plume.sh init permissions --open --reveal   # + nginx bin directory in Finder
+plumectl env init
+plumectl init onboarding
+plumectl init onboarding --fix              # start brew nginx/php
+plumectl init permissions --open            # FDA pane + binary list
+plumectl init permissions --open --reveal   # + nginx bin directory in Finder
 ```
 
 ## Error scenarios

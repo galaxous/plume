@@ -7,18 +7,18 @@ Laravel scheduler operations: status summary (`status`), registered task list (`
 ## Usage
 
 ```bash
-./plume.sh schedule status
-./plume.sh schedule status --mode=native
-./plume.sh schedule status --path=/abs/laravel-app
-./plume.sh --json schedule status --path=/abs/laravel-app
+plumectl schedule status
+plumectl schedule status --mode=native
+plumectl schedule status --path=/abs/laravel-app
+plumectl --json schedule status --path=/abs/laravel-app
 
-./plume.sh schedule list --path=/abs/laravel-app
-./plume.sh schedule run-once --path=/abs/laravel-app
-./plume.sh schedule run-once --path=/abs/laravel-app --dry-run
+plumectl schedule list --path=/abs/laravel-app
+plumectl schedule run-once --path=/abs/laravel-app
+plumectl schedule run-once --path=/abs/laravel-app --dry-run
 
-./plume.sh schedule cron-install --path=/abs/laravel-app
-./plume.sh schedule cron-install --path=/abs/laravel-app --dry-run
-./plume.sh schedule cron-install --path=/abs/laravel-app --remove
+plumectl schedule cron-install --path=/abs/laravel-app
+plumectl schedule cron-install --path=/abs/laravel-app --dry-run
+plumectl schedule cron-install --path=/abs/laravel-app --remove
 ```
 
 ## Parameters
@@ -50,15 +50,15 @@ Text `status` output: `MODE`, `PROJECT_PATH`, `PROJECT_SOURCE`, `ARTISAN` (`pres
 
 ```bash
 # tunnelion (Desktop — site registered or --path)
-./plume.sh schedule status --path=/Users/me/Desktop/Projects.nosync/tunnelion
-./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --dry-run
-./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion
-./plume.sh schedule list --path=/Users/me/Desktop/Projects.nosync/tunnelion
-./plume.sh schedule run-once --path=/Users/me/Desktop/Projects.nosync/tunnelion --dry-run
-./plume.sh schedule run-once --path=/Users/me/Desktop/Projects.nosync/tunnelion
+plumectl schedule status --path=/Users/me/Desktop/Projects.nosync/tunnelion
+plumectl schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --dry-run
+plumectl schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion
+plumectl schedule list --path=/Users/me/Desktop/Projects.nosync/tunnelion
+plumectl schedule run-once --path=/Users/me/Desktop/Projects.nosync/tunnelion --dry-run
+plumectl schedule run-once --path=/Users/me/Desktop/Projects.nosync/tunnelion
 
-cd ~/Desktop/Projects.nosync/tunnelion && ./plume.sh schedule list
-./plume.sh schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --remove
+cd ~/Desktop/Projects.nosync/tunnelion && plumectl schedule list
+plumectl schedule cron-install --path=/Users/me/Desktop/Projects.nosync/tunnelion --remove
 ```
 
 ## Error scenarios

@@ -29,10 +29,10 @@ Remediation:
 ## Verify
 
 ```bash
-./plume.sh site check <site-id>
-./plume.sh doctor web --mode=native    # macos-site-tcc
-./plume.sh doctor php                  # MACOS_TCC
-./plume.sh init permissions --interactive
+plumectl site check <site-id>
+plumectl doctor web --mode=native    # macos-site-tcc
+plumectl doctor php                  # MACOS_TCC
+plumectl init permissions --interactive
 ```
 
 ## Example: move a site off Desktop
@@ -40,7 +40,7 @@ Remediation:
 ```bash
 mkdir -p ~/Sites
 mv ~/Desktop/Projects.nosync/tunnelion ~/Sites/tunnelion
-./plume.sh site update site-1775207595-23239 \
+plumectl site update site-1775207595-23239 \
   --path="$HOME/Sites/tunnelion" --publish --reload
 ```
 

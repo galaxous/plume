@@ -7,8 +7,8 @@ Diagnose native supervisor install, system unit (brew services / systemd), legac
 ## Usage
 
 ```bash
-./plume.sh doctor supervisor
-./plume.sh doctor supervisor --strict
+plumectl doctor supervisor
+plumectl doctor supervisor --strict
 ```
 
 ## Parameters
@@ -26,14 +26,14 @@ Host info is read from `~/.config/plume/host.env` cache (`package_manager`, `sup
 Remediation line (when upgrade is needed):
 
 ```text
-REMEDIATION  run: ./plume.sh services supervisor upgrade --force --yes
+REMEDIATION  run: plumectl services supervisor upgrade --force --yes
 ```
 
 ## Examples
 
 ```bash
-./plume.sh doctor supervisor --strict
-./plume.sh init host --force
+plumectl doctor supervisor --strict
+plumectl init host --force
 ```
 
 ## Error scenarios

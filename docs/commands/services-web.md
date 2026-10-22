@@ -72,9 +72,11 @@ plumectl services web ensure --port=8080
 
 ## Error scenarios
 
-- Port **80/443**: Plume asks for sudo; if denied, ensure fails — rerun `plumectl services web ensure`.
+- Port **80/443**: interactive terminal asks for sudo (via `/dev/tty` in IDE shells — D-159); if denied, ensure fails — rerun `plumectl services web ensure`.
+- Listen already on target port: privileged reload soft-fails with a WARN; `site publish` still proceeds (reload happens after the snippet write).
 - Root-owned conf/pid: elevated `nginx -t` / restart.
 - Orphan duplicate `server_name` WARN: does not break publish; conf cleanup is separate.
+- CI / `PLUME_NONINTERACTIVE=1`: passwordless `sudo -n` only (D-158); never an interactive Password prompt.
 
 ## Related
 

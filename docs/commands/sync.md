@@ -7,15 +7,15 @@ Keep live runtime state (especially docker-lite) in sync via state files + SQLit
 ## Usage
 
 ```bash
-./plume.sh sync state --mode=docker-lite
-./plume.sh sync state --mode=docker-lite --path=/abs/project
-./plume.sh sync state --mode=laradock-bridge
-./plume.sh sync state --mode=laradock-bridge --path=/abs/laradock
+plumectl sync state --mode=docker-lite
+plumectl sync state --mode=docker-lite --path=/abs/project
+plumectl sync state --mode=laradock-bridge
+plumectl sync state --mode=laradock-bridge --path=/abs/laradock
 
-./plume.sh sync cron install --mode=docker-lite
-./plume.sh sync cron status
-./plume.sh sync cron remove
-./plume.sh sync cron run --mode=docker-lite
+plumectl sync cron install --mode=docker-lite
+plumectl sync cron status
+plumectl sync cron remove
+plumectl sync cron run --mode=docker-lite
 ```
 
 ## Notes

@@ -7,12 +7,12 @@ Detect machine identity on first install (and when needed) and write it to `~/.c
 ## Usage
 
 ```bash
-./plume.sh init host
-./plume.sh init host --force
-./plume.sh init host --json
-./plume.sh init host --apply
-./plume.sh doctor host
-./plume.sh doctor host --force
+plumectl init host
+plumectl init host --force
+plumectl init host --json
+plumectl init host --apply
+plumectl doctor host
+plumectl doctor host --force
 ```
 
 If missing, `templates/services.yml.example` → `~/.config/plume/services.yml` is copied (existing file is kept). See [services-manifest.md](../operations/services-manifest.md).
@@ -50,7 +50,7 @@ Fields (key=value):
 ## Examples
 
 ```bash
-./plume.sh init host
+plumectl init host
 grep nginx_http_port_detected ~/.config/plume/host.env
 ```
 

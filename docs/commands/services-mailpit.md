@@ -10,9 +10,9 @@ Laravel `.env`: `MAIL_HOST=127.0.0.1` `MAIL_PORT=1025`.
 
 ```bash
 MAILPIT_ENABLED=true
-./plume.sh services up mailpit --mode=native
-./plume.sh services url mailpit --mode=native
-./plume.sh services credentials mailpit --mode=native
+plumectl services up mailpit --mode=native
+plumectl services url mailpit --mode=native
+plumectl services credentials mailpit --mode=native
 ```
 
 ## Parameters
@@ -30,7 +30,7 @@ MAILPIT_ENABLED=true
 ## Examples
 
 ```bash
-./plume.sh services up @core --mode=native   # if mailpit enabled
+plumectl services up @core --mode=native   # if mailpit enabled
 ```
 
 ## Error scenarios

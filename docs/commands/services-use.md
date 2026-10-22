@@ -7,17 +7,17 @@ Select a single database engine in native mode (like enabling one Laradock compo
 ## Usage
 
 ```bash
-./plume.sh services use mariadb --mode=native
-./plume.sh services use mysql --mode=native
-./plume.sh services use postgres --mode=native
+plumectl services use mariadb --mode=native
+plumectl services use mysql --mode=native
+plumectl services use postgres --mode=native
 ```
 
 Then:
 
 ```bash
-./plume.sh services up @db --mode=native
+plumectl services up @db --mode=native
 # or
-./plume.sh services up @core --mode=native
+plumectl services up @core --mode=native
 ```
 
 ## Parameters
@@ -42,9 +42,9 @@ Behavior:
 ## Examples
 
 ```bash
-./plume.sh services use mariadb --mode=native
-./plume.sh services up mariadb phpmyadmin --mode=native
-./plume.sh services credentials mariadb --mode=native
+plumectl services use mariadb --mode=native
+plumectl services up mariadb phpmyadmin --mode=native
+plumectl services credentials mariadb --mode=native
 ```
 
 ## Error scenarios

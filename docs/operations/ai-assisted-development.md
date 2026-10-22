@@ -1,3 +1,7 @@
+---
+search: false
+---
+
 # AI-Assisted Development (Plume)
 
 Persistent context: so human + AI pair development on this repo does not forget test lessons, documentation obligations, and smoke strategy.
@@ -17,7 +21,7 @@ Paste the block below at the start of a new Cursor/agent session, then write the
 
 ```text
 We are working on Plume. GitHub: galaxous/plume (local folder name may differ). 3-mode CLI for Laravel (native, docker-lite, laradock-bridge).
-Wrapper: ./plume.sh; official binary name plumectl. Real user state: ~/.config/plume (NEVER trust that in tests). Config: services.yml + .env + host.env (AGENTS.md §6–7).
+Wrapper: `./plume.sh` (repo smokes); official binary: `plumectl`. Real user state: ~/.config/plume (NEVER trust that in tests). Config: services.yml + .env + host.env (AGENTS.md §6–7).
 
 Required: AGENTS.md §1–8 + docs/commands/ (new command) + docs/contracts/ + implementation/05-decision-log.md (important decisions).
 Phases 1–23 are complete (Phase 7 beta-frozen); active Phase 27 Composer/Node (D-154). New work = new phase-NN.md + phase-tracker. Phase-gate: tests + docs + decision record.
@@ -25,10 +29,10 @@ Start reading: implementation/phase-tracker.md, implementation/future-roadmap.md
 
 Smoke (default before PR): ./tests/run_smoke_suite.sh --release  (same as CI: --ci)
 Hermetic tests: temp HOME + PLUME_STATE_DIR; mock brew PATH = MOCK_BIN:/usr/bin:/bin only (do not append Homebrew to PATH).
-pipefail: do NOT use ./plume.sh ... | grep -q — first OUT="$(...)" then grep.
+pipefail: do NOT use `./plume.sh ... | grep -q` — first OUT="$(...)" then grep.
 Nginx reload tests: PLUME_SITE_NGINX_STRICT=false and PLUME_SITE_NGINX_STRICT_ON_RELOAD=false (isolated reload-validate); `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false` + fake `PATH=MOCK:/usr/bin:/bin` (no host brew/sudo). Truncate mock nginx log before asserts.
 Site registry smoke (phase4): `PLUME_NATIVE_NGINX_ENSURE_ON_PUBLISH=false`; do not use host `site publish --reload` / brew sudo (D-157). `[INFO]` goes to stderr — `SITE_ID="$(site add …)"` stays stdout-only. Tests that assert INFO/hook lines: `>/tmp/out 2>&1` (stdout-only capture breaks).
-Suite: `PLUME_NONINTERACTIVE=1` + elevated nginx **never** interactively asks for a sudo password (`sudo -n` only, D-158). Hermetic fake-nginx smoke: `PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true` + temp `HOME` (real `.env` empty `PLUME_NATIVE_NGINX_MAIN_CONF=` must not override).
+Suite: `PLUME_NONINTERACTIVE=1` + elevated nginx **never** interactively asks for a sudo password (`sudo -n` only, D-158). Interactive hosts: `/dev/tty` sudo confirm (D-159); ensure soft-fails reload when listen already correct. Hermetic fake-nginx smoke: `PLUME_NATIVE_NGINX_FORCE_UNPRIVILEGED_RELOAD=true` + temp `HOME` (real `.env` empty `PLUME_NATIVE_NGINX_MAIN_CONF=` must not override).
 Phase6-style service smoke: PLUME_PHP_EXTENSIONS_AUTO_SYNC=false.
 Redis smoke: PLUME_NATIVE_REDIS_MAIN_CONF=temp file — never patch host `/opt/homebrew/etc/redis.conf`.
 macOS: Desktop/Documents/Downloads TCC; FDA for nginx + php-fpm binaries (not plume.sh); init permissions --interactive.
@@ -153,7 +157,7 @@ Some tests intentionally use `bash -lc '... | grep -q ...'` in a subshell; when 
 
 - If the site path is under **Desktop, Documents, Downloads**, there is TCC risk; see `doctor web` / the interactive menu.
 - **Full Disk Access**: Homebrew **nginx** and **php-fpm** binaries — do **not** add `plume.sh` / `plumectl` / a fictional "Plume.app".
-- Guide: `plume init permissions --interactive`, `--open`, `--reveal`.
+- Guide: `plumectl init permissions --interactive`, `--open`, `--reveal`.
 - Detail: [macos-permissions.md](./macos-permissions.md).
 
 ### Integration (optional)

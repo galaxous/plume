@@ -14,13 +14,13 @@ Subcommands:
 ## Usage
 
 ```bash
-./plume.sh init shell
-./plume.sh init host
-./plume.sh init onboarding
-./plume.sh init permissions --open
-./plume.sh init shell --shell=zsh
-./plume.sh init shell --shell=bash
-./plume.sh init shell --rc=$HOME/.zshrc --force
+plumectl init shell
+plumectl init host
+plumectl init onboarding
+plumectl init permissions --open
+plumectl init shell --shell=zsh
+plumectl init shell --shell=bash
+plumectl init shell --rc=$HOME/.zshrc --force
 ```
 
 ## Parameters
@@ -50,8 +50,8 @@ Subcommands:
 ## Examples
 
 ```bash
-./plume.sh php install 8.4
-./plume.sh init shell --shell=zsh
+plumectl php install 8.4
+plumectl init shell --shell=zsh
 source ~/.zshrc
 php8.4 -v
 ```

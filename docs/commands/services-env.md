@@ -41,9 +41,9 @@ PLUME_REDIS_PASSWORD=secret_redis
 PLUME_MONGODB_USERNAME=root
 PLUME_MONGODB_PASSWORD=example
 
-./plume.sh services env show mongodb --mode=native
-./plume.sh services env set mongodb password=prod_secret --mode=native --restart
-./plume.sh services restart mongo_webui --mode=native
+plumectl services env show mongodb --mode=native
+plumectl services env set mongodb password=prod_secret --mode=native --restart
+plumectl services restart mongo_webui --mode=native
 ```
 
 ## Error scenarios

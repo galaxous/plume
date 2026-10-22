@@ -23,7 +23,7 @@ plumectl project config show --path=/abs/project
 ## Examples
 
 ```bash
-./plume.sh project config show --path=/var/www/myapp
+plumectl project config show --path=/var/www/myapp
 ```
 
 Example output:

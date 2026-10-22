@@ -32,10 +32,10 @@ plumectl services credentials memcached --mode=native
 ## Examples
 
 ```bash
-./plume.sh services url redis_webui --mode=native
+plumectl services url redis_webui --mode=native
 # url=http://127.0.0.1:8083
 
-./plume.sh services credentials postgres --mode=native
+plumectl services credentials postgres --mode=native
 ```
 
 ## Error scenarios

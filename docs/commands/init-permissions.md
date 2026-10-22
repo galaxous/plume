@@ -7,11 +7,11 @@ List which permissions the user must grant on macOS native mode for nginx/php-fp
 ## Usage
 
 ```bash
-./plume.sh init permissions
-./plume.sh init permissions --open
-./plume.sh init permissions --reveal
-./plume.sh init permissions --open --reveal
-./plume.sh init permissions --interactive
+plumectl init permissions
+plumectl init permissions --open
+plumectl init permissions --reveal
+plumectl init permissions --open --reveal
+plumectl init permissions --interactive
 ```
 
 ## Parameters
@@ -36,10 +36,10 @@ Then resolved `nginx` and `php-fpm` paths (`command -v`, `brew --prefix`) are li
 ## Examples
 
 ```bash
-./plume.sh init permissions
-./plume.sh init permissions --open
-./plume.sh doctor web    # macos-site-tcc line
-./plume.sh doctor php    # MACOS_TCC line
+plumectl init permissions
+plumectl init permissions --open
+plumectl doctor web    # macos-site-tcc line
+plumectl doctor php    # MACOS_TCC line
 ```
 
 ## Error scenarios

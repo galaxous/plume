@@ -7,11 +7,11 @@ Manage Plume's system-level global env file.
 ## Usage
 
 ```bash
-./plume.sh env where
-./plume.sh env init
-./plume.sh env init --force
-./plume.sh env init --from=/abs/path/to/.env.example
-./plume.sh env set PLUME_REDIS_PASSWORD=mysecret
+plumectl env where
+plumectl env init
+plumectl env init --force
+plumectl env init --from=/abs/path/to/.env.example
+plumectl env set PLUME_REDIS_PASSWORD=mysecret
 ```
 
 ## Parameters
@@ -41,12 +41,12 @@ Manage Plume's system-level global env file.
 ## Examples
 
 ```bash
-./plume.sh env where
-./plume.sh env init
-./plume.sh env init --force
-./plume.sh env init --from=/path/to/plume/templates/native-local.env.example --force
-./plume.sh env set PLUME_MONGODB_PASSWORD=example
-./plume.sh services restart mongodb --mode=native
+plumectl env where
+plumectl env init
+plumectl env init --force
+plumectl env init --from=/path/to/plume/templates/native-local.env.example --force
+plumectl env set PLUME_MONGODB_PASSWORD=example
+plumectl services restart mongodb --mode=native
 ```
 
 Stack service shortcut: [services-env.md](services-env.md).

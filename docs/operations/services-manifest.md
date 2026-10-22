@@ -113,34 +113,34 @@ Laradock-bridge-specific compose names (`workspace`, `php-fpm`) are documented a
 
 **Laradock-bridge:** `laravel-horizon`, `php-worker` compose services; the manifest only loads env toggles and does not change compose.
 
-**Operational CLI:** `plume queue status`, `plume queue list`; when Horizon is on, `services status horizon`. `PLUME_HORIZON_PATH` or a registered site artisan path is required.
+**Operational CLI:** `plumectl queue status`, `plumectl queue list`; when Horizon is on, `services status horizon`. `PLUME_HORIZON_PATH` or a registered site artisan path is required.
 
 ## Commands
 
 To see effective configuration (`effective_*` lines, adapter-parse):
 
 ```bash
-./plume.sh init onboarding          # checklist + effective_* lines
-./plume.sh services manifest show
+plumectl init onboarding          # checklist + effective_* lines
+plumectl services manifest show
 ```
 
 Greenfield host (Homebrew / apt / dnf — brew shim in mock smokes):
 
 ```bash
-./plume.sh env init
-./plume.sh init host                  # host.env + services.yml bootstrap
-./plume.sh init host --apply          # native provision from manifest
+plumectl env init
+plumectl init host                  # host.env + services.yml bootstrap
+plumectl init host --apply          # native provision from manifest
 # First CLI session (provision.on_first_run: true in manifest): automatic provision (once)
 # or
-./plume.sh services provision --from-manifest
-./plume.sh services provision --from-manifest --dry-run
+plumectl services provision --from-manifest
+plumectl services provision --from-manifest --dry-run
 ```
 
 If an extra PHP version is not in the manifest:
 
 ```bash
-./plume.sh php install 8.4
-./plume.sh init onboarding --fix      # brew services nginx/php
+plumectl php install 8.4
+plumectl init onboarding --fix      # brew services nginx/php
 ```
 
 ## macOS: steps that are not automatic

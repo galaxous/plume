@@ -5,26 +5,26 @@ This runbook explains the recommended order and host-profile model for developer
 ## Recommended order
 
 1. **CLI readiness** — [install.md](./install.md): Homebrew (macOS), `install.sh` / Composer / `make install` (Linux).
-2. **Global env** — `./plume.sh env init` (or `--from=templates/native-local.env.example`).
-3. **Service manifest (optional, recommended)** — `./plume.sh init host` creates `~/.config/plume/services.yml` if missing (Laradock-like stack definition). Greenfield: `./plume.sh init host --apply` or `./plume.sh services provision --from-manifest`. Detail: [services-manifest.md](./services-manifest.md).
-4. **Host profile** — Together with step 3, `./plume.sh init host` is enough; if there is no profile, automatic bootstrap runs (`PLUME_AUTO_HOST_BOOTSTRAP=true`).
+2. **Global env** — `plumectl env init` (or `--from=templates/native-local.env.example`).
+3. **Service manifest (optional, recommended)** — `plumectl init host` creates `~/.config/plume/services.yml` if missing (Laradock-like stack definition). Greenfield: `plumectl init host --apply` or `plumectl services provision --from-manifest`. Detail: [services-manifest.md](./services-manifest.md).
+4. **Host profile** — Together with step 3, `plumectl init host` is enough; if there is no profile, automatic bootstrap runs (`PLUME_AUTO_HOST_BOOTSTRAP=true`).
 5. **Onboarding checklist** —
    ```bash
-   ./plume.sh init onboarding
+   plumectl init onboarding
    ```
-   On macOS, binary list for Full Disk Access first: `./plume.sh init permissions`  
-   Interactive menu: `./plume.sh init permissions --interactive`  
-   To open System Settings: `./plume.sh init permissions --open` (or `./plume.sh init onboarding --open-settings`)  
-   To start services: `./plume.sh init onboarding --fix` (does not open Settings)
+   On macOS, binary list for Full Disk Access first: `plumectl init permissions`  
+   Interactive menu: `plumectl init permissions --interactive`  
+   To open System Settings: `plumectl init permissions --open` (or `plumectl init onboarding --open-settings`)  
+   To start services: `plumectl init onboarding --fix` (does not open Settings)
 6. **Diagnostics** —
    ```bash
-   ./plume.sh doctor web
-   ./plume.sh doctor php
+   plumectl doctor web
+   plumectl doctor php
    ```
-7. **Shell shim (optional)** — `./plume.sh init shell`
-8. **Services** — `./plume.sh services up @core --mode=native`  
-   Optional development mail (macOS native): `./plume.sh services up mailpit --mode=native` — see [services.md](../commands/services.md) (Mailpit, D-109).
-9. **Site** — `./plume.sh site add ... --publish`
+7. **Shell shim (optional)** — `plumectl init shell`
+8. **Services** — `plumectl services up @core --mode=native`  
+   Optional development mail (macOS native): `plumectl services up mailpit --mode=native` — see [services.md](../commands/services.md) (Mailpit, D-109).
+9. **Site** — `plumectl site add ... --publish`
 
 ## Host profile (`host.env`)
 
@@ -44,13 +44,13 @@ Fields: see [init-host.md](../commands/init-host.md)
 If you put the Laravel root under `~/Desktop`, `~/Documents`, or `~/Downloads`, nginx/php-fpm may not be able to read files. Plume is not a `.app`; **do not add Plume or plume.sh** in System Settings. Instead:
 
 ```bash
-./plume.sh init permissions
-./plume.sh init permissions --interactive   # TTY menu
+plumectl init permissions
+plumectl init permissions --interactive   # TTY menu
 ```
 
 Detail: [macos-permissions.md](./macos-permissions.md) — daily `.env` and TCC paths: [local-dev-macos.md](./local-dev-macos.md)
 
-Add the Homebrew **nginx** and **php-fpm** binaries listed in the output to Full Disk Access with `+`. If needed: `./plume.sh init permissions --open --reveal`.
+Add the Homebrew **nginx** and **php-fpm** binaries listed in the output to Full Disk Access with `+`. If needed: `plumectl init permissions --open --reveal`.
 
 Recommended root: `~/Sites` or `~/Code` (FDA is often unnecessary).
 

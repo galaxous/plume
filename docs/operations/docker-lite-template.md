@@ -9,7 +9,7 @@ Template file:
 ## 1. Stub Generation (recommended)
 
 ```bash
-./plume.sh services workspace init --mode=docker-lite --path=/abs/project
+plumectl services workspace init --mode=docker-lite --path=/abs/project
 ```
 
 This command creates these files in the target directory:
@@ -49,8 +49,8 @@ Optional web server config files:
 ## 3. Integration with Plume
 
 ```bash
-./plume.sh mode use docker-lite
-./plume.sh mode path set "$PWD"
+plumectl mode use docker-lite
+plumectl mode path set "$PWD"
 export PLUME_DOCKER_LITE_COMPOSE_REQUIRED=true
 ```
 
@@ -66,11 +66,11 @@ export PLUME_DOCKER_LITE_HORIZON_SERVICE=laravel-horizon
 ## 4. Workspace / Service Lifecycle
 
 ```bash
-./plume.sh services workspace up --mode=docker-lite
-./plume.sh services workspace status --mode=docker-lite
-./plume.sh services up php --mode=docker-lite
-./plume.sh services health php --mode=docker-lite
-./plume.sh services logs php --mode=docker-lite --tail=50
+plumectl services workspace up --mode=docker-lite
+plumectl services workspace status --mode=docker-lite
+plumectl services up php --mode=docker-lite
+plumectl services health php --mode=docker-lite
+plumectl services logs php --mode=docker-lite --tail=50
 ```
 
 ## 5. Shared Env Precedence

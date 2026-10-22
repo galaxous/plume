@@ -14,11 +14,11 @@ PGADMIN_PORT=5050
 PGADMIN_DEFAULT_EMAIL=pgadmin4@pgadmin.org
 PGADMIN_DEFAULT_PASSWORD=admin
 
-./plume.sh services install postgres --mode=native
-./plume.sh services install pgadmin --mode=native
-./plume.sh services up postgres pgadmin --mode=native
+plumectl services install postgres --mode=native
+plumectl services install pgadmin --mode=native
+plumectl services up postgres pgadmin --mode=native
 # or with enabled filter:
-./plume.sh services up @db --mode=native
+plumectl services up @db --mode=native
 
 open http://127.0.0.1:5050
 # Login: PGADMIN_DEFAULT_EMAIL / PGADMIN_DEFAULT_PASSWORD
@@ -53,9 +53,9 @@ State:
 ## Examples
 
 ```bash
-./plume.sh services credentials pgadmin --mode=native
-./plume.sh services restart pgadmin --mode=native
-./plume.sh services down pgadmin --mode=native
+plumectl services credentials pgadmin --mode=native
+plumectl services restart pgadmin --mode=native
+plumectl services down pgadmin --mode=native
 ```
 
 ## Error scenarios

@@ -42,14 +42,14 @@ Generated file: `$(plume_state_dir)/native/redis/plume-redis.conf` — added to 
 
 ```bash
 # Plume global env
-./plume.sh env set PLUME_REDIS_PASSWORD=deneme
-./plume.sh services redis sync-config --reload
+plumectl env set PLUME_REDIS_PASSWORD=deneme
+plumectl services redis sync-config --reload
 
 # Same password as Laravel project (.env)
 # REDIS_PASSWORD=deneme
 
-./plume.sh services credentials redis --mode=native
-./plume.sh services restart redis --mode=native
+plumectl services credentials redis --mode=native
+plumectl services restart redis --mode=native
 ```
 
 ## Error scenarios

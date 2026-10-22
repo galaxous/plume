@@ -6,9 +6,9 @@ A native service behaves like a Laradock container:
 
 ```bash
 REDIS_ENABLED=true
-./plume.sh services up redis --mode=native
-./plume.sh services status redis --mode=native   # running=true health=healthy | no lies
-./plume.sh services credentials redis --mode=native
+plumectl services up redis --mode=native
+plumectl services status redis --mode=native   # running=true health=healthy | no lies
+plumectl services credentials redis --mode=native
 ```
 
 Laravel `.env`: `127.0.0.1` (no container hostname). Closing the terminal does not kill the HTTP daemon (D-140).

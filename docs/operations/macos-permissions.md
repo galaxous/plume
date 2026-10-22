@@ -12,7 +12,8 @@ Plume native mode runs **Homebrew nginx** and **php-fpm** as separate processes.
 | Reveal nginx binaries                | `init permissions --reveal`, menu option `[1]`                                                                     |
 | Suggest `~/Sites/...` bmove          | Menu option `[2]`, `plume_macos_permissions_suggest_sites_path`                                                    |
 | Homebrew install (nginx, mariadb, …) | With TTY: confirm before `brew install` when `PLUME_NATIVE_HOST_PROVISION=true`                                    |
-| Nginx port 80                        | Patch main config via `services web sync-config`; reload may prompt for **sudo** on interactive TTY                |
+| Nginx port 80                        | Patch via `services web sync-config` / `web ensure`; sudo via `/dev/tty` when needed (D-159). If listen already matches, ensure soft-fails reload instead of blocking `site publish` |
+
 | Start services                       | `init onboarding --fix`, `brew services start …` (no FDA pane)                                                     |
 
 ## What still requires manual steps (FDA)
@@ -24,7 +25,7 @@ Plume native mode runs **Homebrew nginx** and **php-fpm** as separate processes.
 
 ## Interactive flow
 
-When stdin/stdout are a TTY (or `PLUME_INTERACTIVE=1`), Plume may show a menu on:
+When stdin/stdout are a TTY, **or** `/dev/tty` is usable, or `PLUME_INTERACTIVE=1` (D-159), Plume may show a menu on:
 
 - `site add` / `site update --path=...` (native mode, sensitive path)
 - `init host`, `init onboarding` (registered sites under sensitive paths)
@@ -42,7 +43,7 @@ Options:
 ```bash
 export PLUME_NONINTERACTIVE=1
 # or pass global --yes
-./plume.sh services install web --mode=native --yes
+plumectl services install web --mode=native --yes
 ```
 
 - No menus; TCC risks surface as **WARN** in doctor output only.
@@ -54,7 +55,7 @@ export PLUME_NONINTERACTIVE=1
 | ------------------------------ | ------------------------------------------------------------ |
 | `PLUME_NONINTERACTIVE=1`       | Skip all permission/install prompts                          |
 | `PLUME_INTERACTIVE=1`          | Force interactive prompts even if stdout is not a TTY (rare) |
-| `PLUME_INTERACTIVE=0`          | Never prompt                                                 |
+| `PLUME_INTERACTIVE=0` / `false` | Never prompt (must be set explicitly; unset ≠ false — D-159) |
 | `PLUME_ASSUME_YES=1` / `--yes` | Same as non-interactive for confirmations                    |
 
 See also [first-run-onboarding.md](./first-run-onboarding.md) and [init-permissions.md](../commands/init-permissions.md).
@@ -65,7 +66,7 @@ See also [first-run-onboarding.md](./first-run-onboarding.md) and [init-permissi
 
 **What to do?**
 
-1. `./plume.sh init permissions --interactive` or `--open --reveal`
+1. `plumectl init permissions --interactive` or `--open --reveal`
 2. Grant Full Disk Access to the **nginx** and **php-fpm** binaries in System Settings
 3. Or move the project under `~/Sites/...` (`site update --path=... --publish --reload`)
 
@@ -76,3 +77,5 @@ See also [first-run-onboarding.md](./first-run-onboarding.md) and [init-permissi
 - D-097 — TCC detection and nginx PHP location
 - D-099 — FDA binary list UX
 - D-100 — Interactive permission and host install prompts
+- D-158 — Noninteractive: `sudo -n` only (no password prompts in CI)
+- D-159 — Interactive `/dev/tty` sudo; soft-fail ensure when listen already correct; unprivileged `nginx -t` via temp pid

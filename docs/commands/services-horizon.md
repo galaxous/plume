@@ -6,7 +6,7 @@ Native queue worker similar to the Laradock `laravel-horizon` container: Supervi
 
 **Multiple projects:** A separate supervisor program per site record (`plume-horizon-<site-id>`, D-150). Global `PLUME_HORIZON_PATH` is legacy fallback only.
 
-**Operations:** Only `plumectl` / `./plume.sh` — you do not need to run `supervisorctl` or `brew services` (D-152).
+**Operations:** Only `plumectl` / `plumectl` — you do not need to run `supervisorctl` or `brew services` (D-152).
 
 ## Usage
 

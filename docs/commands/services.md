@@ -7,65 +7,65 @@ Install and manage services in native or container mode.
 ## Usage
 
 ```bash
-./plume.sh services supported
-./plume.sh services supported --mode=native
-./plume.sh services supported --mode=docker-lite
-./plume.sh --json services supported --mode=native
-./plume.sh services status
-./plume.sh services status --running
-./plume.sh services status --running --wide
-./plume.sh services status --watch
-./plume.sh services status --watch=5 --running
-./plume.sh services status @web --mode=laradock-bridge
-./plume.sh --json services status
-./plume.sh services install php
-./plume.sh services install all
-./plume.sh services up php
-./plume.sh services up php84
-./plume.sh services status php-fpm-8.4
-./plume.sh services health php82
-./plume.sh services up all
-./plume.sh services up @queue
-./plume.sh services use mariadb --mode=native
-./plume.sh services up @core --mode=native
-./plume.sh services down php
-./plume.sh services down all
-./plume.sh services down group:web
-./plume.sh services health
-./plume.sh services health --running
-./plume.sh services health --watch
-./plume.sh services health redis --mode=native
-./plume.sh services health @web --mode=laradock-bridge
-./plume.sh services logs redis --tail=50 --mode=native
-./plume.sh services logs @web --running --mode=laradock-bridge
-./plume.sh services logs php --follow --mode=laradock-bridge
-./plume.sh services logs php --watch --mode=laradock-bridge
-./plume.sh services exec workspace --mode=docker-lite
-./plume.sh services exec workspace bash --mode=docker-lite
-./plume.sh services exec composer --mode=laradock-bridge
-./plume.sh services containers --mode=docker-lite
-./plume.sh services containers --mode=laradock-bridge
-./plume.sh services containers nginx --mode=docker-lite
-./plume.sh services laradock init --mode=laradock-bridge --path=/opt/laradock
-./plume.sh services laradock sync --mode=laradock-bridge --path=/opt/laradock
-./plume.sh services laradock check --mode=laradock-bridge --path=/opt/laradock
-./plume.sh services config show --mode=laradock-bridge
-./plume.sh services config add @web --mode=laradock-bridge
-./plume.sh services config remove redis --mode=laradock-bridge
-./plume.sh services config reset --mode=laradock-bridge
-./plume.sh services workspace status --mode=docker-lite
-./plume.sh services workspace up --mode=docker-lite
-./plume.sh services workspace apply --mode=docker-lite
-./plume.sh services workspace refresh --mode=docker-lite
-./plume.sh services workspace down --mode=docker-lite
-./plume.sh services workspace init --mode=docker-lite --path=/abs/project
-./plume.sh services workspace reinit --mode=docker-lite --path=/abs/project
-./plume.sh services web ensure
-./plume.sh services web sync-config --reload
-./plume.sh services web port 80 --reload
-./plume.sh services update
-./plume.sh services install php --version=8.3
-./plume.sh services up horizon --version=latest
+plumectl services supported
+plumectl services supported --mode=native
+plumectl services supported --mode=docker-lite
+plumectl --json services supported --mode=native
+plumectl services status
+plumectl services status --running
+plumectl services status --running --wide
+plumectl services status --watch
+plumectl services status --watch=5 --running
+plumectl services status @web --mode=laradock-bridge
+plumectl --json services status
+plumectl services install php
+plumectl services install all
+plumectl services up php
+plumectl services up php84
+plumectl services status php-fpm-8.4
+plumectl services health php82
+plumectl services up all
+plumectl services up @queue
+plumectl services use mariadb --mode=native
+plumectl services up @core --mode=native
+plumectl services down php
+plumectl services down all
+plumectl services down group:web
+plumectl services health
+plumectl services health --running
+plumectl services health --watch
+plumectl services health redis --mode=native
+plumectl services health @web --mode=laradock-bridge
+plumectl services logs redis --tail=50 --mode=native
+plumectl services logs @web --running --mode=laradock-bridge
+plumectl services logs php --follow --mode=laradock-bridge
+plumectl services logs php --watch --mode=laradock-bridge
+plumectl services exec workspace --mode=docker-lite
+plumectl services exec workspace bash --mode=docker-lite
+plumectl services exec composer --mode=laradock-bridge
+plumectl services containers --mode=docker-lite
+plumectl services containers --mode=laradock-bridge
+plumectl services containers nginx --mode=docker-lite
+plumectl services laradock init --mode=laradock-bridge --path=/opt/laradock
+plumectl services laradock sync --mode=laradock-bridge --path=/opt/laradock
+plumectl services laradock check --mode=laradock-bridge --path=/opt/laradock
+plumectl services config show --mode=laradock-bridge
+plumectl services config add @web --mode=laradock-bridge
+plumectl services config remove redis --mode=laradock-bridge
+plumectl services config reset --mode=laradock-bridge
+plumectl services workspace status --mode=docker-lite
+plumectl services workspace up --mode=docker-lite
+plumectl services workspace apply --mode=docker-lite
+plumectl services workspace refresh --mode=docker-lite
+plumectl services workspace down --mode=docker-lite
+plumectl services workspace init --mode=docker-lite --path=/abs/project
+plumectl services workspace reinit --mode=docker-lite --path=/abs/project
+plumectl services web ensure
+plumectl services web sync-config --reload
+plumectl services web port 80 --reload
+plumectl services update
+plumectl services install php --version=8.3
+plumectl services up horizon --version=latest
 ```
 
 ## Parameters
@@ -220,16 +220,16 @@ Install and manage services in native or container mode.
 ## Examples
 
 ```bash
-./plume.sh services install php
-./plume.sh services up php
-./plume.sh services up php82
-./plume.sh services up php --version=8.2
-./plume.sh services down php
-./plume.sh services health php
-./plume.sh services logs php --tail=20
-./plume.sh services update
-./plume.sh services status
-./plume.sh services supported --mode=native
+plumectl services install php
+plumectl services up php
+plumectl services up php82
+plumectl services up php --version=8.2
+plumectl services down php
+plumectl services health php
+plumectl services logs php --tail=20
+plumectl services update
+plumectl services status
+plumectl services supported --mode=native
 ```
 
 ## Native runtime notes (Phase 6)
@@ -284,23 +284,23 @@ Development mail capture with macOS Homebrew:
 ```bash
 # Manifest
 # services.yml → mailpit: { enabled: true }
-./plume.sh services provision --from-manifest
+plumectl services provision --from-manifest
 
 # or directly
-PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
-./plume.sh services up mailpit --mode=native
+PLUME_MAILPIT_ENABLED=true plumectl services install mailpit --mode=native
+plumectl services up mailpit --mode=native
 ```
 
 - UI default: `http://127.0.0.1:8025` (`PLUME_MAILPIT_PORT`).
 - Laravel `.env`: `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, `MAIL_PORT=1025` (Mailpit SMTP).
-- Linux native: no automatic install; `./plume.sh services up mailpit` WARN + exit 2 — `--mode=docker-lite` or [Mailpit](https://github.com/axllent/mailpit) manually.
-- Nginx port 80/8080 diagnose (D-109): `./plume.sh doctor web` — see [services-web.md](./services-web.md).
+- Linux native: no automatic install; `plumectl services up mailpit` WARN + exit 2 — `--mode=docker-lite` or [Mailpit](https://github.com/axllent/mailpit) manually.
+- Nginx port 80/8080 diagnose (D-109): `plumectl doctor web` — see [services-web.md](./services-web.md).
 
 ## Manifest subcommands (native)
 
 ```bash
-./plume.sh services manifest show
-./plume.sh services provision --from-manifest [--dry-run]
+plumectl services manifest show
+plumectl services provision --from-manifest [--dry-run]
 ```
 
 - `manifest show`: `effective_*` lines (web/php/database + `effective_<service>_enabled` / `_version` for all registry services). See [services-manifest.md](../operations/services-manifest.md), [services-provision.md](./services-provision.md).
@@ -314,4 +314,4 @@ PLUME_MAILPIT_ENABLED=true ./plume.sh services install mailpit --mode=native
 - Horizon could not start (supervisor missing/not active)
 - Install/start error during `services update` reconcile
 
-Horizon/supervisor native: [services-horizon.md](./services-horizon.md), [services-supervisor.md](./services-supervisor.md). Diagnose: `./plume.sh doctor supervisor`.
+Horizon/supervisor native: [services-horizon.md](./services-horizon.md), [services-supervisor.md](./services-supervisor.md). Diagnose: `plumectl doctor supervisor`.

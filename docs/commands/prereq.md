@@ -7,11 +7,11 @@ Fail-fast check of core dependencies by profile.
 ## Usage
 
 ```bash
-./plume.sh prereq check
-./plume.sh prereq check --profile=base
-./plume.sh prereq check --profile=native-install
-./plume.sh prereq explain
-./plume.sh --json prereq check --profile=git-ops
+plumectl prereq check
+plumectl prereq check --profile=base
+plumectl prereq check --profile=native-install
+plumectl prereq explain
+plumectl --json prereq check --profile=git-ops
 ```
 
 ## Parameters
@@ -28,10 +28,10 @@ Fail-fast check of core dependencies by profile.
 ## Examples
 
 ```bash
-./plume.sh prereq check --profile=base
-./plume.sh prereq check --profile=native-install
-./plume.sh --json prereq check --profile=docker-lite
-./plume.sh prereq explain
+plumectl prereq check --profile=base
+plumectl prereq check --profile=native-install
+plumectl --json prereq check --profile=docker-lite
+plumectl prereq explain
 ```
 
 ## Error scenarios
