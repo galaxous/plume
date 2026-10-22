@@ -2,6 +2,23 @@
 
 This file records technical decisions taken across phases.
 
+## 2026-10-22 - D-159 - Interactive nginx sudo + soft-fail ensure + unprivileged nginx -t
+
+- Status: accepted
+- Decision:
+  - `plume_interactive_enabled`: treat readable/writable `/dev/tty` as interactive (Cursor/IDE terminals).
+  - `plume_interactive_is_noninteractive`: `PLUME_INTERACTIVE` unset must **not** count as false (was blocking all sudo confirms).
+  - `plume_macos_permissions_confirm_sudo`: default **Yes**; noninteractive returns **1** (no fake approve).
+  - `plume_sites_nginx_run_elevated`: prompt via `/dev/tty` when available; CI still `sudo -n` only.
+  - Ensure/sync: if main nginx already listens on target port, reload failure is a **warn**, not hard fail.
+  - `site publish` ensure uses `sync_reload=false` (reload happens after snippet write / `--reload`).
+  - `plume_sites_nginx_config_test`: first try `nginx -t -g 'pid <tmpdir>; error_log stderr;'` so root-owned `nginx.pid` does not fail a valid config test without sudo.
+  - Site `/etc/hosts` sync: `plume_fs_copy_elevated` (interactive sudo after `sudo -n`); WARN when `PLUME_SITE_HOSTS_SYNC=false` so domain YAML edits do not silently leave NXDOMAIN.
+- Rationale:
+  - Users hit `Binding port 80 requires admin` then `strict mode: config test failed` even when listen was already 80; IDE shells failed the TTY check so sudo confirm never ran; unprivileged `-t` failed only on pid file perms; nginx got new `server_name` while hosts stayed on old domain when sync was off.
+- Impact:
+  - `lib/common/macos_permissions.sh`, `lib/common/sites.sh`, `lib/common/os.sh`, `lib/services/native_web_nginx_config.sh`, ops docs.
+
 ## 2026-10-03 - D-158 - No interactive sudo password in noninteractive / smoke
 
 - Status: accepted

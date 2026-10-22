@@ -119,8 +119,12 @@ plume_native_nginx_sync_main_config() {
 
   if [[ "${current}" == "${target_port}" ]]; then
     plume_info "nginx main config already listens on ${target_port} (${conf})"
+    # Config already correct — do not fail ensure when privileged reload is unavailable (D-159).
+    # Callers that need a live reload (site publish --reload) still reload after writing snippets.
     if [[ "${do_reload}" == "true" ]]; then
-      plume_native_nginx_reload_for_http_port "${target_port}" || return 2
+      if ! plume_native_nginx_reload_for_http_port "${target_port}"; then
+        plume_warn "nginx reload soft-failed (listen already ${target_port}); snippets may need: plumectl site publish <id> --reload"
+      fi
     fi
     return 0
   fi
@@ -232,7 +236,9 @@ plume_native_nginx_reload_for_http_port() {
       fi
     fi
 
-    plume_err "Binding port ${http_port} requires admin. Run: plumectl services web ensure"
+    plume_err "Binding port ${http_port} needs administrator privileges (nginx is root-owned)."
+    plume_err "Fix: run in a real terminal → plumectl services web ensure"
+    plume_err "Or once: sudo brew services restart nginx"
     return 2
   fi
 
@@ -281,7 +287,13 @@ plume_native_nginx_ensure_http_port() {
   fi
 
   plume_info "ensuring nginx HTTP listen port=${target_port} (macOS/Linux)"
-  if ! plume_native_nginx_sync_main_config "${target_port}" "false" "true"; then
+  # site publish passes republish_sites=false and reloads after writing the snippet (D-159).
+  # Avoid a privileged reload here when the caller will reload anyway.
+  local sync_reload="true"
+  if [[ "${republish_sites}" == "false" ]]; then
+    sync_reload="false"
+  fi
+  if ! plume_native_nginx_sync_main_config "${target_port}" "false" "${sync_reload}"; then
     unset PLUME_NATIVE_NGINX_ENSURE_IN_PROGRESS
     return 2
   fi

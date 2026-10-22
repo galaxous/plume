@@ -9,7 +9,9 @@ plume_interactive_is_noninteractive() {
   if [[ "$(plume_bool "${PLUME_ASSUME_YES:-false}")" == "true" ]]; then
     return 0
   fi
-  if [[ "$(plume_bool "${PLUME_INTERACTIVE:-}")" == "false" ]]; then
+  # Only when explicitly set to false — unset must not count as noninteractive (D-159).
+  if [[ -n "${PLUME_INTERACTIVE:-}" ]] \
+    && [[ "$(plume_bool "${PLUME_INTERACTIVE}")" == "false" ]]; then
     return 0
   fi
   return 1
@@ -22,7 +24,14 @@ plume_interactive_enabled() {
   if [[ "$(plume_bool "${PLUME_INTERACTIVE:-false}")" == "true" ]]; then
     return 0
   fi
-  [[ -t 0 && -t 1 ]]
+  if [[ -t 0 && -t 1 ]]; then
+    return 0
+  fi
+  # IDE/Cursor terminals often lack -t on stdin/stdout but still expose /dev/tty (D-159).
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    return 0
+  fi
+  return 1
 }
 
 plume_interactive_confirm() {
@@ -255,8 +264,9 @@ plume_macos_permissions_confirm_host_install() {
 plume_macos_permissions_confirm_sudo() {
   local cmd_desc="$1"
   local reason="${2:-This step needs administrator privileges on macOS.}"
+  # Noninteractive callers must use passwordless sudo (sudo -n) — never auto-approve a prompt.
   if plume_interactive_is_noninteractive; then
-    return 0
+    return 1
   fi
   if [[ "$(plume_detect_os)" != "macos" ]]; then
     return 0
@@ -264,10 +274,11 @@ plume_macos_permissions_confirm_sudo() {
   if ! plume_interactive_enabled; then
     return 1
   fi
-  echo ""
-  echo "${reason}"
-  echo "Command: ${cmd_desc}"
-  plume_interactive_confirm "Run with sudo now?" "true"
+  echo "" >&2
+  echo "${reason}" >&2
+  echo "Command: ${cmd_desc}" >&2
+  # Default Yes — port-80 / root-nginx ops are expected once per session (D-159).
+  plume_interactive_confirm "Run with sudo now?" "false"
 }
 
 plume_macos_permissions_doctor_hint() {

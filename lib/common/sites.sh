@@ -599,8 +599,20 @@ plume_sites_host_marker() {
 plume_sites_upsert_host_entries() {
   local site_id="$1"
   local id_file marker host_file tmp_file
+  local -a domains=()
+  local domain ip
 
-  if [[ "${PLUME_SITE_HOSTS_SYNC}" != "true" ]]; then
+  id_file="$(plume_sites_file "${site_id}")"
+  while IFS= read -r domain; do
+    [[ -z "${domain}" ]] && continue
+    domains+=("${domain}")
+  done < <(plume_sites_record_domains "${id_file}")
+
+  if [[ "$(plume_bool "${PLUME_SITE_HOSTS_SYNC:-true}")" != "true" ]]; then
+    if [[ "${#domains[@]}" -gt 0 ]]; then
+      plume_warn "PLUME_SITE_HOSTS_SYNC=false — /etc/hosts not updated (${domains[*]}); browser may show NXDOMAIN"
+      plume_warn "Fix: set PLUME_SITE_HOSTS_SYNC=true in ~/.config/plume/.env, then: plumectl site publish ${site_id}"
+    fi
     return 0
   fi
 
@@ -610,28 +622,31 @@ plume_sites_upsert_host_entries() {
   fi
 
   marker="$(plume_sites_host_marker "${site_id}")"
-  id_file="$(plume_sites_file "${site_id}")"
 
   tmp_file="$(mktemp)"
   awk -v marker="${marker}" '
     index($0, marker) == 0
   ' "${host_file}" > "${tmp_file}"
 
-  local ip domain
   ip="${PLUME_SITE_HOSTS_IP:-127.0.0.1}"
-  while IFS= read -r domain; do
-    [[ -z "${domain}" ]] && continue
+  for domain in "${domains[@]}"; do
     printf '%s\t%s\t# %s\n' "${ip}" "${domain}" "${marker}" >> "${tmp_file}"
-  done < <(plume_sites_record_domains "${id_file}")
+  done
 
-  if ! plume_fs_copy_no_tty "${tmp_file}" "${host_file}"; then
+  if ! plume_fs_copy_elevated "${tmp_file}" "${host_file}" \
+    "Updating /etc/hosts for site domains (${domains[*]:-none}) needs admin."; then
     rm -f "${tmp_file}"
-    if [[ "${PLUME_SITE_HOSTS_REQUIRED:-false}" == "true" ]]; then
+    plume_warn "could not write ${host_file} (need sudo). Domains: ${domains[*]:-none}"
+    plume_warn "Add manually: ${ip:-127.0.0.1}  ${domains[*]:-}  # ${marker}"
+    if [[ "$(plume_bool "${PLUME_SITE_HOSTS_REQUIRED:-false}")" == "true" ]]; then
       return 2
     fi
     return 0
   fi
   rm -f "${tmp_file}"
+  if [[ "${#domains[@]}" -gt 0 ]]; then
+    plume_info "hosts updated: ${domains[*]} -> ${ip} (${host_file})"
+  fi
   return 0
 }
 
@@ -654,9 +669,10 @@ plume_sites_remove_host_entries() {
     index($0, marker) == 0
   ' "${host_file}" > "${tmp_file}"
 
-  if ! plume_fs_copy_no_tty "${tmp_file}" "${host_file}"; then
+  if ! plume_fs_copy_elevated "${tmp_file}" "${host_file}" \
+    "Removing /etc/hosts entries for ${site_id} needs admin."; then
     rm -f "${tmp_file}"
-    if [[ "${PLUME_SITE_HOSTS_REQUIRED:-false}" == "true" ]]; then
+    if [[ "$(plume_bool "${PLUME_SITE_HOSTS_REQUIRED:-false}")" == "true" ]]; then
       return 2
     fi
     return 0
@@ -1140,6 +1156,8 @@ plume_sites_publish_native_server_strict() {
     plume_err "${server} strict mode: failed to write target include: ${target_conf}"
     return 1
   fi
+  # nginx workers / -t must be able to read includes (avoid umask 0077 → 600).
+  chmod 644 "${target_conf}" 2>/dev/null || true
   if ! plume_sites_validate_native "${server}"; then
     if [[ "${had_backup}" == "true" ]]; then
       cp -f "${backup_file}" "${target_conf}" || true
@@ -1412,15 +1430,15 @@ plume_sites_nginx_needs_elevated() {
 }
 
 # Run nginx (or brew services) with sudo when root-owned daemon requires it.
-# Keeps brew out of user-facing remediation — Plume prompts once when interactive.
-# Never blocks CI/smoke on a password prompt (D-157 / D-158).
+# Interactive: confirm once (via /dev/tty) then password prompt.
+# Noninteractive/CI: passwordless sudo -n only — never hang on Password: (D-158 / D-159).
 plume_sites_nginx_run_elevated() {
   local reason="${1:-nginx is managed as root (often port 80); Plume needs administrator privileges.}"
   shift || true
+  local rc=0
   if ! command -v sudo >/dev/null 2>&1; then
     return 1
   fi
-  # Passwordless sudo only — never open an interactive password prompt here.
   if sudo -n true 2>/dev/null; then
     sudo -n "$@" >/dev/null
     return $?
@@ -1433,18 +1451,51 @@ plume_sites_nginx_run_elevated() {
     if ! plume_macos_permissions_confirm_sudo "sudo $*" "${reason}"; then
       return 1
     fi
-  elif [[ ! -t 0 ]]; then
+  elif declare -F plume_interactive_enabled >/dev/null 2>&1; then
+    if ! plume_interactive_enabled; then
+      return 1
+    fi
+  elif [[ ! -t 0 && ! -r /dev/tty ]]; then
     return 1
   fi
-  # After explicit interactive confirm, allow a one-shot password prompt.
-  sudo "$@" >/dev/null
+  # Prompt on the real terminal when possible (IDE shells). Keep stderr for Password: / errors.
+  set +e
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    sudo "$@" </dev/tty >/dev/null
+    rc=$?
+  elif [[ -t 0 ]]; then
+    sudo "$@" >/dev/null
+    rc=$?
+  else
+    # Last resort: ask sudo to read the password from /dev/tty itself.
+    sudo -p "Password: " "$@" >/dev/null
+    rc=$?
+  fi
+  set -e
+  return "${rc}"
 }
 
 plume_sites_nginx_config_test() {
   local nginx_bin err rc=0
+  local test_pid=""
   nginx_bin="$(plume_sites_native_nginx_bin)"
   [[ -n "${nginx_bin}" ]] || return 0
 
+  # Prefer an unprivileged -t that does not touch root-owned pid/error_log (D-159).
+  # Root brew nginx on port 80 otherwise fails -t with Permission denied on nginx.pid
+  # even when the config itself is valid — that wrongly blocks site publish.
+  test_pid="$(mktemp -t plume-nginx-t.XXXXXX 2>/dev/null || echo "/tmp/plume-nginx-t.$$")"
+  rm -f "${test_pid}" 2>/dev/null || true
+  set +e
+  err="$("${nginx_bin}" -t -g "pid ${test_pid}; error_log stderr;" 2>&1)"
+  rc=$?
+  set -e
+  rm -f "${test_pid}" 2>/dev/null || true
+  if [[ "${rc}" -eq 0 ]]; then
+    return 0
+  fi
+
+  # Real config errors still fail above. Retry plain -t / elevated only for permission noise.
   set +e
   err="$("${nginx_bin}" -t 2>&1)"
   rc=$?
@@ -1453,14 +1504,23 @@ plume_sites_nginx_config_test() {
     return 0
   fi
 
-  if printf '%s' "${err}" | grep -qi 'Permission denied' \
+  # macOS TCC / root nginx often reports "Operation not permitted" (not only "Permission denied").
+  if printf '%s' "${err}" | grep -Eqi 'Permission denied|Operation not permitted' \
     || plume_sites_nginx_needs_elevated; then
     if plume_sites_nginx_run_elevated \
       "nginx config test needs admin because nginx is running as root." \
       "${nginx_bin}" -t; then
       return 0
     fi
+    plume_err "elevated nginx -t failed (sudo cancelled, wrong password, or real config error)"
+    if [[ -n "${err}" ]]; then
+      plume_err "unprivileged nginx -t said:"
+      printf '%s\n' "${err}" >&2
+    fi
+    return 1
   fi
+  plume_err "nginx -t failed:"
+  printf '%s\n' "${err}" >&2
   return 1
 }
 
@@ -1491,6 +1551,8 @@ plume_sites_nginx_reload_or_restart() {
         env HOMEBREW_NO_AUTO_UPDATE=1 brew services restart nginx; then
       return 0
     fi
+    plume_err "nginx reload needs administrator privileges (root-owned nginx / port 80)."
+    plume_err "Approve sudo when prompted, or once: sudo brew services restart nginx"
     return 1
   fi
 
@@ -1545,8 +1607,19 @@ plume_sites_native_ensure_web_runtime() {
   if [[ -n "${nginx_bin}" ]]; then
     if command -v brew >/dev/null 2>&1; then
       if ! HOMEBREW_NO_AUTO_UPDATE=1 brew services list 2>/dev/null | awk '{print $1" "$2}' | grep -q '^nginx started'; then
-        plume_info "starting nginx (brew services)"
-        HOMEBREW_NO_AUTO_UPDATE=1 brew services start nginx >/dev/null 2>&1 || true
+        # Root/port-80 nginx often shows brew "error" while master is still up — do not
+        # fight it with an unprivileged brew start; elevated reload handles that (D-159).
+        if pgrep -f 'nginx: master process' >/dev/null 2>&1; then
+          :
+        elif plume_sites_nginx_needs_elevated; then
+          plume_info "starting nginx (elevated brew services)"
+          plume_sites_nginx_run_elevated \
+            "Starting nginx needs admin (root brew service / port 80)." \
+            env HOMEBREW_NO_AUTO_UPDATE=1 brew services start nginx || true
+        else
+          plume_info "starting nginx (brew services)"
+          HOMEBREW_NO_AUTO_UPDATE=1 brew services start nginx >/dev/null 2>&1 || true
+        fi
       fi
     fi
     return 0
@@ -1646,6 +1719,10 @@ plume_sites_reload_native() {
   if [[ "${server}" == "nginx" || "${server}" == "" ]]; then
     if plume_sites_nginx_reload_or_restart; then
       return 0
+    fi
+    if plume_sites_nginx_needs_elevated; then
+      # reload_or_restart already printed the admin hint
+      return 1
     fi
   fi
 
